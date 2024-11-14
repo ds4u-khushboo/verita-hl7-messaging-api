@@ -23,6 +23,7 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
 
     @Query(value = "SELECT \n" +
             "    ap.visit_appointment_id,\n" +
+            "    ap.external_patient_id,\n"+
             "    ap.appointment_date,\n" +
             "    ap.visit_status_code,\n" +
             "    mt.id AS text_message_id,\n" +

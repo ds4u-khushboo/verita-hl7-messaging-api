@@ -8,6 +8,7 @@ import com.example.hl7project.repository.PatientRepository;
 import com.example.hl7project.response.MessageResponse;
 import com.example.hl7project.service.AppointmentScheduler;
 import com.example.hl7project.service.AppointmentService;
+import com.example.hl7project.service.MessageService;
 import com.example.hl7project.service.NoShowService;
 import com.twilio.rest.api.v2010.account.Message;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +32,9 @@ public class AppointmentController {
 
     @Autowired
     private MessageEntityRepo messageEntityRepo;
+
+    @Autowired
+    private MessageService messageService;
 
     @Autowired
     private PatientRepository patientRepository;
@@ -149,7 +153,11 @@ public class AppointmentController {
         String appointments = appointmentService.sendNoShowReminders();
         return appointments;
     }
-
+//    @GetMapping("/reminder")
+//    public String getReminder() {
+//        String appointments = messageService.sendNoShowReminder();
+//        return appointments;
+//    }
 //    @GetMapping("/no-shows")
 //    public NoShowReportDTO getNoShowReport() {
 //        return appointmentService.getNoShowReport();

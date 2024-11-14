@@ -6,6 +6,7 @@ import com.example.hl7project.repository.TextMessageRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.Optional;
 
 @Service
@@ -21,9 +22,9 @@ public class MessageService {
     @Autowired
     private TwilioConfig twilioConfig;
 
-    public void sendNoShowMessage(String patientName, String patientPhone, String appointmentDate, String appointmentTime, String appointmentId) {
-        String noshowMessage = String.format(twilioConfig.getAppNoShow(), patientName, appointmentDate, appointmentTime, appointmentId);
-        twillioService.getTwilioService(noshowMessage, "+91" + patientPhone);
+    public void sendNoShowMessage(String patientName, String patientPhone, LocalDate appointmentDate, String appointmentId) {
+        String noshowMessage = String.format(twilioConfig.getAppNoShow(), patientName, appointmentDate, appointmentId);
+//        twillioService.getTwilioService(noshowMessage, "+91" + patientPhone);
         TextMessage textMessage = new TextMessage();
         textMessage.setVisitAppointmentId(appointmentId);
         textMessage.setMessageBody(noshowMessage);
@@ -33,7 +34,7 @@ public class MessageService {
 
 
     //send no show reminder 1
-    public void sendNoShowReminder(String patientName, String appointmentDate, String patientPhone, String appointmentId, Long textMessageId) {
+    public void sendNoShowReminder(String patientName, LocalDate appointmentDate, String patientPhone, String appointmentId, Long textMessageId) {
 
         Optional<TextMessage> textMessageOptional = textMessageRepository.findById(textMessageId);
 
@@ -45,7 +46,7 @@ public class MessageService {
             if ("NS".equals(typeCode)) {
                 textMessage.setTypeCode("NSR1");
                 messageBody = String.format(twilioConfig.getAppNoShow(), patientName, appointmentDate, appointmentId);
-                twillioService.getTwilioService(messageBody, "+91" + patientPhone);
+             //   twillioService.getTwilioService(messageBody, "+91" + patientPhone);
 
             } else if (typeCode.equals("NSR1")) {
                 textMessage.setTypeCode("NSR2");

@@ -6,6 +6,8 @@ import java.time.LocalDateTime;
 
 public class AppointmentTextMessageDTO {
     private Long visitAppointmentId;
+
+    private String externalPatientId;
     private LocalDate appointmentDate;
     private String visitStatusCode;
     private Long textMessageId;
@@ -13,16 +15,12 @@ public class AppointmentTextMessageDTO {
     private LocalDateTime createdAt;
     private Long days;
 
-    public AppointmentTextMessageDTO(String visitAppointmentId, String appointmentDate, String visitStatusCode,
-                                     Long textMessageId, String typeCode, String createdAt, int days) {
-        this.visitAppointmentId = Long.valueOf(visitAppointmentId);
-        this.appointmentDate = LocalDate.parse(appointmentDate);
-        this.visitStatusCode = visitStatusCode;
-        this.textMessageId = textMessageId;
-        this.typeCode = typeCode;
-        this.createdAt = LocalDateTime.parse(createdAt);
-        this.days = (long) days;
+
+
+    public AppointmentTextMessageDTO() {
+
     }
+
     public Long getVisitAppointmentId() {
         return visitAppointmentId;
     }
@@ -65,6 +63,14 @@ public class AppointmentTextMessageDTO {
 
     public LocalDateTime getCreatedAt() {
         return createdAt;
+    }
+
+    public String getExternalPatientId() {
+        return externalPatientId;
+    }
+
+    public void setExternalPatientId(String externalPatientId) {
+        this.externalPatientId = externalPatientId;
     }
 
     public void setCreatedAt(LocalDateTime createdAt) {

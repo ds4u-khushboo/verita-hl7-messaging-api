@@ -1,6 +1,7 @@
 package com.example.hl7project.service;
 
 import com.example.hl7project.configuration.TwilioConfig;
+import com.example.hl7project.dto.AppointmentTextMessageDTO;
 import com.example.hl7project.dto.MessageDTO;
 import com.example.hl7project.model.Appointment;
 import com.example.hl7project.model.MessageEntity;
@@ -216,36 +217,68 @@ public class AppointmentService {
                 .body(twimlResponse);
     }
 
-
+//
+//    public void getNoShow(){
+//        return messageService.sendNoShowReminder();
+//    }
     public String sendNoShowReminders() {
-        //get No show messages
-        List<Object[]> results = appointmentRepository.findNoShowAppointmentsToSendTextMessages(); // Assume this is your query result
+        List<AppointmentTextMessageDTO> list = getAppointmentTextMessageDTO();
 
-        List<Appointment> appointments = new ArrayList<>();
-        for (Object[] row : results) {
-            Appointment appointment = new Appointment();
-            TextMessage textMessage = new TextMessage();
-            appointment.setVisitAppointmentId((String) row[0]);
-            appointment.setAppointmentDate((String) row[1]);
-            appointment.setVisitStatusCode((String) row[2]);
-            textMessage.setId(row[3] != null ? Long.parseLong(row[3].toString()) : null);
-            textMessage.setTypeCode(row[4] != null ? (String) row[4] : null);
-            appointment.setCreatedAt(row[5] != null ? (LocalDateTime) row[5] : null);
-            //textMessage.setDays((Integer) row[6]);
+        for (AppointmentTextMessageDTO appointment : list) {
+            Patient patient = patientRepository.findByExternalPatientId(appointment.getExternalPatientId());
+            if (appointment.getTypeCode() == null) {
+                messageService.sendNoShowMessage(patient.getName(), patient.getAdditionalPhone(), appointment.getAppointmentDate(), appointment.getVisitAppointmentId().toString());
+            }
+            else if(appointment.getTypeCode().equals("NS")&&appointment.getDays()>14){
+                messageService.sendNoShowReminder(patient.getName(),appointment.getAppointmentDate(),patient.getAdditionalPhone(),appointment.getVisitAppointmentId().toString(),appointment.getTextMessageId());
+            }
+            else if(appointment.getTypeCode().equals("NSR1")&&appointment.getDays()>28){
+                messageService.sendNoShowReminder(patient.getName(),appointment.getAppointmentDate(),patient.getAdditionalPhone(),appointment.getVisitAppointmentId().toString(),appointment.getTextMessageId());
 
-            appointments.add(appointment);
+            }
         }
-        String json="";
-        // Convert the list to JSON
-        ObjectMapper objectMapper = new ObjectMapper();
-        try {
-           json = objectMapper.writeValueAsString(appointments);
-            System.out.println(json);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return json;
+        return "success";
     }
+
+    private List<AppointmentTextMessageDTO> getAppointmentTextMessageDTO(){
+        List<Object[]> results = appointmentRepository.findNoShowAppointmentsToSendTextMessages();
+
+        List<AppointmentTextMessageDTO> reminders = new ArrayList<>();
+        String json = null;
+        for (Object[] row : results) {
+            //get No show messages
+            AppointmentTextMessageDTO dto = new AppointmentTextMessageDTO();
+            dto.setVisitAppointmentId(Long.valueOf((String) row[0]));
+            dto.setExternalPatientId((String)row[1]);
+            dto.setVisitStatusCode((String) row[3]);
+            dto.setTextMessageId(row[4] != null ? Long.parseLong(row[4].toString()) : null);
+            dto.setTypeCode(row[5] != null ? (String) row[5] : null);
+
+            // Map created at time (convert to LocalDateTime)
+            dto.setCreatedAt(row[6] != null ? ((java.sql.Timestamp) row[6]).toLocalDateTime() : null);
+            dto.setDays(Long.valueOf((Integer) row[7]));
+            // Add the DTO to the list
+            reminders.add(dto);
+            System.out.println("dto" + dto);
+        }
+        return reminders;
+    }
+
+
+
+            // Convert the list to JSON
+//            ObjectMapper objectMapper = new ObjectMapper();
+//            try {
+//                json = objectMapper.writeValueAsString(reminders);
+//                System.out.println(json);
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//            }
+//
+//            return json;
+//        }
+//        return json;
+
 
         // Convert the list of Object[] to a list of Appointment objects
 //        List<Appointment> appointments = new ArrayList<>();

@@ -1,9 +1,6 @@
 package com.example.hl7project.model;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
 
@@ -12,6 +9,7 @@ import java.time.LocalDateTime;
 public class TextMessage {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY) // or GenerationType.AUTO or UUID
     private Long id;
 
     @Column(name = "visit_appointment_id")
