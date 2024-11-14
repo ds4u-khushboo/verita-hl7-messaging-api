@@ -29,6 +29,7 @@ public class MessageEntity {
     @Column(name = "phone_number", length = 255)
     private String phoneNumber;
 
+
     @Column(name = "sent_at")
     private LocalDateTime sentAt;
 

@@ -1,5 +1,6 @@
 package com.example.hl7project.controller;
 
+import com.example.hl7project.dto.AppointmentTextMessageDTO;
 import com.example.hl7project.dto.MessageDTO;
 import com.example.hl7project.model.MessageEntity;
 import com.example.hl7project.model.Patient;
@@ -141,6 +142,12 @@ public class AppointmentController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
+    }
+
+    @GetMapping("/without-recent-texts")
+    public ResponseEntity<List<AppointmentTextMessageDTO>> getAppointmentsWithoutRecentTextMessages() {
+        List<AppointmentTextMessageDTO> appointments = noShowService.getAppointmentsWithoutRecentTextMessages();
+        return ResponseEntity.ok(appointments);
     }
 
 //    @GetMapping("/no-shows")

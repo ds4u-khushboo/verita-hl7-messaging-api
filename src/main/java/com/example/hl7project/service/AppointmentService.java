@@ -5,9 +5,11 @@ import com.example.hl7project.dto.MessageDTO;
 import com.example.hl7project.model.Appointment;
 import com.example.hl7project.model.MessageEntity;
 import com.example.hl7project.model.Patient;
+import com.example.hl7project.model.TextMessage;
 import com.example.hl7project.repository.AppointmentRepository;
 import com.example.hl7project.repository.MessageEntityRepo;
 import com.example.hl7project.repository.PatientRepository;
+import com.example.hl7project.repository.TextMessageRepository;
 import com.example.hl7project.response.MessageResponse;
 import com.twilio.rest.api.v2010.account.Message;
 import jakarta.transaction.Transactional;
@@ -40,6 +42,9 @@ public class AppointmentService {
 
     @Autowired
     private MessageEntityRepo messageEntityRepo;
+
+    @Autowired
+    private TextMessageRepository textMessageRepository;
 
     @Autowired
     private AppointmentRepository appointmentRepository;
@@ -281,21 +286,10 @@ public class AppointmentService {
                 schData.put("Appointment Time", formattedTime); // Store time
             }
         }
-        // You can add more fields as needed based on the specification
         schData.put("Resource Name", (schSegment.size() > 20) ? schSegment.get(20) : null); // SCH.20 - Required
         schData.put("Encounter Notes", (schSegment.size() > 24) ? schSegment.get(24) : null); // SCH.24 - Optional
         schData.put("Visit Status Code", (schSegment.size() > 25) ? schSegment.get(25) : null); // SCH.25 - Optional
 
-        //  Appointment appointment = new Appointment();
-
-        // Set each field from the extracted data
-//        appointment.setPatientId(patientId);
-
-        // Extract appointment date and time (assuming format is already in LocalDateTime)
-
-//        System.out.println("saved!!!");
-//        // Save the appointment entity
-//        appointmentRepository.save(appointment);
         System.out.println("Extracted SCH Data:");
         for (Map.Entry<String, String> entry : schData.entrySet()) {
             System.out.println(entry.getKey() + ": " + entry.getValue());
@@ -323,6 +317,25 @@ public class AppointmentService {
 
         patientRepository.save(patient);
     }
+
+    public void saveTextMessage(String hl7Message, String messageContent, String patientPhone, String messageType,
+                                Map<String, String> schData, Map<String, String> patientData) {
+        // Extract necessary information from the data
+        String appointmentId = schData.get("Visit/Appointment ID");
+        String typeCode = messageType.equals("SIU^S14") ? "NS" : "NSR1";  // Default typeCode, change based on conditions
+        LocalDateTime currentTime = LocalDateTime.now();  // Record the current time for message creation
+
+        // Create and populate TextMessage entity
+        TextMessage textMessage = new TextMessage();
+        textMessage.setVisitAppointmentId(appointmentId);
+        textMessage.setTypeCode(typeCode);
+        textMessage.setCreatedAt(currentTime);
+
+        // Save the text message entity to the database
+        textMessageRepository.save(textMessage);
+        System.out.println("Text message saved to database for appointment ID: " + appointmentId);
+    }
+
 
     //    @Transactional
     public void saveAppointmentData(Map<String, String> schData, Map<String, String> mshData,Map<String, String> patientData) {
