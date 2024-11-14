@@ -11,22 +11,20 @@ import com.example.hl7project.repository.MessageEntityRepo;
 import com.example.hl7project.repository.PatientRepository;
 import com.example.hl7project.repository.TextMessageRepository;
 import com.example.hl7project.response.MessageResponse;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.twilio.rest.api.v2010.account.Message;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
-import java.util.stream.Stream;
 
 @Service
 public class AppointmentService {
@@ -39,6 +37,9 @@ public class AppointmentService {
 
     @Autowired
     private NoShowService noShowService;
+
+    @Autowired
+    private MessageService messageService;
 
     @Autowired
     private MessageEntityRepo messageEntityRepo;
@@ -113,7 +114,7 @@ public class AppointmentService {
                 processedAppointmentIds.add(appointmentId);
                 if (!appointmentRepository.existsByVisitAppointmentId(appointmentId)) {
                     smsMessage = String.format(twilioConfig.getAppCreation(), patientName, appointmentDate, appointmentTime, appointmentId);
-                    saveAppointmentData(schData, mshData,patientData);
+                    saveAppointmentData(schData, mshData, patientData);
                     savePatientData(patientData);
                     saveMessageEntity(hl7Message, smsMessage, patientPhone, messageType, schData, patientData);
                     twillioService.getTwilioService(smsMessage, "+91" + patientPhone);
@@ -132,12 +133,12 @@ public class AppointmentService {
 
                     // Send No-Show reminder through NoShowService
                     noShowService.checkNoShowAppointments(); // Check for 2-week and 4-week reminders
+//                    saveTextMessage()
                     saveMessageEntity(hl7Message, noshowMessage, patientPhone, messageType, schData, patientData);
 
                     // Send SMS to the patient for the No-Show appointment
                     System.out.println("No-show message sent for appointment ID: " + appointmentId);
-                }
-                else {
+                } else {
 
                     smsMessage = String.format("Dear %s, your appointment has been modified for %s at %s. Appointment ID: %s. Tap 'Yes' to confirm or 'No' to refuse.", patientName, appointmentDate, appointmentTime, appointmentId);
                     twillioService.getTwilioService(smsMessage, "+91" + patientPhone);
@@ -152,7 +153,7 @@ public class AppointmentService {
                     smsMessage = String.format(twilioConfig.getDeletion(), appointmentId, appointmentTime);
 
                     appointmentRepository.deleteByVisitAppointmentId(appointmentId);
-                    saveMessageEntity(hl7Message,smsMessage, patientPhone, messageType, schData, patientData);
+                    saveMessageEntity(hl7Message, smsMessage, patientPhone, messageType, schData, patientData);
                     twillioService.getTwilioService(smsMessage, "+91" + patientPhone);
                     System.out.println("message sent");
                     System.out.println("smsMessage:::" + smsMessage);
@@ -214,6 +215,52 @@ public class AppointmentService {
                 .header("Content-Type", "text/xml")
                 .body(twimlResponse);
     }
+
+
+    public String sendNoShowReminders() {
+        //get No show messages
+        List<Object[]> results = appointmentRepository.findNoShowAppointmentsToSendTextMessages(); // Assume this is your query result
+
+        List<Appointment> appointments = new ArrayList<>();
+        for (Object[] row : results) {
+            Appointment appointment = new Appointment();
+            TextMessage textMessage = new TextMessage();
+            appointment.setVisitAppointmentId((String) row[0]);
+            appointment.setAppointmentDate((String) row[1]);
+            appointment.setVisitStatusCode((String) row[2]);
+            textMessage.setId(row[3] != null ? Long.parseLong(row[3].toString()) : null);
+            textMessage.setTypeCode(row[4] != null ? (String) row[4] : null);
+            appointment.setCreatedAt(row[5] != null ? (LocalDateTime) row[5] : null);
+            //textMessage.setDays((Integer) row[6]);
+
+            appointments.add(appointment);
+        }
+        String json="";
+        // Convert the list to JSON
+        ObjectMapper objectMapper = new ObjectMapper();
+        try {
+           json = objectMapper.writeValueAsString(appointments);
+            System.out.println(json);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return json;
+    }
+
+        // Convert the list of Object[] to a list of Appointment objects
+//        List<Appointment> appointments = new ArrayList<>();
+//        for (AppointmentTextMessageDTO appointmentTextMessageDTO: results) {
+//            Appointment appointment = new Appointment();
+//            appointment.setVisitAppointmentId(appointmentTextMessageDTO.);
+//            appointment.setAppointmentDate((String) row[1]);
+//            appointment.setVisitStatusCode((String) row[2]);
+//            appointment.setTextMessageId(row[3] != null ? Long.parseLong(row[3].toString()) : null);
+//            appointment.setTypeCode(row[4] != null ? (String) row[4] : null);
+//            appointment.setCreatedAt(row[5] != null ? (String) row[5] : null);
+//            appointment.setDays((Integer) row[6]);
+//
+//            appointments.add(appointment);
+//        }
 
     private Map<String, String> extractPatientDataFromPidSegment(List<String> pidSegment) {
         Map<String, String> patientData = new HashMap<>();
@@ -318,8 +365,7 @@ public class AppointmentService {
         patientRepository.save(patient);
     }
 
-    public void saveTextMessage(String hl7Message, String messageContent, String patientPhone, String messageType,
-                                Map<String, String> schData, Map<String, String> patientData) {
+    public void saveTextMessage(String messageType, Map<String, String> schData) {
         // Extract necessary information from the data
         String appointmentId = schData.get("Visit/Appointment ID");
         String typeCode = messageType.equals("SIU^S14") ? "NS" : "NSR1";  // Default typeCode, change based on conditions
@@ -338,7 +384,7 @@ public class AppointmentService {
 
 
     //    @Transactional
-    public void saveAppointmentData(Map<String, String> schData, Map<String, String> mshData,Map<String, String> patientData) {
+    public void saveAppointmentData(Map<String, String> schData, Map<String, String> mshData, Map<String, String> patientData) {
 
         Patient patient = patientRepository.findByExternalPatientId(patientData.get("External Patient ID"));
         if (patient == null) {

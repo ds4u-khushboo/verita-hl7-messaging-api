@@ -1,6 +1,5 @@
 package com.example.hl7project.service;
 
-import com.example.hl7project.dto.AppointmentTextMessageDTO;
 import com.example.hl7project.model.Appointment;
 import com.example.hl7project.model.Providers;
 import com.example.hl7project.repository.AppointmentRepository;
@@ -85,12 +84,9 @@ public class NoShowService {
         taskScheduler.schedule(() -> sendSecondAppointmentMessage(secondAppointment), new Date(System.currentTimeMillis() + 300000));  // Delay for 5 minutes (300,000 ms)
     }
 
-    public List<AppointmentTextMessageDTO> getAppointmentsWithoutRecentTextMessages() {
-        return appointmentRepository.findAppointmentsWithoutRecentTextMessages();
-    }
-
-    // Send message for the second appointment
-    // Send message for the second appointment
+//    public List<Object[]> getAppointmentsWithoutRecentTextMessages() {
+//        return appointmentRepository.findAppointmentsWithoutRecentTextMessages();
+//    }
     private void sendSecondAppointmentMessage(Appointment secondAppointment) {
         // Construct and send message for the second appointment
         String message = String.format("Dear %s, we noticed you missed your first appointment. Your second appointment is scheduled for %s. Please confirm at your earliest convenience.",
