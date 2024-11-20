@@ -17,13 +17,14 @@ public class ADTController {
 
     @Autowired
     private ADTService adtService;
-    @PostMapping("/adt")
-    public Message getAdtMessage(@RequestBody String adtMessage) throws JsonProcessingException {
-       return adtService.processMessage(adtMessage);
+
+    @PostMapping("/ADT")
+    public Message getAdtMessage(@RequestBody String adtMessage) {
+        return adtService.processMessage(adtMessage);
     }
 
     @PostMapping("/adtmsg")
-    public void createADTmessage(){
+    public void createADTmessage() {
 
     }
 }

@@ -1,6 +1,6 @@
 package com.example.hl7project.configuration;
 
-import com.example.hl7project.service.AppointmentService;
+import com.example.hl7project.service.SIUInboundService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 public class SchedulerJob {
 
     @Autowired
-    private AppointmentService appointmentService;
+    private SIUInboundService appointmentService;
 
     @Scheduled(cron = "0 0 0 * * ?") // Runs every day at midnight
     public void deleteOldMessages() {

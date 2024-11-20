@@ -1,14 +1,12 @@
 package com.example.hl7project.controller;
 
-import com.example.hl7project.dto.MessageDTO;
-import com.example.hl7project.model.MessageEntity;
+import com.example.hl7project.model.InboundHL7Message;
 import com.example.hl7project.model.Patient;
-import com.example.hl7project.repository.MessageEntityRepo;
+import com.example.hl7project.repository.InboundSIUMessageRepo;
 import com.example.hl7project.repository.PatientRepository;
 import com.example.hl7project.response.MessageResponse;
-import com.example.hl7project.service.AppointmentScheduler;
-import com.example.hl7project.service.AppointmentService;
-import com.example.hl7project.service.MessageService;
+import com.example.hl7project.service.SchedulerService;
+import com.example.hl7project.service.SIUInboundService;
 import com.example.hl7project.service.NoShowService;
 import com.twilio.rest.api.v2010.account.Message;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,31 +26,30 @@ public class AppointmentController {
 
 
     @Autowired
-    private AppointmentService appointmentService;
+    private SIUInboundService appointmentService;
 
     @Autowired
-    private MessageEntityRepo messageEntityRepo;
+    private InboundSIUMessageRepo inboundSIUMessageRepo;
 
     @Autowired
-    private MessageService messageService;
+    private SIUInboundService siuInboundService;
 
     @Autowired
     private PatientRepository patientRepository;
 
     @Autowired
-    private AppointmentScheduler appointmentScheduler;
+    private SchedulerService appointmentScheduler;
 
     @Autowired
     private NoShowService noShowService;
     @PostMapping("/SIU")
     public Message sendMessge(@RequestBody String hl7mesage) throws Exception {
-
-        return appointmentService.processMessage(hl7mesage);
+        return siuInboundService.processMessage(hl7mesage);
     }
-    @PostMapping("/sendSMs")
-    public ResponseEntity<String> sendSMS(@RequestBody MessageDTO message) {
-        return appointmentService.getSmsConfirm(message);
-    }
+//    @PostMapping("/sendSMs")
+//    public ResponseEntity<String> sendSMS(@RequestBody MessageDTO message) {
+//        return appointmentService.getSmsConfirm(message);
+//    }
 
     @GetMapping("/multipleApp")
     public String getMultiple(){
@@ -73,12 +70,13 @@ public class AppointmentController {
     }
 
     @RequestMapping("/listByTimeRange")
-    public List<MessageEntity> getMessagesSentInRange(String startTime) {
-        return messageEntityRepo.findMessageEntityByAppointment_StartTime(startTime);
+    public List<InboundHL7Message> getMessagesSentInRange(String startTime) {
+        return inboundSIUMessageRepo.findInboundHL7MessageByCreatedAt(LocalDate.parse(startTime));
     }
     @GetMapping("/trigger-no-show-check")
     public String triggerNoShowCheck() {
         noShowService.checkNoShowAppointments();
+
         return "No-show appointment check triggered manually.";
     }
     @RequestMapping("/no-show")
@@ -87,7 +85,7 @@ public class AppointmentController {
     }
 
     @DeleteMapping("/deleteByDate")
-    public List<MessageEntity> getDeleteMessageByDate(@RequestParam("date") String dateString) {
+    public List<InboundHL7Message> getDeleteMessageByDate(@RequestParam("date") String dateString) {
 //        if (dateString == null) {
 //            return ResponseEntity.badRequest().body("Date parameter is required and cannot be null.");
 //        }
@@ -105,7 +103,7 @@ public class AppointmentController {
 
 
     @DeleteMapping("/deleteByDays")
-    public List<MessageEntity> getDeleteMessageByDate(@RequestParam int days) {
+    public List<InboundHL7Message> getDeleteMessageByDate(@RequestParam int days) {
         return appointmentService.deleteMessagesOlderThanDays(days);
     }
 
@@ -150,12 +148,14 @@ public class AppointmentController {
     @GetMapping("/without-recent-texts")
 
     public String getAppointmentsWithoutRecentTextMessages() {
-        String appointments = appointmentService.sendNoShowReminders();
+        String appointments = appointmentService.sendNoShowAppointmentMessages();
+        System.out.println("Scheduled task result: " + appointments);
+
         return appointments;
     }
 //    @GetMapping("/reminder")
 //    public String getReminder() {
-//        String appointments = messageService.sendNoShowReminder();
+//        String appointments = messageService.sendNoShowReminderMessage();
 //        return appointments;
 //    }
 //    @GetMapping("/no-shows")

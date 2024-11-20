@@ -6,8 +6,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "inbound_message")
-public class MessageEntity {
+@Table(name = "inbound_siu_message")
+public class InboundHL7Message {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -23,27 +23,19 @@ public class MessageEntity {
     @Column(name = "message_type", length = 255)
     private String messageType;
 
-    @Column(name = "message_Text", length = 255)
-    private String messageText;
-
     @Column(name = "phone_number", length = 255)
     private String phoneNumber;
-
-
-    @Column(name = "sent_at")
-    private LocalDateTime sentAt;
 
     @Column(name = "visit_appointment_id", length = 45)
     private String visitAppointmentId;
 
-    @ManyToOne
-    @JoinColumn(name = "visit_appointment_id", insertable = false, updatable = false)
-    private Appointment appointment;
+    @Column(name = "patient_id", length = 45)
+    private String patientId;
 
-    public MessageEntity(Long patientId, String type, LocalDate now) {
+    public InboundHL7Message(Long patientId, String type, LocalDate now) {
     }
 
-    public MessageEntity() {
+    public InboundHL7Message() {
 
     }
 
@@ -63,14 +55,6 @@ public class MessageEntity {
         this.createdAt = createdAt;
     }
 
-    public String getMessageText() {
-        return messageText;
-    }
-
-    public void setMessageText(String messageText) {
-        this.messageText = messageText;
-    }
-
     public String getMessageType() {
         return messageType;
     }
@@ -87,13 +71,6 @@ public class MessageEntity {
         this.phoneNumber = phoneNumber;
     }
 
-    public LocalDateTime getSentAt() {
-        return sentAt;
-    }
-
-    public void setSentAt(LocalDateTime sentAt) {
-        this.sentAt = sentAt;
-    }
 
     public String getVisitAppointmentId() {
         return visitAppointmentId;
@@ -101,10 +78,6 @@ public class MessageEntity {
 
     public void setVisitAppointmentId(String visitAppointmentId) {
         this.visitAppointmentId = visitAppointmentId;
-    }
-
-    public Appointment getAppointment() {
-        return appointment;
     }
 
     public String getRawMessage() {
@@ -115,8 +88,13 @@ public class MessageEntity {
         this.rawMessage = rawMessage;
     }
 
-    public void setAppointment(Appointment appointment) {
-        this.appointment = appointment;
+    public String getPatientId() {
+        return patientId;
     }
-// Getters and Setters
+
+    public void setPatientId(String patientId) {
+        this.patientId = patientId;
+    }
+
+    // Getters and Setters
 }

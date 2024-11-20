@@ -26,9 +26,9 @@ public class TwillioService {
 
             // Create and send the message
             Message message = Message.creator(
-                    new PhoneNumber(to),             // The recipient's phone number
-                    new PhoneNumber("+18562882592"), // Your Twilio phone number
-                    messageBody                       // The message content
+                    new PhoneNumber(to),
+                    new PhoneNumber("+18562882592"),
+                    messageBody
             ).create();
 
             // Log the SID of the message for tracking

@@ -1,6 +1,5 @@
 package com.example.hl7project.model;
 
-import com.example.hl7project.model.Appointment;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -10,9 +9,17 @@ import java.util.List;
 @Table(name = "patients")
 public class Patient {
 
+//    @Id
+//    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "patient_seq")
+//    @SequenceGenerator(name = "patient_seq", sequenceName = "patients_seq", allocationSize = 1)
+//    private Long id;
+
     @Id
-    @Column(name = "id", length = 255)
-    private String id;
+    @Column(name = "external_patient_id", unique = true, nullable = false)
+    private String externalPatientId;
+
+    @Column(name = "external_patient_mrn")
+    private String externalPatientMRN;
 
     @Column(name = "external_id", length = 50)
     private String externalId;
@@ -59,9 +66,6 @@ public class Patient {
     @Column(name = "created_at")
     private java.time.LocalDateTime createdAt;
 
-    @Column(name = "external_patient_id", length = 50)
-    private String externalPatientId;
-
     @Column(name = "language", length = 255)
     private String language;
 
@@ -71,16 +75,15 @@ public class Patient {
     @Column(name = "updated_at")
     private java.time.LocalDateTime updatedAt;
 
-    @OneToMany(mappedBy = "patient", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "patient",  fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
     private List<Appointment> appointments;
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
+//    public Long getId() {
+//        return id;
+//    }
+//
+//    public void setId(Long id) {
+//        this.id = id;
+//    }
 
     public String getExternalId() {
         return externalId;
@@ -241,5 +244,14 @@ public class Patient {
     public void setAppointments(List<Appointment> appointments) {
         this.appointments = appointments;
     }
-// Getters and Setters
+
+    public String getExternalPatientMRN() {
+        return externalPatientMRN;
+    }
+
+    public void setExternalPatientMRN(String externalPatientMRN) {
+        this.externalPatientMRN = externalPatientMRN;
+    }
+
+    // Getters and Setters
 }

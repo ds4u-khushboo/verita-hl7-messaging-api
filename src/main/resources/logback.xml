@@ -1,0 +1,30 @@
+<configuration>
+
+    <!-- Console appender for outputting logs to the console (optional) -->
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- File appender for writing logs to a file -->
+    <appender name="FILE" class="ch.qos.logback.core.FileAppender">
+        <file>logs/application.log</file>  <!-- Log file location -->
+        <append>true</append>  <!-- Appends to the existing log file -->
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Root logger configuration -->
+    <root level="debug">
+        <appender-ref ref="STDOUT"/>
+        <appender-ref ref="FILE"/>
+    </root>
+
+    <!-- Specific logger configuration for your service class (optional) -->
+    <logger name="com.example.hl7project.service.SIUInboundService" level="debug">
+        <appender-ref ref="FILE"/>
+    </logger>
+
+</configuration>

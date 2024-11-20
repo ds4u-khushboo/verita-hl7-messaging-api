@@ -17,13 +17,14 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 @Service
-public class AppointmentScheduler {
+public class SchedulerService {
 
     @Autowired  // Automatically inject AppointmentRepository
     private AppointmentRepository appointmentRepository;
 
     private static final ZoneId EST_ZONE = ZoneId.of("America/New_York");
 
+    
     public ResponseEntity<Long> getScheduler() {
         final long CHECK_INTERVAL_MINUTES = 1;
 

@@ -18,7 +18,7 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
 //    public Boolean existsByPatient(Patient patient);
 
     //    public Optional<Appointment> findByPlacerAppointmentId(String placerApppointmnetId);
-    public boolean existsByVisitAppointmentId(String appointmentId);
+     boolean existsByVisitAppointmentId(Long appointmentId);
 
 
     @Query(value = "SELECT \n" +
@@ -49,7 +49,7 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     List<Object[]> findNoShowAppointmentsToSendTextMessages();
 
 
-    public Appointment findByVisitAppointmentId(String appointmentId);
+    public Appointment findByVisitAppointmentId(Long appointmentId);
 
     List<Appointment> findByVisitStatusCode(String s);
 
@@ -57,7 +57,7 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
 
     List<Appointment> findByIsConfirmRequestSentTrue();
 
-    List<Appointment> deleteByVisitAppointmentId(String visitAppId);
+    List<Appointment> deleteByVisitAppointmentId(Long visitAppId);
 
     List<Appointment> findByPatientAndAppointmentDate(Patient patient, String appointmentDate);
 //    public long countBy(String status);

@@ -1,6 +1,6 @@
 package com.example.hl7project.configuration;
 
-import com.example.hl7project.service.AppointmentService;
+import com.example.hl7project.service.SIUInboundService;
 import com.example.hl7project.service.TwillioService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -35,11 +35,6 @@ public class TwilioConfig {
     @Bean
     public TwillioService twilioService() {
         return new TwillioService();
-    }
-
-    @Bean
-    public AppointmentService appointmentService() {
-        return new AppointmentService();
     }
 
     public String getAccountSid() {

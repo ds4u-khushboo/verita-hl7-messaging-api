@@ -1,6 +1,7 @@
 package com.example.hl7project.model;
 
 import jakarta.persistence.*;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -10,7 +11,7 @@ import java.util.List;
 public class Appointment {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     private Long id;
 
@@ -61,35 +62,32 @@ public class Appointment {
     @Column(name = "external_patient_id", length = 255)
     private String externalPatientId;
 
-    @Column(name = "visit_appointment_id", length = 255, unique = true)
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-
-    private String visitAppointmentId;
-
+    @Column(name = "visit_appointment_id")
+    private Long visitAppointmentId;
     @Column(name = "sms_sent_status")
     private Integer smsSentStatus;
 
     @ManyToOne
-    @JoinColumn(name = "patient_id")
+    @JoinColumn(name = "external_patient_id", referencedColumnName = "external_patient_id", nullable = false, insertable = false, updatable = false)
     private Patient patient;
 
     @ManyToOne
-    @JoinColumn(name = "provider_code")  // Foreign key column in the 'Appointment' table
+    @JoinColumn(name = "provider_code")
     private Providers providers;
-    @OneToMany(mappedBy = "appointment", cascade = CascadeType.ALL)
-    private List<MessageEntity> inboundMessages;
+//    @OneToMany(mappedBy = "appointment", cascade = CascadeType.ALL)
+//    private List<InboundHL7Message> inboundMessages;
 
     public Appointment() {
 
     }
 
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
+//    public Long getId() {
+//        return id;
+//    }
+//
+//    public void setId(Long id) {
+//        this.id = id;
+//    }
 
     public String getAppointmentDate() {
         return appointmentDate;
@@ -259,11 +257,11 @@ public class Appointment {
         this.externalPatientId = externalPatientId;
     }
 
-    public String getVisitAppointmentId() {
+    public Long getVisitAppointmentId() {
         return visitAppointmentId;
     }
 
-    public void setVisitAppointmentId(String visitAppointmentId) {
+    public void setVisitAppointmentId(Long visitAppointmentId) {
         this.visitAppointmentId = visitAppointmentId;
     }
 
@@ -283,15 +281,27 @@ public class Appointment {
         this.patient = patient;
     }
 
-    public List<MessageEntity> getInboundMessages() {
-        return inboundMessages;
-    }
-
-    public void setInboundMessages(List<MessageEntity> inboundMessages) {
-        this.inboundMessages = inboundMessages;
-    }
+//    public List<InboundHL7Message> getInboundMessages() {
+//        return inboundMessages;
+//    }
+//
+//    public void setInboundMessages(List<InboundHL7Message> inboundMessages) {
+//        this.inboundMessages = inboundMessages;
+//    }
 
     public void setLastMessageSentDate(LocalDate now) {
+    }
+
+    public void setId(long l) {
+
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 // Getters and Setters
 }
