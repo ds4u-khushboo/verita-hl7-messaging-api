@@ -188,9 +188,9 @@ public class SIUInboundService {
             if (appointment.getTypeCode() == null) {
                 noShowServiceImpl.sendNoShowMessage(patient.getName(), appointment.getVisitAppointmentId().toString());
             } else if (appointment.getTypeCode().equals("NS") && appointment.getDays() > 14) {
-                noShowServiceImpl.sendNoShowReminderMessage(patient.getName(), LocalDate.parse(appointment.getAppointmentDate()), patient.getAdditionalPhone(), appointment.getTextMessageId());
+                noShowServiceImpl.sendNoShowReminderMessage(patient.getName(), patient.getAdditionalPhone(),appointment.getAppointmentDate(), String.valueOf(appointment.getVisitAppointmentId()), appointment.getTextMessageId());
             } else if (appointment.getTypeCode().equals("NSR1") && appointment.getDays() > 28) {
-                noShowServiceImpl.sendNoShowReminderMessage(patient.getName(), LocalDate.parse(appointment.getAppointmentDate()), patient.getAdditionalPhone(), appointment.getTextMessageId());
+                noShowServiceImpl.sendNoShowReminderMessage(patient.getName(), patient.getAdditionalPhone(),appointment.getAppointmentDate(), String.valueOf(appointment.getVisitAppointmentId()), appointment.getTextMessageId());
             }
         }
         return "success";
