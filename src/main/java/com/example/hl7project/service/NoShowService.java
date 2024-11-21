@@ -39,7 +39,7 @@ public class NoShowService {
         }
         return 0;
     }
-    @Scheduled(cron = "0 */15 * * * ?") // Runs every 15 minutes
+    @Scheduled(cron = "0 0 */3 * * ?") // Runs every 3 hours
     public void checkAppointmentConfirmations() {
         // Fetch appointments where confirmation requests have not been sent yet
         List<Appointment> appointmentsToCheck = appointmentRepository.findByIsConfirmRequestSentTrue();
@@ -70,13 +70,13 @@ public class NoShowService {
             sendSecondAppointmentMessage(currentAppointment);
         } else {
             // If not confirmed, schedule the message for the second appointment after a 5-minute delay
-            scheduleMessageWithDelay(currentAppointment);
+            scheduleMessageWithDelay(currentAppointment,3 * 60 * 60 * 1000);
         }
     }
 
 
     // This method will introduce a delay and send the message after 5 minutes.
-    private void scheduleMessageWithDelay(Appointment secondAppointment) {
+    private void scheduleMessageWithDelay(Appointment secondAppointment,long delayMillis) {
         // Log the message to track timing
         System.out.println("Scheduling message for second appointment after 5 minutes...");
 
@@ -94,35 +94,37 @@ public class NoShowService {
 
         // Send message via Twilio or your messaging service
         twillioService.getTwilioService(message, "+91" + secondAppointment.getPatient().getPhoneNumber());
+        System.out.println("Second appointment message sent for: " + secondAppointment.getPatient().getName());
 
         // Log the message
-        System.out.println("Second appointment message sent for: " + secondAppointment.getPatient().getName());
+        secondAppointment.setConfirmRequestSent(true);
+        appointmentRepository.save(secondAppointment);
     }
 
 
 
     // Check no-show appointments every day
-    @Scheduled(cron = "0 0 9 * * ?") // Runs at 9 AM every day
-    public void checkNoShowAppointments() {
-        List<Appointment> noShowAppointments = appointmentRepository.findByVisitStatusCode("N/S");
-
-        for (Appointment appointment : noShowAppointments) {
-            // Handle reminders after 2 weeks
-            if (shouldSendReminder(appointment, 14)) {
-                sendReminder(appointment, 14);
-            }
-
-            // Handle reminders after 4 weeks
-            if (shouldSendReminder(appointment, 28)) {
-                sendReminder(appointment, 28);
-            }
-
-            // Reschedule appointment if not already rescheduled
-            if (shouldRescheduleAppointment(appointment)) {
-                rescheduleAppointment(appointment);
-            }
-        }
-    }
+//    @Scheduled(cron = "0 0 9 * * ?") // Runs at 9 AM every day
+//    public void checkNoShowAppointments() {
+//        List<Appointment> noShowAppointments = appointmentRepository.findByVisitStatusCode("N/S");
+//
+//        for (Appointment appointment : noShowAppointments) {
+//            // Handle reminders after 2 weeks
+//            if (shouldSendReminder(appointment, 14)) {
+//                sendReminder(appointment, 14);
+//            }
+//
+//            // Handle reminders after 4 weeks
+//            if (shouldSendReminder(appointment, 28)) {
+//                sendReminder(appointment, 28);
+//            }
+//
+//            // Reschedule appointment if not already rescheduled
+//            if (shouldRescheduleAppointment(appointment)) {
+//                rescheduleAppointment(appointment);
+//            }
+//        }
+//    }
 
 
     private boolean shouldSendReminder(Appointment appointment, int daysAfterAppointment) {

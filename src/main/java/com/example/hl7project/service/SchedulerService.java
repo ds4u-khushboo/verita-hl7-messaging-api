@@ -1,16 +1,19 @@
 package com.example.hl7project.service;
 
+import com.example.hl7project.dto.AppointmentTextMessageDTO;
 import com.example.hl7project.model.Appointment;
+import com.example.hl7project.model.Patient;
 import com.example.hl7project.repository.AppointmentRepository;
+import com.example.hl7project.repository.PatientRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import java.time.Duration;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -22,9 +25,16 @@ public class SchedulerService {
     @Autowired  // Automatically inject AppointmentRepository
     private AppointmentRepository appointmentRepository;
 
+    @Autowired
+    private PatientRepository patientRepository;
+
+    @Autowired
+    private NoShowServiceImpl noShowServiceImpl;
+
     private static final ZoneId EST_ZONE = ZoneId.of("America/New_York");
 
-    
+    //@Scheduled(cron = "0 0 10 * * ?", zone = "America/New_York") // Runs every day at 10:00 PM EST
+
     public ResponseEntity<Long> getScheduler() {
         final long CHECK_INTERVAL_MINUTES = 1;
 

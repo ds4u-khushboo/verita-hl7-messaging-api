@@ -54,8 +54,6 @@ public class AppointmentController {
     @GetMapping("/multipleApp")
     public String getMultiple(){
        noShowService.checkAppointmentConfirmations() ;
-
-
         return "multiple appointment come";
     }
     @RequestMapping("/listByName")
@@ -73,16 +71,16 @@ public class AppointmentController {
     public List<InboundHL7Message> getMessagesSentInRange(String startTime) {
         return inboundSIUMessageRepo.findInboundHL7MessageByCreatedAt(LocalDate.parse(startTime));
     }
-    @GetMapping("/trigger-no-show-check")
-    public String triggerNoShowCheck() {
-        noShowService.checkNoShowAppointments();
-
-        return "No-show appointment check triggered manually.";
-    }
-    @RequestMapping("/no-show")
-    public void getNoShow() {
-         noShowService.checkNoShowAppointments();
-    }
+//    @GetMapping("/trigger-no-show-check")
+//    public String triggerNoShowCheck() {
+//        noShowService.checkNoShowAppointments();
+//
+//        return "No-show appointment check triggered manually.";
+//    }
+//    @RequestMapping("/no-show")
+//    public void getNoShow() {
+//         noShowService.checkNoShowAppointments();
+//    }
 
     @DeleteMapping("/deleteByDate")
     public List<InboundHL7Message> getDeleteMessageByDate(@RequestParam("date") String dateString) {
@@ -148,7 +146,7 @@ public class AppointmentController {
     @GetMapping("/without-recent-texts")
 
     public String getAppointmentsWithoutRecentTextMessages() {
-        String appointments = appointmentService.sendNoShowAppointmentMessages();
+        String appointments = siuInboundService.sendNoShowAppointmentMessages();
         System.out.println("Scheduled task result: " + appointments);
 
         return appointments;

@@ -8,14 +8,23 @@ public class AppointmentTextMessageDTO {
     private Long visitAppointmentId;
 
     private String externalPatientId;
-    private LocalDate appointmentDate;
+    private String appointmentDate;
     private String visitStatusCode;
     private Long textMessageId;
     private String typeCode;
     private LocalDateTime createdAt;
     private Long days;
 
-
+//    public AppointmentTextMessageDTO(Long visitAppointmentId, String externalPatientId, String appointmentDate, String visitStatusCode, Long textMessageId, String typeCode, LocalDateTime createdAt, Long days) {
+//        this.visitAppointmentId = visitAppointmentId;
+//        this.externalPatientId = externalPatientId;
+//        this.appointmentDate = appointmentDate;
+//        this.visitStatusCode = visitStatusCode;
+//        this.textMessageId = textMessageId;
+//        this.typeCode = typeCode;
+//        this.createdAt = createdAt;
+//        this.days = days;
+//    }
 
     public AppointmentTextMessageDTO() {
 
@@ -29,11 +38,11 @@ public class AppointmentTextMessageDTO {
         this.visitAppointmentId = visitAppointmentId;
     }
 
-    public LocalDate getAppointmentDate() {
+    public String getAppointmentDate() {
         return appointmentDate;
     }
 
-    public void setAppointmentDate(LocalDate appointmentDate) {
+    public void setAppointmentDate(String appointmentDate) {
         this.appointmentDate = appointmentDate;
     }
 

@@ -11,6 +11,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 public class AppointmentService {
@@ -63,7 +64,7 @@ public class AppointmentService {
     public Appointment updateAppointmentData(Map<String, String> schData, Map<String, String> mshData) {
         // Retrieve the existing appointment using the appointment ID from schData
         Long appointmentId = Long.valueOf(schData.get("Visit/Appointment ID"));
-        Appointment existingAppointment = appointmentRepository.findByVisitAppointmentId(appointmentId);
+       Appointment existingAppointment = appointmentRepository.findByVisitAppointmentId(appointmentId);
 
         if (existingAppointment == null) {
             // If the appointment is not found, you can handle the error or throw an exception
@@ -87,7 +88,7 @@ public class AppointmentService {
                 e.printStackTrace();
             }
         }
-
+//Appointment appointment=existingAppointment.
         // Save the updated appointment
         appointmentRepository.save(existingAppointment);
         System.out.println("Appointment data updated successfully!");

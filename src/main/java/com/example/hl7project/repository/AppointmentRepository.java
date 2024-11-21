@@ -3,13 +3,11 @@ package com.example.hl7project.repository;
 import com.example.hl7project.dto.AppointmentTextMessageDTO;
 import com.example.hl7project.model.Appointment;
 import com.example.hl7project.model.Patient;
-import jakarta.persistence.FieldResult;
-import jakarta.persistence.SqlResultSetMapping;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 import java.util.List;
-import java.util.Objects;
+import java.util.Optional;
 
 @Repository
 public interface AppointmentRepository extends JpaRepository<Appointment, Long> {
@@ -48,8 +46,9 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
             "ORDER BY mt.type_code, mt.created_at", nativeQuery = true)
     List<Object[]> findNoShowAppointmentsToSendTextMessages();
 
+//    public Optional<Appointment> findByVisitAppointmentId(Long appointmentId);
 
-    public Appointment findByVisitAppointmentId(Long appointmentId);
+     Appointment findByVisitAppointmentId(Long appointmentId);
 
     List<Appointment> findByVisitStatusCode(String s);
 

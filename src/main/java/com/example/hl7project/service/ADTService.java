@@ -63,6 +63,7 @@ public class ADTService {
                 String smsMessage = String.format("Your have registered at patient named as %s  Patient ID: %s", patientName, patientId);
                 patientService.savePatientData(patientData);
                 messageService.saveMessageEntity(messageType,hl7Message,patientPhone,"",patientId);
+                messageService.saveTextMessage(messageType,patientData);
                // messageService.saveMessageEntity(messageType,smsMessage,hl7Message,patientPhone);
               //  notificationService.sendPatientCreateNotification(patientPhone, smsMessage);
                 break;
