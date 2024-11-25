@@ -35,6 +35,9 @@ public class AppointmentController {
     private SIUInboundService siuInboundService;
 
     @Autowired
+    private SchedulerService schedulerService;
+
+    @Autowired
     private PatientRepository patientRepository;
 
     @Autowired
@@ -42,6 +45,7 @@ public class AppointmentController {
 
     @Autowired
     private NoShowService noShowService;
+
     @PostMapping("/SIU")
     public Message sendMessge(@RequestBody String hl7mesage) throws Exception {
         return siuInboundService.processMessage(hl7mesage);
@@ -52,19 +56,32 @@ public class AppointmentController {
 //    }
 
     @GetMapping("/multipleApp")
-    public String getMultiple(){
-       noShowService.checkAppointmentConfirmations() ;
+    public String getMultiple() {
+        noShowService.checkAppointmentConfirmations();
         return "multiple appointment come";
     }
+
     @RequestMapping("/listByName")
     public List<Patient> getListByName(@RequestParam String patientName) {
         return patientRepository.findByName(patientName);
+    }
+
+    @PostMapping("/trigger-scheduler")
+    public ResponseEntity<String> triggerScheduler() {
+        schedulerService.noshowScheudler();  // Trigger the scheduled method manually
+        return ResponseEntity.ok("Scheduled task triggered.");
     }
 
     @RequestMapping("/listByPhNumber")
     public List<Patient> getListByPhNumber(@RequestParam String phNumber) {
         List<Patient> messages = patientRepository.findByPhoneNumber("+" + phNumber);
         return messages;
+    }
+
+    @PostMapping("/trigger-multiple-appointments-scheduler")
+    public ResponseEntity<String> triggerMultipleAppointmentsScheduler() {
+        schedulerService.multipleppoinmentsScheudler();  // Manually trigger the scheduled method
+        return ResponseEntity.ok("Multiple appointments scheduler triggered.");
     }
 
     @RequestMapping("/listByTimeRange")
@@ -114,14 +131,15 @@ public class AppointmentController {
     public ResponseEntity<Long> countMessagesByType(@RequestParam String type) {
         return appointmentService.noOfMessage(type);
     }
-    @GetMapping("/scheduler")
-    public ResponseEntity<Long> getScheduler() {
-        return appointmentScheduler.getScheduler();
-    }
-    @GetMapping("/schedulerr")
-    public void getSchedulerr() {
-         appointmentScheduler.checkAndSendMessage();
-    }
+
+    //    @GetMapping("/scheduler")
+//    public ResponseEntity<Long> getScheduler() {
+//        return appointmentScheduler.getScheduler();
+//    }
+//    @GetMapping("/schedulerr")
+//    public void getSchedulerr() {
+//         appointmentScheduler.checkAndSendMessage();
+//    }
     @GetMapping("/noshow-rate")
     public ResponseEntity<Map<String, Object>> getNoShowRate() {
         try {
@@ -151,7 +169,8 @@ public class AppointmentController {
 
         return appointments;
     }
-//    @GetMapping("/reminder")
+
+    //    @GetMapping("/reminder")
 //    public String getReminder() {
 //        String appointments = messageService.sendNoShowReminderMessage();
 //        return appointments;
@@ -160,7 +179,22 @@ public class AppointmentController {
 //    public NoShowReportDTO getNoShowReport() {
 //        return appointmentService.getNoShowReport();
 //    }
+    @GetMapping("messgaeByStatus")
+    public void getMessages() {
+        schedulerService.multipleppoinmentsScheudlerWithStatus();
+    }
 
+    @GetMapping("/providerName")
+    private void getAppByProvider(@RequestParam Long patientId){
+        noShowService.handleNoShowAndRebook(patientId);
+        System.out.println("Rescheduled by another provider");
+    }
+
+    @GetMapping("/appointmetnCheck")
+    private void checkStatau(){
+        schedulerService.checkAppointmentsAndSendMessages();
+        System.out.println("checke dappointment status");
+    }
     @GetMapping("/count-by-type")
     public List<Object[]> getCountByMessageType() {
         return appointmentService.getCountByMessageType();

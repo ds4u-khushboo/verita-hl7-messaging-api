@@ -29,9 +29,6 @@ public class SIUInboundService {
     private InboundSIUMessageRepo inboundSIUMessageRepo;
 
     @Autowired
-    private TextMessageRepository textMessageRepository;
-
-    @Autowired
     private AppointmentRepository appointmentRepository;
 
     @Autowired
@@ -42,6 +39,9 @@ public class SIUInboundService {
 
     @Autowired
     private AppointmentService appointmentService;
+
+    @Autowired
+    private SchedulerService schedulerService;
 
     @Autowired
     private NotificationService notificationService;
@@ -105,23 +105,21 @@ public class SIUInboundService {
 
                    boolean appointmentOptional = appointmentRepository.existsByVisitAppointmentId(appointmentId);
                     System.out.println("appointmentOptional::::"+appointmentOptional);
+//                    Patient patient=
 //                    System.out.println("appointmentId"+appointmentId);
                     if (appointmentOptional==false) {
-                        //Appointment appointment = appointmentOptional
 
                         System.out.println("appointmentOptional"+appointmentOptional);
-                        // Check if confirmation request is already sent
-//                        if (Boolean.FALSE.equals(appointmentOptional)) {
-//                            logger.info("Confirmation message has already been sent for Appointment ID: {}", appointmentId);
-//                            break;  // Skip sending message if already sent
-//                        }
+
                         appointmentService.saveAppointmentData(schData, mshData, patientData);
+                        updateFirstAppointmentIsConfirmRequestSent(String.valueOf(appointmentId));
                         String smsMessage = String.format("Your appointment is scheduled for %s at %s. Appointment ID: %s",
                                 schData.get("Appointment Date"), schData.get("Appointment Time"), appointmentId);
                         notificationService.sendAppointmentNotification(patientPhone, smsMessage);
                         logger.info("Appointment scheduled and notification sent for Appointment ID: {}", appointmentId);
                         messageService.saveMessageEntity(messageType, hl7Message, patientPhone, String.valueOf(appointmentId), "");
                         updateFirstAppointmentIsConfirmRequestSent(String.valueOf(appointmentId));
+//                        if(appointmentRepository.findByPatientAndAppointmentDate(patientName,schData.get("Appointment Date")))
                     } else {
                         logger.error("Appointment not found for Appointment ID: {}", appointmentId);
                     }
@@ -130,35 +128,36 @@ public class SIUInboundService {
                 case "SIU^S14":
                     logger.info("Processing SIU^S14 message: Appointment No-Show.");
                      Appointment appointment = appointmentRepository.findByVisitAppointmentId(appointmentId);
-                    if (appointment!=null) {
+                    if (appointment!=null&&appointment.getVisitStatusCode()!="N/S") {
 //                        Appointment noShowAppointment = appointment;
                         System.out.println("appointmentOptional"+appointment);
-                        //if ("N/S".equalsIgnoreCase(appointment.getVisitStatusCode())) {
+                       if (appointment.getVisitStatusCode().equals("PEN")) {
 //                            schedulerService.sendNoShowAppointmentMessages();
 //                            notificationService.sendNoShowNotification(patientPhone,noshowMessage);
 //                            logger.info("Appointment is already marked as No-Show. No further action needed for Appointment ID: {}", appointmentId);
 //                        } else {
-                            appointment.setVisitStatusCode("N/S");  // Update the visit status to No-Show
-                            appointmentRepository.save(appointment);  // Save the updated appointment
-                            System.out.println("saved app");
-                            updateFirstAppointmentIsConfirmRequestSent(String.valueOf(appointmentId));
-                            // Log the status update
-                            logger.info("Appointment ID: {} marked as No-Show.", appointmentId);
+                           appointment.setVisitStatusCode("N/S");  // Update the visit status to No-Show
+                           appointmentRepository.save(appointment);  // Save the updated appointment
+                           System.out.println("saved app");
+                           updateFirstAppointmentIsConfirmRequestSent(String.valueOf(appointmentId));
+                           // Log the status update
+                           logger.info("Appointment ID: {} marked as No-Show.", appointmentId);
 
-                            // Step 4: Send the No-Show message to the patient
+                           // Step 4: Send the No-Show message to the patient
 
-                            // Save the message to the database (if applicable)
-                            messageService.saveMessageEntity(messageType, hl7Message, patientPhone, String.valueOf(appointmentId), "");
+                           // Save the message to the database (if applicable)
+                           messageService.saveMessageEntity(messageType, hl7Message, patientPhone, String.valueOf(appointmentId), "");
 
-                            // Send the No-Show message (using your existing service method)
-                            noShowServiceImpl.sendNoShowMessage(patientName, String.valueOf(appointmentId));
+                           // Send the No-Show message (using your existing service method)
+                           noShowServiceImpl.sendNoShowMessage(patientName, String.valueOf(appointmentId));
 
-                            // Optionally, send additional notifications if necessary (uncomment if needed)
-                             notificationService.sendNoShowNotification(patientPhone, noshowMessage);
+                           // Optionally, send additional notifications if necessary (uncomment if needed)
+                           notificationService.sendNoShowNotification(patientPhone, noshowMessage);
 
-                            // Optionally, call any other method after the message is sent
-                            sendNoShowAppointmentMessages();
+                           // Optionally, call any other method after the message is sent
+                           schedulerService.noshowScheudler();
 
+                       }
                     } else {
                         logger.warn("No appointment found with Appointment ID: {}", appointmentId);
                     }

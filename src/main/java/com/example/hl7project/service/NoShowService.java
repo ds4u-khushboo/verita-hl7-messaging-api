@@ -1,18 +1,23 @@
 package com.example.hl7project.service;
 
 import com.example.hl7project.model.Appointment;
+import com.example.hl7project.model.Patient;
 import com.example.hl7project.model.Providers;
 import com.example.hl7project.repository.AppointmentRepository;
+import com.example.hl7project.repository.PatientRepository;
 import com.example.hl7project.repository.ProviderRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+
+import java.sql.Timestamp;
+import java.time.Duration;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
+
 @Service
 public class NoShowService {
 
@@ -26,7 +31,56 @@ public class NoShowService {
     private ProviderRepository providerRepository;
 
     @Autowired
+    private PatientRepository patientRepository;
+
+
+    @Autowired
     private TwillioService twillioService;
+
+
+    public void checkAppointmentsAndSendMessages() {
+        List<Object[]> appointmentsData = appointmentRepository.findAppointmentsWithConfirmationStatus();
+        System.out.println("appointmentsData"+appointmentsData);
+        Map<String, LocalDateTime> lastAppointmentTimeMap = new HashMap<>();
+        Map<String, Boolean> messageSentMap = new HashMap<>();
+
+        for (Object[] data : appointmentsData) {
+            Long visitAppointmentId = (Long) data[0];
+            String patientId = (String) data[1];
+            String cmCode = (String) data[2];
+            Timestamp createdAt = (Timestamp) data[3];
+            //Integer minutesElapsed = (Integer) data[4];
+            Integer isPreviousNew = (Integer) data[5];
+            Patient patient = patientRepository.findByExternalPatientId(patientId);
+
+            if (patient != null) {
+                String patientPhone = patient.getPhoneNumber();
+            // Check if previous appointment was "NEW" and if no message has been sent yet
+            if (isPreviousNew == 1 && !messageSentMap.getOrDefault(patientId, false)) {
+              //  sendMessageToPatient(patientPhone, "Reminder: Please confirm your appointment.");
+                messageSentMap.put(patientId, true);
+            } else if (lastAppointmentTimeMap.containsKey(patientId)) {
+                LocalDateTime lastAppointmentTime = lastAppointmentTimeMap.get(patientId);
+                Duration duration = Duration.between(lastAppointmentTime, createdAt.toLocalDateTime());
+                System.out.println("patientPhone"+patientPhone);
+                if (duration.toHours() == 3 && cmCode.equals("NEW")) {
+                    sendMessageToPatient(patientPhone, "Reminder: Your next appointment is in 3 hours.");
+                }
+            }
+            }
+
+            // Store the current appointment time for the patient
+            lastAppointmentTimeMap.put(patientId, createdAt.toLocalDateTime());
+        }
+    }
+
+    private void sendMessageToPatient(String patientPhone, String message) {
+        // Placeholder for sending a message (you can integrate an actual messaging service)
+        System.out.println("Sending message to patient " + patientPhone + ": " + message);
+        twillioService.getTwilioService(message,"91"+patientPhone);
+        System.out.println("patientPhone"+patientPhone);
+        // messageService.sendMessage(patientId, message);
+    }
 
     public int getSmsSentStatus(String status) {
         List<Appointment> appointmentList = appointmentRepository.findByVisitStatusCode(status);
@@ -39,7 +93,7 @@ public class NoShowService {
         }
         return 0;
     }
-    @Scheduled(cron = "0 0 */3 * * ?") // Runs every 3 hours
+
     public void checkAppointmentConfirmations() {
         // Fetch appointments where confirmation requests have not been sent yet
         List<Appointment> appointmentsToCheck = appointmentRepository.findByIsConfirmRequestSentTrue();
@@ -176,7 +230,80 @@ public class NoShowService {
         LocalDate appointmentDate = LocalDate.parse(appointment.getAppointmentDate(),formatter);
         return LocalDate.now().isAfter(appointmentDate.plusDays(15)) && appointment.getVisitStatusCode().equals("N/S");
     }
+    public Boolean handleNoShowAndRebook(Long patientId) {
+        // Get patient details
+        Patient patient = patientRepository.findById(patientId)
+                .orElseThrow(() -> new RuntimeException("Patient not found"));
 
+        // Find the latest appointment for the patient
+        Appointment latestAppointment = appointmentRepository.findLatestByPatient(patientId);
+
+        // If the latest appointment was a no-show, try to rebook
+        if (latestAppointment != null && "N/S".equals(latestAppointment.getVisitStatusCode())) {
+            String specialty = latestAppointment.getProviders().getSpecialty();
+
+            // Find available providers with the same specialty
+            List<Providers> availableProviders = providerRepository.findBySpecialty(specialty);
+
+            // If there's an available provider, book the next appointment
+            if (!availableProviders.isEmpty()) {
+                Providers nextProvider = availableProviders.get(0);
+                Appointment newAppointment = new Appointment();
+                newAppointment.setPatient(patient);
+                newAppointment.setProviders(nextProvider);
+                newAppointment.setAppointmentTime(String.valueOf(LocalDateTime.now().plusDays(1)));
+                newAppointment.setVisitStatusCode("PEN");
+
+                // Save the new appointment
+                appointmentRepository.save(newAppointment);
+
+                // Send message to patient
+                sendMessageToPatient(patient.getPhoneNumber(), "Your appointment has been rescheduled with Dr. " + nextProvider.getFirstName());
+            } else {
+                // No available provider, send a message about the unavailability
+                sendMessageToPatient(patient.getPhoneNumber(), "Unfortunately, no providers are available for rescheduling your appointment.");
+            }
+        }
+        return true;
+    }
+
+    public void checkAppointmentStatus(String patientPhone,String patientId) {
+        // Check for appointments made by the patient within the last 15 and 30 days
+        if(!handleNoShowAndRebook(Long.valueOf(patientId))) {
+            LocalDateTime fifteenDaysAgo = LocalDateTime.now().minusDays(15);
+            LocalDateTime thirtyDaysAgo = LocalDateTime.now().minusDays(30);
+
+            List<Appointment> recentAppointments = appointmentRepository.findAppointmentsByPatientAndDateRange(
+                    patientPhone, thirtyDaysAgo, LocalDateTime.now());
+
+            boolean hasAppointmentWithin15Days = recentAppointments.stream()
+                    .anyMatch(app -> LocalDateTime.parse(app.getAppointmentTime()).isAfter(fifteenDaysAgo));
+
+            // If no appointment within 15 days, send message
+            if (!hasAppointmentWithin15Days) {
+                sendMessageToPatient(patientPhone, "You have not booked an appointment for more than 15 days. Please schedule one soon.");
+            }
+
+            // If no appointment within 30 days, send another message
+            boolean hasAppointmentWithin30Days = !recentAppointments.isEmpty();
+            if (!hasAppointmentWithin30Days) {
+                sendMessageToPatient(patientPhone, "You have not scheduled any appointment for over 30 days. Please contact us.");
+            }
+        }
+
+    }
+
+//    public void sendMessageToPatient(String phoneNumber, String message) {
+//        // Send the message via Twilio or other services
+//        twillioService.getTwilioService(message, phoneNumber);
+//    }
+
+//    public void sendMessageToPatient(Long patientId, String message) {
+//        // Fetch the patient phone number
+//        Patient patient = patientRepository.findById(patientId)
+//                .orElseThrow(() -> new RuntimeException("Patient not found"));
+//        sendMessageToPatient(patient.getPhoneNumber(), message);
+//    }
     private void rescheduleAppointment(Appointment appointment) {
         Providers newProvider = findAnotherProviderWithSameSpecialty(appointment.getProviders().getSpecialty());
         if (newProvider != null) {

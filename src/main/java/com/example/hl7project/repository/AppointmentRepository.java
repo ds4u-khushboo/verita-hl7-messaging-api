@@ -4,7 +4,10 @@ import com.example.hl7project.model.Appointment;
 import com.example.hl7project.model.Patient;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -68,5 +71,18 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
 //    @Query("SELECT COUNT(a) FROM Appointment a WHERE a.visitStatusCode = 'No_Show'")
 //    long countNoShowAppointments();
 
+    @Query(value = "SELECT visit_appointment_id, external_patient_id, cm_code, created_at, " +
+            "TIMESTAMPDIFF(MINUTE, created_at, NOW()) AS minutes_elapsed, " +
+            "CASE WHEN LAG(cm_code) OVER (PARTITION BY external_patient_id, DATE(created_at) " +
+            "ORDER BY created_at ASC) = 'NEW' THEN 1 ELSE 0 END AS IsPreviousNew " +
+            "FROM appointments WHERE cm_code IN ('NEW', 'CRS', 'CRR0', 'CRR1')", nativeQuery = true)
+    List<Object[]> findAppointmentsWithConfirmationStatus();
 
+    @Query("SELECT a FROM Appointment a WHERE a.patient.externalPatientId = :patientId ORDER BY a.appointmentTime DESC")
+    Appointment findLatestByPatient(@Param("patientId") Long patientId);
+
+    @Query("SELECT a FROM Appointment a WHERE a.patient.additionalPhone = :phoneNumber AND a.appointmentTime BETWEEN :startDate AND :endDate")
+    List<Appointment> findAppointmentsByPatientAndDateRange(@Param("phoneNumber") String phoneNumber,
+                                                            @Param("startDate") LocalDateTime startDate,
+                                                            @Param("endDate") LocalDateTime endDate);
 }
