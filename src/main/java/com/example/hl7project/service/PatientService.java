@@ -17,6 +17,7 @@ public class PatientService {
 
     public void savePatientData(Map<String, String> patientData) {
         Patient patient = new Patient();
+
 //        patient.setId(patientData.get("Patient ID"));
         patient.setExternalPatientId(patientData.get("External Patient ID"));
         patient.setExternalPatientMRN(patientData.get("External Patient MRN"));
@@ -52,4 +53,5 @@ public class PatientService {
 
     }
 
+    // check duplicate patient   MRN  firstName  LastNAme  DateOfBirth
 }

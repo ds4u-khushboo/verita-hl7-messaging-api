@@ -10,16 +10,17 @@ import org.springframework.stereotype.Service;
 @Service
 public class TwillioService {
 
-  @Autowired
-  private TwilioConfig twilioConfig;
+    @Autowired
+    private TwilioConfig twilioConfig;
 
-    public Message getTwilioService(String body,String number) {
+    public Message getTwilioService(String body, String number) {
         Twilio.init(twilioConfig.getAccountSid(), twilioConfig.getAuthToken());
         //String smsBody = "Your appointment has been rescheduled to " + startDate.toString() + " at " + location + ". Reason: " + changeReason;
 
-       return Message.creator(new com.twilio.type.PhoneNumber("+"+number),
+        return Message.creator(new com.twilio.type.PhoneNumber("+" + number),
                 new PhoneNumber(twilioConfig.getFromNumber()), body).create();
     }
+
     public void sendSms(String to, String messageBody) {
         try {
             Twilio.init(twilioConfig.getAccountSid(), twilioConfig.getAuthToken());

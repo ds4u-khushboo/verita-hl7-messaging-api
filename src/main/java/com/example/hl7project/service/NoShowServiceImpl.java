@@ -34,7 +34,7 @@ public class NoShowServiceImpl {
     }
 
     //send no show reminder 1
-    public void sendNoShowReminderMessage(String patientName,String patientPhone, LocalDate appointmentDate, String appointmentId, Long textMessageId) {
+    public void sendNoShowReminderMessage(String patientName, String patientPhone, LocalDate appointmentDate, String appointmentId, Long textMessageId) {
 
         Optional<TextMessage> textMessageOptional = textMessageRepository.findById(textMessageId);
 
@@ -45,13 +45,16 @@ public class NoShowServiceImpl {
             // Compare strings using equals(), not ==
             if ("NS".equals(typeCode)) {
                 textMessage.setTypeCode("NSR1");
+                System.out.println("patientPhone::" + patientPhone);
+
                 messageBody = String.format(twilioConfig.getAppNoShow(), patientName, appointmentDate, appointmentId);
-                twillioService.getTwilioService(messageBody, "+91" + patientPhone);
-                System.out.println("message Sent");
+                twillioService.getTwilioService(messageBody, "91" + patientPhone);
+                System.out.println("patientPhone::" + patientPhone);
+                System.out.println("message Sent:::");
             } else if (typeCode.equals("NSR1")) {
                 textMessage.setTypeCode("NSR2");
                 messageBody = String.format(twilioConfig.getAppNoShow(), patientName, appointmentDate, appointmentId);
-                twillioService.getTwilioService(messageBody, "+91" + patientPhone);
+                twillioService.getTwilioService(messageBody, "91" + patientPhone);
                 System.out.println("message Sent");
             }
             textMessageRepository.save(textMessage);

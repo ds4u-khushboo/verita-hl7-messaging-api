@@ -65,8 +65,7 @@ public class SIUInboundService {
             }
 
             List<String> schSegment = hl7Map.get("SCH");
-            if (schSegment == null)
-            {
+            if (schSegment == null) {
                 throw new Exception("SCH segment not found.");
             }
 
@@ -103,13 +102,13 @@ public class SIUInboundService {
                         break;
                     }
 
-                   boolean appointmentOptional = appointmentRepository.existsByVisitAppointmentId(appointmentId);
-                    System.out.println("appointmentOptional::::"+appointmentOptional);
+                    boolean appointmentOptional = appointmentRepository.existsByVisitAppointmentId(appointmentId);
+                    System.out.println("appointmentOptional::::" + appointmentOptional);
 //                    Patient patient=
 //                    System.out.println("appointmentId"+appointmentId);
-                    if (appointmentOptional==false) {
+                    if (appointmentOptional == false) {
 
-                        System.out.println("appointmentOptional"+appointmentOptional);
+                        System.out.println("appointmentOptional" + appointmentOptional);
 
                         appointmentService.saveAppointmentData(schData, mshData, patientData);
                         updateFirstAppointmentIsConfirmRequestSent(String.valueOf(appointmentId));
@@ -127,37 +126,37 @@ public class SIUInboundService {
 
                 case "SIU^S14":
                     logger.info("Processing SIU^S14 message: Appointment No-Show.");
-                     Appointment appointment = appointmentRepository.findByVisitAppointmentId(appointmentId);
-                    if (appointment!=null&&appointment.getVisitStatusCode()!="N/S") {
+                    Appointment appointment = appointmentRepository.findByVisitAppointmentId(appointmentId);
+                    if (appointment != null && appointment.getVisitStatusCode() != "N/S") {
 //                        Appointment noShowAppointment = appointment;
-                        System.out.println("appointmentOptional"+appointment);
-                       if (appointment.getVisitStatusCode().equals("PEN")) {
+                        System.out.println("appointmentOptional" + appointment);
+                        if (appointment.getVisitStatusCode().equals("PEN")) {
 //                            schedulerService.sendNoShowAppointmentMessages();
 //                            notificationService.sendNoShowNotification(patientPhone,noshowMessage);
 //                            logger.info("Appointment is already marked as No-Show. No further action needed for Appointment ID: {}", appointmentId);
 //                        } else {
-                           appointment.setVisitStatusCode("N/S");  // Update the visit status to No-Show
-                           appointmentRepository.save(appointment);  // Save the updated appointment
-                           System.out.println("saved app");
-                           updateFirstAppointmentIsConfirmRequestSent(String.valueOf(appointmentId));
-                           // Log the status update
-                           logger.info("Appointment ID: {} marked as No-Show.", appointmentId);
+                            appointment.setVisitStatusCode("N/S");  // Update the visit status to No-Show
+                            appointmentRepository.save(appointment);  // Save the updated appointment
+                            System.out.println("saved app");
+                            updateFirstAppointmentIsConfirmRequestSent(String.valueOf(appointmentId));
+                            // Log the status update
+                            logger.info("Appointment ID: {} marked as No-Show.", appointmentId);
 
-                           // Step 4: Send the No-Show message to the patient
+                            // Step 4: Send the No-Show message to the patient
 
-                           // Save the message to the database (if applicable)
-                           messageService.saveMessageEntity(messageType, hl7Message, patientPhone, String.valueOf(appointmentId), "");
+                            // Save the message to the database (if applicable)
+                            messageService.saveMessageEntity(messageType, hl7Message, patientPhone, String.valueOf(appointmentId), "");
 
-                           // Send the No-Show message (using your existing service method)
-                           noShowServiceImpl.sendNoShowMessage(patientName, String.valueOf(appointmentId));
+                            // Send the No-Show message (using your existing service method)
+                            noShowServiceImpl.sendNoShowMessage(patientName, String.valueOf(appointmentId));
 
-                           // Optionally, send additional notifications if necessary (uncomment if needed)
-                           notificationService.sendNoShowNotification(patientPhone, noshowMessage);
+                            // Optionally, send additional notifications if necessary (uncomment if needed)
+                            notificationService.sendNoShowNotification(patientPhone, noshowMessage);
 
-                           // Optionally, call any other method after the message is sent
-                           schedulerService.noshowScheudler();
+                            // Optionally, call any other method after the message is sent
+                            schedulerService.noshowScheudler();
 
-                       }
+                        }
                     } else {
                         logger.warn("No appointment found with Appointment ID: {}", appointmentId);
                     }
@@ -179,21 +178,23 @@ public class SIUInboundService {
         System.out.println("Scheduled task started: " + LocalDateTime.now());
 
         for (AppointmentTextMessageDTO appointment : list) {
-            System.out.println("appointment.getAppointmentDate()"+appointment.getAppointmentDate());
+            System.out.println("appointment.getAppointmentDate()" + appointment.getAppointmentDate());
             Patient patient = patientRepository.findByExternalPatientId(appointment.getExternalPatientId());
             System.out.println("Processing appointment for patient: " + patient.getName() + " on " + appointment.getAppointmentDate());
 //            long daysSinceAppointment = ChronoUnit.DAYS.between(appointment.getAppointmentDate(), LocalDate.now());
 
+            System.out.println("patient.getAdditionalPhone()" + patient.getAdditionalPhone());
             if (appointment.getTypeCode() == null) {
                 noShowServiceImpl.sendNoShowMessage(patient.getName(), appointment.getVisitAppointmentId().toString());
             } else if (appointment.getTypeCode().equals("NS") && appointment.getDays() > 14) {
-                noShowServiceImpl.sendNoShowReminderMessage(patient.getName(), patient.getAdditionalPhone(),appointment.getAppointmentDate(), String.valueOf(appointment.getVisitAppointmentId()), appointment.getTextMessageId());
+                noShowServiceImpl.sendNoShowReminderMessage(patient.getName(), patient.getPhoneNumber(), appointment.getAppointmentDate(), String.valueOf(appointment.getVisitAppointmentId()), appointment.getTextMessageId());
             } else if (appointment.getTypeCode().equals("NSR1") && appointment.getDays() > 28) {
-                noShowServiceImpl.sendNoShowReminderMessage(patient.getName(), patient.getAdditionalPhone(),appointment.getAppointmentDate(), String.valueOf(appointment.getVisitAppointmentId()), appointment.getTextMessageId());
+                noShowServiceImpl.sendNoShowReminderMessage(patient.getName(), patient.getPhoneNumber(), appointment.getAppointmentDate(), String.valueOf(appointment.getVisitAppointmentId()), appointment.getTextMessageId());
             }
         }
         return "success";
     }
+
     private List<AppointmentTextMessageDTO> getAppointmentTextMessageDTO() {
         List<Object[]> results = appointmentRepository.findNoShowAppointmentsToSendTextMessages();
 //        System.out.println("results"+results);
@@ -210,7 +211,8 @@ public class SIUInboundService {
             } else {
                 // Handle the case where the value is neither Long nor String
                 throw new IllegalArgumentException("Expected Long or String, but got: " + value.getClass());
-            }            dto.setExternalPatientId((String) row[1]);
+            }
+            dto.setExternalPatientId((String) row[1]);
             dto.setVisitStatusCode((String) row[3]);
             dto.setTextMessageId(row[4] != null ? Long.parseLong(row[4].toString()) : null);
             dto.setTypeCode(row[5] != null ? (String) row[5] : null);

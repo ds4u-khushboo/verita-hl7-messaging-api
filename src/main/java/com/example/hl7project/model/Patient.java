@@ -27,6 +27,11 @@ public class Patient {
     @Column(name = "name", length = 100)
     private String name;
 
+    @Column(name = "first_name", length = 100)
+    private String firstName;
+
+    @Column(name = "last_name", length = 100)
+    private String lastName;
     @Column(name = "date_of_birth")
     private String dateOfBirth;
 
@@ -77,6 +82,13 @@ public class Patient {
 
     @OneToMany(mappedBy = "patient",  fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
     private List<Appointment> appointments;
+
+    public Patient(String firstName, String lastName, String dateOfBirth) {
+    }
+
+    public Patient() {
+
+    }
 //    public Long getId() {
 //        return id;
 //    }
@@ -253,5 +265,20 @@ public class Patient {
         this.externalPatientMRN = externalPatientMRN;
     }
 
-    // Getters and Setters
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
+    }
+// Getters and Setters
 }

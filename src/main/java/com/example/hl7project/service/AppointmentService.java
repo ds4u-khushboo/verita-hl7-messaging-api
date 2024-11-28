@@ -103,4 +103,6 @@ public class AppointmentService {
     public boolean appointmentExists(Long appointmentId) {
         return appointmentRepository.existsByVisitAppointmentId(appointmentId);
     }
+
+
 }

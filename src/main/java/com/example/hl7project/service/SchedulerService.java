@@ -45,33 +45,33 @@ public class SchedulerService {
         logger.info("Scheduled task finished at: {}", LocalDateTime.now());
     }
 
-    @Scheduled(cron = "0 0 10 * * ?") // Runs every day at 10 AM
-    public void multipleppoinmentsScheudler() {
-        logger.info("Scheduled task started at: {}");
-        noShowService.checkAppointmentConfirmations();
-        logger.info("Scheduled task finished at: {}");
-
-    }
+//    @Scheduled(cron = "0 0 10 * * ?") // Runs every day at 10 AM
+//    public void multipleppoinmentsScheudler() {
+//        logger.info("Scheduled task started at: {}");
+//        noShowService.checkAppointmentConfirmations();
+//        logger.info("Scheduled task finished at: {}");
+//
+//    }
 
     @Scheduled(cron = "0 0 10 * * ?", zone = "America/New_York")
     public void multipleppoinmentsScheudlerWithStatus() {
-        logger.info("Scheduled task started at: {}",LocalDateTime.now(ZoneId.of("America/New_York")));
+        logger.info("Scheduled task started at: {}Scheduled task started at: {", LocalDateTime.now(ZoneId.of("America/New_York")));
         noShowService.checkAppointmentsAndSendMessages();
-        logger.info("Scheduled task finished at: {}",LocalDateTime.now(ZoneId.of("America/New_York")));
+        logger.info("Scheduled task finished at: {}", LocalDateTime.now(ZoneId.of("America/New_York")));
 
     }
 
     @Scheduled(cron = "0 0 10 * * ?", zone = "America/New_York")
     public void checkAppointmentsAndSendMessages() {
         // Retrieve all patients who might have missed appointments
-        logger.info("Scheduled task started at: {}",LocalDateTime.now(ZoneId.of("America/New_York")));
+        logger.info("Scheduled task started at: {}", LocalDateTime.now(ZoneId.of("America/New_York")));
 
         List<Patient> allPatients = patientRepository.findAll();
 
         for (Patient patient : allPatients) {
             // Check if the patient has booked an appointment in the past 15 or 30 days
-            noShowService.checkAppointmentStatus(patient.getAdditionalPhone(),patient.getExternalPatientId());
-            logger.info("Scheduled task finished at: {}",LocalDateTime.now(ZoneId.of("America/New_York")));
+            noShowService.checkAppointmentStatus(patient.getAdditionalPhone(), patient.getExternalPatientId());
+            logger.info("Scheduled task finished at: {}", LocalDateTime.now(ZoneId.of("America/New_York")));
 
         }
     }
