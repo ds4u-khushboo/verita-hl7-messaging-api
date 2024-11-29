@@ -183,13 +183,13 @@ public class SIUInboundService {
             System.out.println("Processing appointment for patient: " + patient.getName() + " on " + appointment.getAppointmentDate());
 //            long daysSinceAppointment = ChronoUnit.DAYS.between(appointment.getAppointmentDate(), LocalDate.now());
 
-            System.out.println("patient.getAdditionalPhone()" + patient.getAdditionalPhone());
+//            System.out.println("patient.getAdditionalPhone()" + patient.getAdditionalPhone());
             if (appointment.getTypeCode() == null) {
                 noShowServiceImpl.sendNoShowMessage(patient.getName(), appointment.getVisitAppointmentId().toString());
             } else if (appointment.getTypeCode().equals("NS") && appointment.getDays() > 14) {
-                noShowServiceImpl.sendNoShowReminderMessage(patient.getName(), patient.getPhoneNumber(), appointment.getAppointmentDate(), String.valueOf(appointment.getVisitAppointmentId()), appointment.getTextMessageId());
+                noShowServiceImpl.sendNoShowReminderMessage(patient.getName(), patient.getHomePhone(), appointment.getAppointmentDate(), String.valueOf(appointment.getVisitAppointmentId()), appointment.getTextMessageId());
             } else if (appointment.getTypeCode().equals("NSR1") && appointment.getDays() > 28) {
-                noShowServiceImpl.sendNoShowReminderMessage(patient.getName(), patient.getPhoneNumber(), appointment.getAppointmentDate(), String.valueOf(appointment.getVisitAppointmentId()), appointment.getTextMessageId());
+                noShowServiceImpl.sendNoShowReminderMessage(patient.getName(), patient.getHomePhone(), appointment.getAppointmentDate(), String.valueOf(appointment.getVisitAppointmentId()), appointment.getTextMessageId());
             }
         }
         return "success";

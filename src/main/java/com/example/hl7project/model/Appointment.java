@@ -28,9 +28,6 @@ public class Appointment {
     @Column(name = "visit_status_code", length = 20)
     private String visitStatusCode;
 
-    @Column(name = "resource_name", length = 100)
-    private String resourceName;
-
     @Column(name = "duration", length = 255)
     private String duration;
 
@@ -49,8 +46,6 @@ public class Appointment {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    @Column(name = "start_time", length = 50)
-    private String startTime;
     @Column(name = "is_confirm_request_sent")
     private Boolean isConfirmRequestSent;
     @Column(name = "is_confirm_request_replied")
@@ -151,14 +146,6 @@ public class Appointment {
         this.visitStatusCode = visitStatusCode;
     }
 
-    public String getResourceName() {
-        return resourceName;
-    }
-
-    public void setResourceName(String resourceName) {
-        this.resourceName = resourceName;
-    }
-
     public String getDuration() {
         return duration;
     }
@@ -237,14 +224,6 @@ public class Appointment {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
-    }
-
-    public String getStartTime() {
-        return startTime;
-    }
-
-    public void setStartTime(String startTime) {
-        this.startTime = startTime;
     }
 
     public String getExternalPatientId() {

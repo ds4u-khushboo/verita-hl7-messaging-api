@@ -81,7 +81,7 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     @Query("SELECT a FROM Appointment a WHERE a.patient.externalPatientId = :patientId ORDER BY a.appointmentTime DESC")
     Appointment findLatestByPatient(@Param("patientId") Long patientId);
 
-    @Query("SELECT a FROM Appointment a WHERE a.patient.additionalPhone = :phoneNumber AND a.appointmentTime BETWEEN :startDate AND :endDate")
+    @Query("SELECT a FROM Appointment a WHERE a.patient.homePhone = :phoneNumber AND a.appointmentTime BETWEEN :startDate AND :endDate")
     List<Appointment> findAppointmentsByPatientAndDateRange(@Param("phoneNumber") String phoneNumber,
                                                             @Param("startDate") LocalDateTime startDate,
                                                             @Param("endDate") LocalDateTime endDate);

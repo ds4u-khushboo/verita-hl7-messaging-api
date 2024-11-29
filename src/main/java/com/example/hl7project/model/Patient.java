@@ -20,10 +20,6 @@ public class Patient {
 
     @Column(name = "external_patient_mrn")
     private String externalPatientMRN;
-
-    @Column(name = "external_id", length = 50)
-    private String externalId;
-
     @Column(name = "name", length = 100)
     private String name;
 
@@ -35,10 +31,10 @@ public class Patient {
     @Column(name = "date_of_birth")
     private String dateOfBirth;
 
-    @Column(name = "sex", length = 255)
+    @Column(name = "sex")
     private String sex;
 
-    @Column(name = "race", length = 255)
+    @Column(name = "race")
     private String race;
 
     @Column(name = "address", length = 255)
@@ -46,9 +42,6 @@ public class Patient {
 
     @Column(name = "home_phone", length = 15)
     private String homePhone;
-
-    @Column(name = "additional_phone", length = 15)
-    private String additionalPhone;
 
     @Column(name = "primary_language", length = 255)
     private String primaryLanguage;
@@ -83,12 +76,6 @@ public class Patient {
     @OneToMany(mappedBy = "patient",  fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
     private List<Appointment> appointments;
 
-    public Patient(String firstName, String lastName, String dateOfBirth) {
-    }
-
-    public Patient() {
-
-    }
 //    public Long getId() {
 //        return id;
 //    }
@@ -96,14 +83,6 @@ public class Patient {
 //    public void setId(Long id) {
 //        this.id = id;
 //    }
-
-    public String getExternalId() {
-        return externalId;
-    }
-
-    public void setExternalId(String externalId) {
-        this.externalId = externalId;
-    }
 
     public String getName() {
         return name;
@@ -145,20 +124,9 @@ public class Patient {
         this.address = address;
     }
 
-    public String getHomePhone() {
-        return homePhone;
-    }
 
     public void setHomePhone(String homePhone) {
         this.homePhone = homePhone;
-    }
-
-    public String getAdditionalPhone() {
-        return additionalPhone;
-    }
-
-    public void setAdditionalPhone(String additionalPhone) {
-        this.additionalPhone = additionalPhone;
     }
 
     public String getPrimaryLanguage() {
@@ -233,7 +201,7 @@ public class Patient {
         this.language = language;
     }
 
-    public String getPhoneNumber() {
+    public String getHomePhone() {
         return phoneNumber;
     }
 

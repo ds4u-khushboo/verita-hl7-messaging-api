@@ -37,7 +37,7 @@ public class AppointmentController {
     private InboundSIUMessageRepo inboundSIUMessageRepo;
 
     @Autowired
-    private PatientService patientService;
+    private OutboundService outboundService;
 
     @Autowired
     private SIUInboundService siuInboundService;
@@ -101,7 +101,7 @@ public class AppointmentController {
 
     @RequestMapping("/listByPhNumber")
     public List<Patient> getListByPhNumber(@RequestParam String phNumber) {
-        List<Patient> messages = patientRepository.findByPhoneNumber("+" + phNumber);
+        List<Patient> messages = patientRepository.findByHomePhone("+" + phNumber);
         return messages;
     }
 
@@ -228,135 +228,16 @@ public class AppointmentController {
         return appointmentService.getCountByMessageType();
     }
 
-    //    @PostMapping("/convert")
-//    public ResponseEntity<String> convertJsonToHl7(@RequestBody HL7Request hl7Request) {
-//        try {
-//            // Validate input
-//            if (hl7Request.getMessageType() == null || hl7Request.getJsonPayload() == null) {
-//                throw new IllegalArgumentException("Missing required fields: messageType or jsonPayload");
-//            }
-//
-//            // Use the jsonPayload directly as it is already a Map<String, Object>
-//            Map<String, Object> patientData = hl7Request.getJsonPayload();
-//
-//            // Convert JSON to HL7 message
-//            String hl7Message = hl7MessageBuilderService.buildAdtMessage(
-//                    hl7Request.getMessageType(),
-//                    patientData
-//            );
-//
-//            return ResponseEntity.ok(hl7Message);
-//        } catch (IllegalArgumentException e) {
-//            return ResponseEntity.badRequest().body("Invalid request: " + e.getMessage());
-//        } catch (Exception e) {
-//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-//                    .body("Error occurred: " + e.getMessage());
-//        }
-//    }
     @PostMapping("/book-appointment")
-    public String conversion(@RequestBody AppointmentRequest appointmentRequest)  {
-        try {
-            String hl7Message = "";
-
-            // Extract patient details from JSON
-            Map<String, String> patientDetails = hl7UtilityService.extractPatientDetailsFromJson(appointmentRequest);
-            String firstName = patientDetails.get("firstName");
-            String lastName = patientDetails.get("lastName");
-            String dateOfBirth = patientDetails.get("dob");
-            System.out.println("Checking patient with details: firstName=" + firstName + ", lastName=" + lastName + ", dob=" + dateOfBirth);
-
-            // Check if the patient exists in the database
-            Optional<Patient> existingPatient = patientRepository.findPatientByDetails(firstName, lastName, dateOfBirth);
-            System.out.println("existingPatient: " + existingPatient);
-            if (!existingPatient.isPresent()) {
-                System.out.println("true");
-            }
-            if (!existingPatient.isPresent()) {
-                // Patient does not exist, save patient details in local DB
-                Patient newPatient = new Patient(firstName, lastName, dateOfBirth);
-                // patientService.savePatientData(newPatient); // Uncomment if saving patient is needed
-                System.out.println("Patient details saved to database.");
-
-                // Convert JSON to HL7 message
-                hl7Message = hl7UtilityService.convertJsonToADTHL7(appointmentRequest);
-                hl7UtilityService.buildSIUHl7Message(appointmentRequest);
-                System.out.println("ADThl7Message:::" + hl7Message);
-
-                // Log the converted HL7 message
-                System.out.println("Converted ADT HL7 Message: " + hl7Message);
-
-                // Send HL7 message to Mirth
-                HttpClient httpClient = HttpClient.newBuilder()
-                        .followRedirects(HttpClient.Redirect.ALWAYS) // Ensure redirects are followed
-                        .build();
-
-                HttpRequest request = HttpRequest.newBuilder()
-                        .uri(URI.create("http://localhost:8085/"))
-                        .header("Content-Type", "text/plain")
-                        .POST(HttpRequest.BodyPublishers.ofString(hl7Message)) // Send HL7 message as body
-                        .build();
-
-                HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-
-                if (response.statusCode() == 302) {
-                    String redirectUrl = response.headers().firstValue("Location").orElse(null);
-                    if (redirectUrl != null) {
-                        System.out.println("Redirecting to: " + redirectUrl);
-                        // Optionally, resend the request to the new URL
-                    }
-                } else if (response.statusCode() == 200) {
-                    System.out.println("Request successful!");
-                } else {
-                    System.out.println("Failed with status code: " + response.statusCode());
-                }
-
-                System.out.println("response:::" + response.body());
-
-            } else {
-                hl7UtilityService.buildSIUHl7Message(appointmentRequest);
-                HttpClient httpClient = HttpClient.newBuilder()
-                        .followRedirects(HttpClient.Redirect.ALWAYS) // Ensure redirects are followed
-                        .build();
-
-                HttpRequest request = HttpRequest.newBuilder()
-                        .uri(URI.create("http://localhost:8085/"))
-                        .header("Content-Type", "text/plain")
-                        .POST(HttpRequest.BodyPublishers.ofString(hl7Message)) // Send HL7 message as body
-                        .build();
-
-                HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-
-                if (response.statusCode() == 302) {
-                    String redirectUrl = response.headers().firstValue("Location").orElse(null);
-                    if (redirectUrl != null) {
-                        System.out.println("Redirecting to: " + redirectUrl);
-                        // Optionally, resend the request to the new URL
-                    }
-                } else if (response.statusCode() == 200) {
-                    System.out.println("Request successful!");
-                } else {
-                    System.out.println("Failed with status code: " + response.statusCode());
-                }
-
-                System.out.println("response:::" + response.body());
-
-                // Patient already exists, log this and do not send HL7 message
-                System.out.println("Patient already exists. HL7 message not sent to Mirth.");
-            }
-
-            return "HL7 message processed successfully.";
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "Error processing HL7 message: " + e.getMessage();
-        }
+    public String conversion(@RequestBody AppointmentRequest appointmentRequest) {
+        return outboundService.processAppointmentRequest(appointmentRequest);
     }
 
     @PostMapping("/siubuild")
     public String buildSIU(@RequestBody AppointmentRequest appointmentRequest) {
-        StringBuilder hl7Message = hl7UtilityService.buildSIUHl7Message(appointmentRequest);
-        System.out.println("hl7Message::"+hl7Message);
-     return hl7Message.toString();
+        String hl7Message = hl7UtilityService.buildSIUHl7Message(appointmentRequest);
+        System.out.println("hl7Message::" + hl7Message);
+        return hl7Message.toString();
     }
 
     private String sendHl7ToMirth(String hl7Message) throws Exception {

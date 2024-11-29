@@ -63,7 +63,7 @@ public class InboundHL7Message {
         this.messageType = messageType;
     }
 
-    public String getPhoneNumber() {
+    public String getHomePhone() {
         return phoneNumber;
     }
 

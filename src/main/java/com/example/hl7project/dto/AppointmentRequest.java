@@ -1,5 +1,7 @@
 package com.example.hl7project.dto;
 
+import java.time.LocalDateTime;
+
 // Root class representing the entire JSON structure
 public class AppointmentRequest {
     public String sendingApplication;
@@ -13,6 +15,19 @@ public class AppointmentRequest {
     public String versionId;
     public Resource resource;
     public Location location;
+
+    private String visitAppointmentIdVendor;
+    private String visitAppointmentIdECW;
+    private String appointmentReason;
+    private String appointmentVisitType;
+    private String duration;
+    private String durationUnits;
+    private String appointmentTimingQuantity;
+    private LocalDateTime startDateTime;
+    private LocalDateTime endDateTime;
+    private String resourceName;
+    private String encounterNotes;
+    private String visitStatusCode;
     public Provider provider;
     public Patient patient;
     public Visit visit;
@@ -138,7 +153,81 @@ public class AppointmentRequest {
         this.insurance = insurance;
     }
 
+    public String getVisitAppointmentIdVendor() {
+        return visitAppointmentIdVendor;
+    }
 
+    public void setVisitAppointmentIdVendor(String visitAppointmentIdVendor) {
+        this.visitAppointmentIdVendor = visitAppointmentIdVendor;
+    }
+
+    public String getVisitAppointmentIdECW() {
+        return visitAppointmentIdECW;
+    }
+
+    public void setVisitAppointmentIdECW(String visitAppointmentIdECW) {
+        this.visitAppointmentIdECW = visitAppointmentIdECW;
+    }
+
+    public String getAppointmentReason() {
+        return appointmentReason;
+    }
+
+    public void setAppointmentReason(String appointmentReason) {
+        this.appointmentReason = appointmentReason;
+    }
+
+    public String getAppointmentVisitType() {
+        return appointmentVisitType;
+    }
+
+    public void setAppointmentVisitType(String appointmentVisitType) {
+        this.appointmentVisitType = appointmentVisitType;
+    }
+
+    public String getAppointmentTimingQuantity() {
+        return appointmentTimingQuantity;
+    }
+
+    public void setAppointmentTimingQuantity(String appointmentTimingQuantity) {
+        this.appointmentTimingQuantity = appointmentTimingQuantity;
+    }
+
+    public void setStartDateTime(LocalDateTime startDateTime) {
+        this.startDateTime = startDateTime;
+    }
+
+    public LocalDateTime getEndDateTime() {
+        return endDateTime;
+    }
+
+    public void setEndDateTime(LocalDateTime endDateTime) {
+        this.endDateTime = endDateTime;
+    }
+
+    public String getResourceName() {
+        return resourceName;
+    }
+
+    public void setResourceName(String resourceName) {
+        this.resourceName = resourceName;
+    }
+
+    public String getEncounterNotes() {
+        return encounterNotes;
+    }
+
+    public void setEncounterNotes(String encounterNotes) {
+        this.encounterNotes = encounterNotes;
+    }
+
+    public String getVisitStatusCode() {
+        return visitStatusCode;
+    }
+
+    public void setVisitStatusCode(String visitStatusCode) {
+        this.visitStatusCode = visitStatusCode;
+    }
 // Getters and Setters
     // (Generate these using your IDE or manually)
 
@@ -576,8 +665,6 @@ public class AppointmentRequest {
     private String eventReasonCode;
     private String appointmentType;
     private String dateTimeOfTheEvent;
-    private String duration;
-    private String durationUnits;
 
     // AIL (Appointment Information Location) fields
     private String locationId;

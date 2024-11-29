@@ -37,7 +37,7 @@ public class AppointmentService {
         appointment.setAppointmentTime(schData.get("Appointment Time"));
         appointment.setAppointmentReason(schData.get("Appointment Reason"));
         appointment.setVisitStatusCode(schData.get("Visit Status Code"));
-        appointment.setResourceName(schData.get("Resource Name"));
+//        appointment.setResourceName(schData.get("Resource Name"));
         appointment.setAppointmentDatetime(schData.get("Appointment Timing Quantity"));
         appointment.setVisitAppointmentId(Long.valueOf(schData.get("Visit/Appointment ID")));
         appointment.setDuration(schData.get("Appointment Duration"));

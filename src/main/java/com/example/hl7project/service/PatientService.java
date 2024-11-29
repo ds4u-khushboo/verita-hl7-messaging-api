@@ -1,12 +1,9 @@
 package com.example.hl7project.service;
 
-import com.example.hl7project.model.Appointment;
 import com.example.hl7project.model.Patient;
 import com.example.hl7project.repository.PatientRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 import java.util.Map;
 
 @Service
@@ -26,9 +23,12 @@ public class PatientService {
         patient.setSex(patientData.get("Sex"));
         patient.setRace(patientData.get("Race"));
         patient.setAddress(patientData.get("Patient Address"));
-        patient.setPhoneNumber(patientData.get("Home Phone Number"));
+        patient.setHomePhone(patientData.get("Home Phone Number"));
         patient.setLanguage(patientData.get("Primary Language"));
         patient.setMaritalStatus(patientData.get("Marital Status"));
+        patient.setFirstName(patientData.get("firstName"));
+        patient.setLastName(patientData.get("lastName"));
+
 //        patient.setAppointments(appointmentList);
         System.out.println("patient data saved!!!");
 

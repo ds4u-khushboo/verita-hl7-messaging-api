@@ -42,7 +42,7 @@ public class PatientRequest {
         this.dateOfBirth = dateOfBirth;
     }
 
-    public String getPhoneNumber() {
+    public String getHomePhone() {
         return phoneNumber;
     }
 

@@ -70,9 +70,8 @@ public class SchedulerService {
 
         for (Patient patient : allPatients) {
             // Check if the patient has booked an appointment in the past 15 or 30 days
-            noShowService.checkAppointmentStatus(patient.getAdditionalPhone(), patient.getExternalPatientId());
+            noShowService.checkAppointmentStatus(patient.getHomePhone(), patient.getExternalPatientId());
             logger.info("Scheduled task finished at: {}", LocalDateTime.now(ZoneId.of("America/New_York")));
-
         }
     }
 }

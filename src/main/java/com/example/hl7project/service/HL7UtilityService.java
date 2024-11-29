@@ -1,22 +1,15 @@
 package com.example.hl7project.service;
 
 import com.example.hl7project.dto.AppointmentRequest;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.JsonObject;
 import org.springframework.stereotype.Service;
 
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
 public class HL7UtilityService {
-
-    private final ObjectMapper objectMapper = new ObjectMapper();
-
-    private AppointmentRequest appointmentRequest=new AppointmentRequest();
 
     public Map<String, List<String>> parseHl7Message(String hl7Message) {
         Map<String, List<String>> hl7Map = new HashMap<>();
@@ -132,7 +125,8 @@ public class HL7UtilityService {
                     .append(appointmentRequest.getSendingFacility() != null ? appointmentRequest.getSendingFacility() : "ECW").append("|")
                     .append(appointmentRequest.getReceivingApplication() != null ? appointmentRequest.getReceivingApplication() : "ECW").append("|")
                     .append(appointmentRequest.getReceivingFacility() != null ? appointmentRequest.getReceivingFacility() : "ECW").append("|")
-                    .append(appointmentRequest.getDateTimeOfMessage() != null ? appointmentRequest.getDateTimeOfMessage() : LocalDateTime.now()).append("||")
+                    .append(appointmentRequest.getDateTimeOfMessage() != null ? formatHL7Date(appointmentRequest.getDateTimeOfMessage()) : "").append("||")
+
                     .append(appointmentRequest.getMessageType() != null ? appointmentRequest.getMessageType() : "ADT^A28").append("|")
                     .append(appointmentRequest.getMessageControlId() != null ? appointmentRequest.getMessageControlId() : "").append("|")
                     .append(appointmentRequest.getProcessingId() != null ? appointmentRequest.getProcessingId() : "P").append("|")
@@ -187,7 +181,7 @@ public class HL7UtilityService {
                 hl7Message.append("||||||||||||")
                         .append(visit.getVisitNumber() != null ? visit.getVisitNumber() : "").append("|")
                         .append("|||||||||||||||||")
-                        .append(visit.getAdmitDate() != null ? visit.getAdmitDate() : "").append("\n");
+                        .append(visit.getAdmitDate() != null ? formatHL7Date(visit.getAdmitDate()) : "").append("\n");
             }
 
             // Build IN1 Segment
@@ -215,7 +209,15 @@ public class HL7UtilityService {
             return null;
         }
     }
+    public static String formatHL7Date(String hl7Date) throws Exception {
+        // Parse the original HL7 date string (e.g., 20241129T121813.629972300)
+        SimpleDateFormat originalFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+        Date date = originalFormat.parse(hl7Date);
 
+        // Format the date to show 'yyyyMMddHHmmss' (date + hour + minute + second)
+        SimpleDateFormat targetFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+        return targetFormat.format(date);
+    }
     public Map<String, String> extractPatientDetailsFromJson(AppointmentRequest json) {
         Map<String, String> patientDetails = new HashMap<>();
         JsonObject jsonObject = new JsonObject();
@@ -229,7 +231,7 @@ public class HL7UtilityService {
 
         return patientDetails;
     }
-    public StringBuilder buildSIUHl7Message(AppointmentRequest appointmentRequest) {
+    public String buildSIUHl7Message(AppointmentRequest appointmentRequest) {
         try {
             // Build MSH Segment
             StringBuilder hl7Message = new StringBuilder();
@@ -238,7 +240,7 @@ public class HL7UtilityService {
                     .append(appointmentRequest.getSendingFacility() != null ? appointmentRequest.getSendingFacility() : "ECW").append("|")
                     .append(appointmentRequest.getReceivingApplication() != null ? appointmentRequest.getReceivingApplication() : "ECW").append("|")
                     .append(appointmentRequest.getReceivingFacility() != null ? appointmentRequest.getReceivingFacility() : "ECW").append("|")
-                    .append(appointmentRequest.getDateTimeOfMessage() != null ? appointmentRequest.getDateTimeOfMessage() : LocalDateTime.now()).append("||")
+                    .append(appointmentRequest.getDateTimeOfMessage() != null ? formatHL7Date(appointmentRequest.getDateTimeOfMessage()) : formatHL7Date(String.valueOf(LocalDateTime.now()))).append("||")
                     .append(appointmentRequest.getMessageType() != null ? appointmentRequest.getMessageType() : "SIU^S12").append("|")
                     .append(appointmentRequest.getMessageControlId() != null ? appointmentRequest.getMessageControlId() : "").append("|")
                     .append(appointmentRequest.getProcessingId() != null ? appointmentRequest.getProcessingId() : "P").append("|")
@@ -246,19 +248,44 @@ public class HL7UtilityService {
 
             // Build SCH Segment (Schedule)
             hl7Message.append("SCH|")
-                    .append(appointmentRequest.getScheduleId() != null ? appointmentRequest.getScheduleId() : "").append("|")
-                    .append(appointmentRequest.getEventReasonCode() != null ? appointmentRequest.getEventReasonCode() : "").append("|")
-                    .append(appointmentRequest.getAppointmentType() != null ? appointmentRequest.getAppointmentType() : "").append("|")
-                    .append(appointmentRequest.getDateTimeOfTheEvent() != null ? appointmentRequest.getDateTimeOfTheEvent() : LocalDateTime.now()).append("|")
-                    .append(appointmentRequest.getDuration() != null ? appointmentRequest.getDuration() : "").append("|")
-                    .append(appointmentRequest.getDurationUnits() != null ? appointmentRequest.getDurationUnits() : "").append("\n");
+                    .append(appointmentRequest.getVisitAppointmentIdVendor() != null ? appointmentRequest.getVisitAppointmentIdVendor() : "").append("|") // Placer Appointment ID
+                    .append(appointmentRequest.getVisitAppointmentIdECW() != null ? appointmentRequest.getVisitAppointmentIdECW() : "").append("|") // Filler Appointment ID
+                    .append(appointmentRequest.getAppointmentReason() != null ? appointmentRequest.getAppointmentReason() : "").append("|") // Appointment Reason
+                    .append(appointmentRequest.getAppointmentVisitType() != null ? appointmentRequest.getAppointmentVisitType() : "").append("|") // Appointment Type
+                    .append(appointmentRequest.getStartDateTime() != null ? formatHL7Date(appointmentRequest.getStartDateTime()).toString() : "").append("|") // Start Date/Time
+                    .append(appointmentRequest.getEndDateTime() != null ? formatHL7Date(appointmentRequest.getEndDateTime().toString()) : "").append("|") // End Date/Time
+                    .append(appointmentRequest.getDuration() != null ? appointmentRequest.getDuration() : "").append("|") // Duration
+                    .append(appointmentRequest.getDurationUnits() != null ? appointmentRequest.getDurationUnits() : "").append("|") // Duration Units
+                    .append(appointmentRequest.getLocation() != null && appointmentRequest.getLocation().getLocationName() != null ? appointmentRequest.getLocation().getLocationName() : "").append("|") // Location
+                    .append(appointmentRequest.getProvider() != null && appointmentRequest.getProvider().getProviderId() != null ? appointmentRequest.getProvider().getProviderId() : "").append("|") // Provider ID
+                    .append(appointmentRequest.getResourceName() != null ? appointmentRequest.getResourceName() : "").append("|") // Resource Name
+                    .append(appointmentRequest.getEncounterNotes() != null ? appointmentRequest.getEncounterNotes() : "").append("\n"); // Notes
+            AppointmentRequest.Patient patient = appointmentRequest.getPatient();
+            if (patient != null) {
+                hl7Message.append("PID|||")
+                        .append(patient.getMrnNo() != null ? patient.getMrnNo() : "").append("||")
+                        .append(patient.getLastName() != null ? patient.getLastName() : "").append("^")
+                        .append(patient.getFirstName() != null ? patient.getFirstName() : "").append("^")
+                        .append(patient.getMiddleName() != null ? patient.getMiddleName() : "").append("||")
+                        .append(patient.getDob() != null ? patient.getDob() : "").append("|")
+                        .append(patient.getSex() != null ? patient.getSex() : "").append("|||");
+
+                AppointmentRequest.Address address = patient.getAddress();
+                if (address != null) {
+                    hl7Message.append(address.getStreet() != null ? address.getStreet() : "").append("^")
+                            .append(address.getCity() != null ? address.getCity() : "").append("^")
+                            .append(address.getState() != null ? address.getState() : "").append("^")
+                            .append(address.getZip() != null ? address.getZip() : "").append("|");
+                }
+                hl7Message.append(patient.getPhone() != null ? patient.getPhone() : "").append("\n");
+            }
 
 //            AppointmentRequest appointment = new AppointmentRequest();
             if (appointmentRequest != null) {
                 hl7Message.append("AIG|")
                         .append(appointmentRequest.getId() != null ? appointmentRequest.getId() : "").append("|")
                         .append(appointmentRequest.getResourceId() != null ? appointmentRequest.getResourceId() : "").append("|")
-                        .append(appointmentRequest.getStartDateTime() != null ? appointmentRequest.getStartDateTime() : "").append("|||")
+                        .append(appointmentRequest.getStartDateTime() != null ? formatHL7Date(appointmentRequest.getStartDateTime()) : "").append("|||")
                         .append(appointmentRequest.getDuration() != null ? appointmentRequest.getDuration() : "").append("|")
                         .append(appointmentRequest.getDurationUnits() != null ? appointmentRequest.getDurationUnits() : "").append("\n");
             }
@@ -281,7 +308,7 @@ public class HL7UtilityService {
                         .append(provider.getLastName() != null ? provider.getLastName() : "").append("^")
                         .append(provider.getFirstName() != null ? provider.getFirstName() : "").append("\n");
             }
-            return hl7Message;
+            return hl7Message.toString();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -388,19 +415,6 @@ public class HL7UtilityService {
 //        System.out.println("siu hl7 message:::"+hl7Message);
 //        return hl7Message;
 //    }
-
-    private String getCurrentTimestamp() {
-        return java.time.format.DateTimeFormatter.ofPattern("yyyyMMddHHmmss")
-                .format(java.time.LocalDateTime.now());
-    }
-
-    private String generateUniqueControlID() {
-        return java.util.UUID.randomUUID().toString();
-    }
-
-    private String getString(Map<String, Object> data, String key) {
-        return data.getOrDefault(key, "").toString();
-    }
 
     private String generateExternalMRN(String vendorPrefix) {
         // Use UUID for uniqueness or implement your logic here for unique generation

@@ -15,19 +15,17 @@ public interface PatientRepository extends JpaRepository<Patient, Long> {
 
     public List<Patient> findByName(String patientName);
 
-    @Query("SELECT p FROM Patient p WHERE p.firstName = :firstName AND p.lastName = :lastName AND p.dateOfBirth = :dateOfBirth")
+    @Query("SELECT p FROM Patient p WHERE p.firstName = :firstName AND p.lastName = :lastName AND p.dateOfBirth = :dateOfBirth ORDER BY p.createdAt DESC")
     Optional<Patient> findPatientByDetails(
             @Param("firstName") String firstName,
             @Param("lastName") String lastName,
             @Param("dateOfBirth") String dateOfBirth
     );
 
-    public Patient findByExternalPatientId(String patientId);
+    Patient findByExternalPatientId(String patientId);
 
-    public Boolean existsByExternalPatientId(String patientId);
+    List<Patient> findByHomePhone(String patientPhone);
 
-    public List<Patient> findByPhoneNumber(String patientPhone);
-
-    public boolean existsByName(String patientName);
+    boolean existsByName(String patientName);
 
 }
