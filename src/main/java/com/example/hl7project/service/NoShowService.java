@@ -1,5 +1,6 @@
 package com.example.hl7project.service;
 
+import com.example.hl7project.dto.AppointmentTestMessageProjection;
 import com.example.hl7project.model.Appointment;
 import com.example.hl7project.model.Patient;
 import com.example.hl7project.model.Providers;
@@ -11,7 +12,6 @@ import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
-import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -36,7 +36,7 @@ public class NoShowService {
     private TwillioService twillioService;
 
 
-    public void checkAppointmentsAndSendMessages() {
+    public void sendConfirmationMessageForAllAppointments() {
         List<Object[]> appointmentsData = appointmentRepository.findAppointmentsWithConfirmationStatus();
         System.out.println("appointmentsData" + appointmentsData.get(0));
         Map<String, LocalDateTime> lastAppointmentTimeMap = new HashMap<>();
@@ -47,29 +47,111 @@ public class NoShowService {
             String patientId = (String) data[1];
             String cmCode = (String) data[2];
             Timestamp createdAt = (Timestamp) data[3];
-            //Integer minutesElapsed = (Integer) data[4];
+            Long minutesElapsed = (Long) data[4];
             Integer isPreviousNew = (Integer) data[5];
             Patient patient = patientRepository.findByExternalPatientId(patientId);
 
             if (patient != null) {
                 String patientPhone = patient.getHomePhone();
                 // Check if previous appointment was "NEW" and if no message has been sent yet
-                if (isPreviousNew == 1 && !messageSentMap.getOrDefault(patientId, false)) {
-                    sendMessageToPatient(patientPhone, "Reminder: Please confirm your appointment.");
-                    messageSentMap.put(patientId, true);
-                } else if (lastAppointmentTimeMap.containsKey(patientId)) {
-                    LocalDateTime lastAppointmentTime = lastAppointmentTimeMap.get(patientId);
-                    Duration duration = Duration.between(lastAppointmentTime, createdAt.toLocalDateTime());
-                    System.out.println("patientPhone" + patientPhone);
-                    if (duration.toHours() == 3 && cmCode.equals("NEW")) {
-                        sendMessageToPatient(patientPhone, "Reminder: Your next appointment is in 3 hours.");
+                if (cmCode.equals("NEW")) {
+                    if (isPreviousNew.equals(0) || (isPreviousNew.equals(1) && minutesElapsed > 180)) {
+                        sendMessageToPatient(patientPhone, "your appointment is scheduled");
+                        updateConfirmationMessageCodeStatus(visitAppointmentId, "CRS");
+                        messageSentMap.put(patientId, true);
                     }
                 }
             }
-
-            lastAppointmentTimeMap.put(patientId, createdAt.toLocalDateTime());
         }
     }
+
+    public void testAppointmentMessage(Long appointmentID, String patientPhone, String patientId) {
+        // Fetch appointments from the repository
+        List<Object[]> appointments = appointmentRepository.findOneAppointmentWithNewConfirmationStatus(patientId);
+
+        // Iterate through the results and map them to the DTO manually
+        for (Object[] rawAppointment : appointments) {
+            // Manually map each Object[] to AppointmentTestMessageProjection
+            AppointmentTestMessageProjection appointment = new AppointmentTestMessageProjection(
+                    (Long) rawAppointment[0], // visitAppointmentId
+                    (String) rawAppointment[1], // externalPatientId
+                    (String) rawAppointment[2],               // cmCode
+                    (Timestamp) rawAppointment[3],            // createdAt
+                    ((Number) rawAppointment[4]).intValue(),  // minutesElapsed
+                    ((Number) rawAppointment[5]).intValue()   // isPreviousNew
+            );
+
+            System.out.println("appointment.getCmCode()::" + appointment.getCmCode());
+
+            // Compare visitAppointmentId to the provided appointmentID
+            boolean isMatchingAppointment = appointment.getVisitAppointmentId().equals(appointmentID);
+            System.out.println("appointment.getVisitAppointmentId().equals(appointmentID" + appointment.getVisitAppointmentId().equals(appointmentID));
+            System.out.println("appointment()::" + isMatchingAppointment);
+
+            if (isMatchingAppointment) {
+                System.out.println("appointment.getCmCode()::" + appointment.getCmCode());
+
+                // Compare cmCode using .equals() for value comparison
+                if (appointment.getCmCode().equals("NEW")) {
+                    if (appointment.getIsPreviousNew() == 0 ||
+                            (appointment.getIsPreviousNew() == 1 && appointment.getMinutesElapsed() > 180)) {
+                        // Send notification to the patient
+                        sendMessageToPatient(patientPhone, String.format("Your appointment is scheduled for %s .", appointment.getVisitAppointmentId()));
+                        // Update confirmation message code status
+                        updateConfirmationMessageCodeStatus(appointment.getVisitAppointmentId(), "CRS");
+
+                    }
+                }
+                break;
+            }
+        }
+    }
+
+//        Optional<AppointmentTestMessageProjection> appointmentTestMessageProjection = appointments.stream().filter(appt -> {
+//            Long appointmetId=appt.getVisitAppointmentId();
+//            System.out.println("appointmetId======"+appointmetId);
+//            System.out.println("appointmetId====="+appointmentID);
+//            Boolean check= appointmentID==appt.getVisitAppointmentId();
+//            System.out.println("check"+check);
+//            return appointmentID==appt.getVisitAppointmentId();
+//                }
+//        ).findFirst();
+//        appointmentTestMessageProjection.ifPresent(record -> {
+//            System.out.println("First Matching Record: " + record);
+//
+//            if (record.getCmCode() == "NEW") {
+//                if (record.getIsPreviousNew() == 0 || (record.getIsPreviousNew() == 1 && record.getMinutesElapsed() > 180)) {
+//                    sendMessageToPatient(patientPhone, "your appointment is scheduled");
+//                    updateConfirmationMessageCodeStatus("CRS");
+//                }
+//            }
+//        });
+
+
+    public void updateConfirmationMessageCodeStatus(Long visitAppointmentId, String status) {
+        Appointment optionalAppointment = appointmentRepository.findByVisitAppointmentId(visitAppointmentId);
+
+        if (optionalAppointment != null) {
+//            Appointment appointment = optionalAppointment.get();
+            optionalAppointment.setCmCode(status);
+            optionalAppointment.setConfirmRequestSent(true);
+            appointmentRepository.save(optionalAppointment); // Persist the changes
+        } else {
+            System.out.println("Appointment not found with ID: " + visitAppointmentId);
+        }
+    }
+//                else if (lastAppointmentTimeMap.containsKey(patientId)) {
+//                    LocalDateTime lastAppointmentTime = lastAppointmentTimeMap.get(patientId);
+//                    Duration duration = Duration.between(lastAppointmentTime, createdAt.toLocalDateTime());
+//                    System.out.println("patientPhone" + patientPhone);
+//                    if (duration.toHours() == 3 && cmCode.equals("CRS")) {
+//                        sendMessageToPatient(patientPhone, "Reminder: Your next appointment is in 3 hours.");
+//                    }
+//                }
+//            }
+
+//            lastAppointmentTimeMap.put(patientId, createdAt.toLocalDateTime());
+
 
     private void sendMessageToPatient(String patientPhone, String message) {
         // Placeholder for sending a message (you can integrate an actual messaging service)
@@ -119,7 +201,6 @@ public class NoShowService {
             // If confirmed, send the message for the second appointment immediately
             sendSecondAppointmentMessage(currentAppointment);
         } else {
-            // If not confirmed, schedule the message for the second appointment after a 5-minute delay
             scheduleMessageWithDelay(currentAppointment, 3 * 60 * 60 * 1000);
         }
     }

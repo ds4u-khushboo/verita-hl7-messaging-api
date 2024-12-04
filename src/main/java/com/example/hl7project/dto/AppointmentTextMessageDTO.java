@@ -9,6 +9,8 @@ public class AppointmentTextMessageDTO {
 
     private String externalPatientId;
     private LocalDate appointmentDate;
+
+
     private String visitStatusCode;
     private Long textMessageId;
     private String typeCode;

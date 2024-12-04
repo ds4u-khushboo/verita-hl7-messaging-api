@@ -18,9 +18,6 @@ public class MessageService {
     @Autowired
     private InboundSIUMessageRepo inboundSIUMessageRepo;
 
-//    @Autowired
-//    private InBoundADTMessageRepo inBoundADTMessageRepo;
-
     @Autowired
     private TextMessageRepository textMessageRepository;
 
@@ -28,8 +25,10 @@ public class MessageService {
         InboundHL7Message inboundHL7Message = new InboundHL7Message();
         inboundHL7Message.setRawMessage(hl7Message);
         inboundHL7Message.setMessageType(messageType);
+//        inboundHL7Message.setMessageText();
         inboundHL7Message.setPhoneNumber(phoneNumber);
         inboundHL7Message.setVisitAppointmentId(appointmentId);
+        inboundHL7Message.setSentAt(String.valueOf(LocalDateTime.now()));
         inboundHL7Message.setPatientId(patientId);
         inboundHL7Message.setCreatedAt(LocalDateTime.now());
         inboundSIUMessageRepo.save(inboundHL7Message);
@@ -53,6 +52,7 @@ public class MessageService {
         textMessage.setVisitAppointmentId(appointmentId);
         textMessage.setTypeCode(typeCode);
         textMessage.setCreatedAt(currentTime);
+        textMessage.setSentAt(LocalDateTime.now());
 
         // Save the text message entity to the database
         textMessageRepository.save(textMessage);

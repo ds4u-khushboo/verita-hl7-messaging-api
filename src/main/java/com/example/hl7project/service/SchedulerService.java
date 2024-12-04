@@ -1,26 +1,16 @@
 package com.example.hl7project.service;
 
-import com.example.hl7project.dto.AppointmentTextMessageDTO;
-import com.example.hl7project.model.Appointment;
 import com.example.hl7project.model.Patient;
-import com.example.hl7project.repository.AppointmentRepository;
 import com.example.hl7project.repository.PatientRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.*;
-import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 @Service
 @EnableScheduling
@@ -38,7 +28,7 @@ public class SchedulerService {
     private static final Logger logger = LoggerFactory.getLogger(SIUInboundService.class);
     private static final ZoneId EST_ZONE = ZoneId.of("America/New_York");
 
-    @Scheduled(cron = "0 0 10 * * ?", zone = "America/New_York") // Runs every day at 10:00 PM EST
+    @Scheduled(cron = "0 55 4 * * ?", zone = "America/New_York") // Runs every day at 10:00 PM EST
     public void noshowScheudler() {
         logger.info("Scheduled task started at: {}", LocalDateTime.now());
         siuInboundService.sendNoShowAppointmentMessages();
@@ -53,10 +43,10 @@ public class SchedulerService {
 //
 //    }
 
-    @Scheduled(cron = "0 0 10 * * ?", zone = "America/New_York")
+    @Scheduled(cron = "0 40 11 * * ?", zone = "America/New_York")
     public void multipleppoinmentsScheudlerWithStatus() {
         logger.info("Scheduled task started at: {}Scheduled task started at: {", LocalDateTime.now(ZoneId.of("America/New_York")));
-        noShowService.checkAppointmentsAndSendMessages();
+        noShowService.sendConfirmationMessageForAllAppointments();
         logger.info("Scheduled task finished at: {}", LocalDateTime.now(ZoneId.of("America/New_York")));
 
     }

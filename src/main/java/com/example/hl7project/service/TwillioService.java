@@ -40,5 +40,23 @@ public class TwillioService {
             e.printStackTrace();
         }
     }
+
+    public boolean sendMessage(String phoneNumber, String messageText) {
+        try {
+            Twilio.init(twilioConfig.getAccountSid(), twilioConfig.getAuthToken());
+            // Implement Twilio API integration here
+            Message message = Message.creator(
+                    new PhoneNumber(phoneNumber),
+                    new PhoneNumber(twilioConfig.getFromNumber()),
+                    messageText
+            ).create();
+
+            System.out.println("Message sent to: " + phoneNumber);
+            return message.getStatus() != Message.Status.FAILED;
+        } catch (Exception e) {
+            System.err.println("Error sending message to " + phoneNumber + ": " + e.getMessage());
+            return false;
+        }
+    }
 }
 

@@ -23,8 +23,14 @@ public class InboundHL7Message {
     @Column(name = "message_type", length = 255)
     private String messageType;
 
+    @Column(name = "message_text", length = 255)
+    private String messageText;
+
     @Column(name = "phone_number", length = 255)
     private String phoneNumber;
+
+    @Column(name = "sent_at", length = 255)
+    private String sentAt;
 
     @Column(name = "visit_appointment_id", length = 45)
     private String visitAppointmentId;
@@ -32,11 +38,17 @@ public class InboundHL7Message {
     @Column(name = "patient_id", length = 45)
     private String patientId;
 
-    public InboundHL7Message(Long patientId, String type, LocalDate now) {
-    }
 
     public InboundHL7Message() {
 
+    }
+
+    public String getMessageText() {
+        return messageText;
+    }
+
+    public void setMessageText(String messageText) {
+        this.messageText = messageText;
     }
 
     public Long getMessageId() {
@@ -94,6 +106,18 @@ public class InboundHL7Message {
 
     public void setPatientId(String patientId) {
         this.patientId = patientId;
+    }
+
+    public String getPhoneNumber() {
+        return phoneNumber;
+    }
+
+    public String getSentAt() {
+        return sentAt;
+    }
+
+    public void setSentAt(String sentAt) {
+        this.sentAt = sentAt;
     }
 
     // Getters and Setters

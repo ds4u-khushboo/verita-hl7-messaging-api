@@ -10,7 +10,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
@@ -39,6 +38,9 @@ public class SIUInboundService {
 
     @Autowired
     private AppointmentService appointmentService;
+
+    @Autowired
+    private NoShowService noShowService;
 
     @Autowired
     private SchedulerService schedulerService;
@@ -87,8 +89,6 @@ public class SIUInboundService {
             System.out.println("patientPhone:::" + patientPhone);
             String patientName = patientData.get("Patient Name");
             System.out.println("patientName:::" + patientName);
-
-            // patientService.savePatientData(patientData);
             logger.debug("Message type: {}, Appointment ID: {}, Patient Phone: {}", messageType, appointmentId, patientPhone);
             String noshowMessage = String.format("Your appointment was missed on %s at %s. Appointment ID: %s.",
                     schData.get("Appointment Date"), schData.get("Appointment Time"), appointmentId);
@@ -104,24 +104,25 @@ public class SIUInboundService {
 
                     boolean appointmentOptional = appointmentRepository.existsByVisitAppointmentId(appointmentId);
                     System.out.println("appointmentOptional::::" + appointmentOptional);
-//                    Patient patient=
-//                    System.out.println("appointmentId"+appointmentId);
                     if (appointmentOptional == false) {
 
                         System.out.println("appointmentOptional" + appointmentOptional);
-
+//                       String appointments= appointmentRepository.findOneAppointmentWithNewConfirmationStatus().toString();
+//                       System.out.println("appointments"+appointments);
                         appointmentService.saveAppointmentData(schData, mshData, patientData);
-                        updateFirstAppointmentIsConfirmRequestSent(String.valueOf(appointmentId));
                         String smsMessage = String.format("Your appointment is scheduled for %s at %s. Appointment ID: %s",
                                 schData.get("Appointment Date"), schData.get("Appointment Time"), appointmentId);
                         notificationService.sendAppointmentNotification(patientPhone, smsMessage);
+                        schedulerService.multipleppoinmentsScheudlerWithStatus();
+                        //      noShowService.testAppointmentMessage(appointmentId,patientPhone,patientData.get("External Patient ID"));
+
                         logger.info("Appointment scheduled and notification sent for Appointment ID: {}", appointmentId);
                         messageService.saveMessageEntity(messageType, hl7Message, patientPhone, String.valueOf(appointmentId), "");
                         updateFirstAppointmentIsConfirmRequestSent(String.valueOf(appointmentId));
-//                        if(appointmentRepository.findByPatientAndAppointmentDate(patientName,schData.get("Appointment Date")))
                     } else {
                         logger.error("Appointment not found for Appointment ID: {}", appointmentId);
                     }
+
                     break;
 
                 case "SIU^S14":
@@ -130,38 +131,46 @@ public class SIUInboundService {
                     if (appointment != null && appointment.getVisitStatusCode() != "N/S") {
 //                        Appointment noShowAppointment = appointment;
                         System.out.println("appointmentOptional" + appointment);
-                        if (appointment.getVisitStatusCode().equals("PEN")) {
+                        if (appointment.getVisitStatusCode().equals("PEN") || appointment.getVisitStatusCode().equals("N/S")) {
 //                            schedulerService.sendNoShowAppointmentMessages();
 //                            notificationService.sendNoShowNotification(patientPhone,noshowMessage);
 //                            logger.info("Appointment is already marked as No-Show. No further action needed for Appointment ID: {}", appointmentId);
 //                        } else {
                             appointment.setVisitStatusCode("N/S");  // Update the visit status to No-Show
                             appointmentRepository.save(appointment);  // Save the updated appointment
-                            System.out.println("saved app");
-                            updateFirstAppointmentIsConfirmRequestSent(String.valueOf(appointmentId));
-                            // Log the status update
-                            logger.info("Appointment ID: {} marked as No-Show.", appointmentId);
 
-                            // Step 4: Send the No-Show message to the patient
-
-                            // Save the message to the database (if applicable)
-                            messageService.saveMessageEntity(messageType, hl7Message, patientPhone, String.valueOf(appointmentId), "");
-
-                            // Send the No-Show message (using your existing service method)
-                            noShowServiceImpl.sendNoShowMessage(patientName, String.valueOf(appointmentId));
-
-                            // Optionally, send additional notifications if necessary (uncomment if needed)
-                            notificationService.sendNoShowNotification(patientPhone, noshowMessage);
-
-                            // Optionally, call any other method after the message is sent
-                            schedulerService.noshowScheudler();
-
+//                            if (appointment.getVisitStatusCode().equals("N/S")) {
+                            appointment.setVisitStatusCode("N/S");  // Update the visit status to No-Show
+                            appointment.setAppointmentDate(schData.get("Appointment Date"));
+                            appointment.setAppointmentTime(schData.get("Appointment Time"));
+                            appointment.setAppointmentDatetime(schData.get("Appointment Date") + schData.get("Appointment Time"));
+                            appointmentRepository.save(appointment);  // Save the updated appointment
                         }
+                        System.out.println("saved app");
+                        updateFirstAppointmentIsConfirmRequestSent(String.valueOf(appointmentId));
+                        // Log the status update
+                        logger.info("Appointment ID: {} marked as No-Show.", appointmentId);
+
+                        // Save the message to the database (if applicable)
+                        messageService.saveMessageEntity(messageType, hl7Message, patientPhone, String.valueOf(appointmentId), "");
+
+                        // Send the No-Show message (using your existing service method)
+                        noShowServiceImpl.sendNoShowMessage(patientName, patientPhone, LocalDate.parse(appointment.getAppointmentDate()), String.valueOf(appointmentId));
+
+                        // Optionally, send additional notifications if necessary (uncomment if needed)
+                        notificationService.sendNoShowNotification(patientPhone, noshowMessage);
+
+                        // Optionally, call any other method after the message is sent
+                        schedulerService.noshowScheudler();
+
                     } else {
                         logger.warn("No appointment found with Appointment ID: {}", appointmentId);
                     }
                     break;
-
+                case "SIU^S22":
+                    List<Appointment> appointment1 = appointmentRepository.deleteByVisitAppointmentId(appointmentId);
+                    logger.info("Appointment ID: {} is deleted.", appointmentId);
+                    System.out.println("the appointment is deleted");
                 default:
                     logger.error("Unknown message type: {}", messageType);
                     throw new Exception("Unknown message type: " + messageType);
@@ -182,10 +191,10 @@ public class SIUInboundService {
             Patient patient = patientRepository.findByExternalPatientId(appointment.getExternalPatientId());
             System.out.println("Processing appointment for patient: " + patient.getName() + " on " + appointment.getAppointmentDate());
 //            long daysSinceAppointment = ChronoUnit.DAYS.between(appointment.getAppointmentDate(), LocalDate.now());
-
+            System.out.println("patient.getHomePhone()" + patient.getHomePhone());
 //            System.out.println("patient.getAdditionalPhone()" + patient.getAdditionalPhone());
             if (appointment.getTypeCode() == null) {
-                noShowServiceImpl.sendNoShowMessage(patient.getName(), appointment.getVisitAppointmentId().toString());
+                noShowServiceImpl.sendNoShowMessage(patient.getName(), patient.getHomePhone(), appointment.getAppointmentDate(), String.valueOf(appointment.getVisitAppointmentId()));
             } else if (appointment.getTypeCode().equals("NS") && appointment.getDays() > 14) {
                 noShowServiceImpl.sendNoShowReminderMessage(patient.getName(), patient.getHomePhone(), appointment.getAppointmentDate(), String.valueOf(appointment.getVisitAppointmentId()), appointment.getTextMessageId());
             } else if (appointment.getTypeCode().equals("NSR1") && appointment.getDays() > 28) {

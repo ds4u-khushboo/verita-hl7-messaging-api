@@ -46,6 +46,9 @@ public class Appointment {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Column(name = "cm_code")
+    private String cmCode;
+
     @Column(name = "is_confirm_request_sent")
     private Boolean isConfirmRequestSent;
     @Column(name = "is_confirm_request_replied")
@@ -128,6 +131,14 @@ public class Appointment {
 
     public void setConfirmRequestReplied(boolean confirmRequestReplied) {
         isConfirmRequestReplied = confirmRequestReplied;
+    }
+
+    public String getCmCode() {
+        return cmCode;
+    }
+
+    public void setCmCode(String cmCode) {
+        this.cmCode = cmCode;
     }
 
     public boolean isConfirmed() {

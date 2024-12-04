@@ -47,7 +47,7 @@ public class PatientService {
         patient.setSex(patientData.get("Sex"));
         patient.setRace(patientData.get("Race"));
         patient.setAddress(patientData.get("Patient Address"));
-        patient.setPhoneNumber(patientData.get("Home Phone Number"));
+        patient.setHomePhone(patientData.get("Home Phone Number"));
         patient.setMaritalStatus(patientData.get("Marital Status"));
         patientRepository.save(patient);
 

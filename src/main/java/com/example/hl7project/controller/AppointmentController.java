@@ -43,6 +43,9 @@ public class AppointmentController {
     private SIUInboundService siuInboundService;
 
     @Autowired
+    private TwilioTest twilioTest;
+
+    @Autowired
     private HL7UtilityService hl7UtilityService;
 
     @Autowired
@@ -63,7 +66,17 @@ public class AppointmentController {
         return siuInboundService.processMessage(hl7mesage);
     }
 
-
+    @GetMapping("/process")
+    public ResponseEntity<String> processMessages(@RequestParam Long patientId) {
+        try {
+            // Trigger message processing
+            twilioTest.processMessage(patientId);
+            return ResponseEntity.ok("Message processing completed successfully.");
+        } catch (Exception e) {
+            // Handle and respond with errors
+            return ResponseEntity.status(500).body("Error during message processing: " + e.getMessage());
+        }
+    }
 //    @PostMapping("/sendSMs")
 //    public ResponseEntity<String> sendSMS(@RequestBody MessageDTO message) {
 //        return appointmentService.getSmsConfirm(message);
@@ -208,7 +221,13 @@ public class AppointmentController {
 //    }
     @GetMapping("messgaeByStatus")
     public void getMessages() {
-        schedulerService.multipleppoinmentsScheudlerWithStatus();
+        try {
+            schedulerService.multipleppoinmentsScheudlerWithStatus();
+            System.out.println("multiple appointment come");
+        }
+        catch (Exception e){
+            e.printStackTrace();
+        }
     }
 
     @GetMapping("/providerName")
@@ -220,7 +239,7 @@ public class AppointmentController {
     @GetMapping("/appointmetnCheck")
     private void checkStatau() {
         schedulerService.checkAppointmentsAndSendMessages();
-        System.out.println("checke dappointment status");
+        System.out.println("checked appointment status");
     }
 
     @GetMapping("/count-by-type")

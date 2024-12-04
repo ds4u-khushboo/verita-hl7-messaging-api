@@ -1,7 +1,9 @@
 package com.example.hl7project.repository;
 
+import com.example.hl7project.dto.AppointmentTestMessageProjection;
 import com.example.hl7project.model.Appointment;
 import com.example.hl7project.model.Patient;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -77,6 +79,21 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
             "ORDER BY created_at ASC) = 'NEW' THEN 1 ELSE 0 END AS IsPreviousNew " +
             "FROM appointments WHERE cm_code IN ('NEW', 'CRS', 'CRR0', 'CRR1')", nativeQuery = true)
     List<Object[]> findAppointmentsWithConfirmationStatus();
+        @Query("SELECT a FROM Appointment a WHERE a.externalPatientId = :patientId ORDER BY a.appointmentDate DESC")
+        List<Appointment> findLastAppointmentsByPatientId(@Param("patientId") Long patientId, Pageable pageable);
+
+    @Query(value = "SELECT visit_appointment_id AS visitAppointmentId, " +
+            "external_patient_id AS externalPatientId, " +
+            "cm_code AS cmCode, " +
+            "created_at AS createdAt, " +
+            "TIMESTAMPDIFF(MINUTE, created_at, NOW()) AS minutesElapsed, " +
+            "CASE WHEN LAG(cm_code) OVER (PARTITION BY external_patient_id, DATE(created_at) " +
+            "ORDER BY created_at ASC) = 'NEW' THEN 1 ELSE 0 END AS isPreviousNew " +
+            "FROM appointments WHERE cm_code IN ('NEW', 'CRS', 'CRR0', 'CRR1') " +
+            "AND DATE(created_at) = CURDATE() AND external_patient_id=:externalPatientId",
+            nativeQuery = true)
+    List<Object[]> findOneAppointmentWithNewConfirmationStatus(@Param("externalPatientId") String externalPatientId);
+
 
     @Query("SELECT a FROM Appointment a WHERE a.patient.externalPatientId = :patientId ORDER BY a.appointmentTime DESC")
     Appointment findLatestByPatient(@Param("patientId") Long patientId);

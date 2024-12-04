@@ -67,9 +67,6 @@ public class Patient {
     @Column(name = "language", length = 255)
     private String language;
 
-    @Column(name = "phone_number", length = 20)
-    private String phoneNumber;
-
     @Column(name = "updated_at")
     private java.time.LocalDateTime updatedAt;
 
@@ -127,6 +124,10 @@ public class Patient {
 
     public void setHomePhone(String homePhone) {
         this.homePhone = homePhone;
+    }
+
+    public String getHomePhone() {
+        return homePhone;
     }
 
     public String getPrimaryLanguage() {
@@ -199,14 +200,6 @@ public class Patient {
 
     public void setLanguage(String language) {
         this.language = language;
-    }
-
-    public String getHomePhone() {
-        return phoneNumber;
-    }
-
-    public void setPhoneNumber(String phoneNumber) {
-        this.phoneNumber = phoneNumber;
     }
 
     public LocalDateTime getUpdatedAt() {

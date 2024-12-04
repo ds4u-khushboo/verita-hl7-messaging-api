@@ -45,19 +45,20 @@ public class AppointmentService {
         appointment.setAppointmentType(schData.get("Appointment Type"));
         appointment.setNotes(schData.get("Encounter Notes"));
         appointment.setExternalPatientId(patientData.get("External Patient ID"));
+        appointment.setCmCode("NEW");
         String messageDateTime = mshData.get("messageDateTime");
         if (messageDateTime != null) {
             try {
                 DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
-                LocalDateTime createdAt = LocalDateTime.parse(messageDateTime, formatter);
-                appointment.setCreatedAt(createdAt);
+//                LocalDateTime createdAt = LocalDateTime.parse(messageDateTime, formatter);
+                appointment.setCreatedAt(LocalDateTime.now());
             } catch (DateTimeParseException e) {
                 System.err.println("Error parsing messageDateTime: " + messageDateTime);
                 e.printStackTrace();
             }
         }
-        System.out.println("appointment data saved!!!");
         appointmentRepository.save(appointment);
+        System.out.println("appointment data saved!!!");
         return appointment;
     }
 

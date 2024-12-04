@@ -23,9 +23,12 @@ public class NoShowServiceImpl {
     @Autowired
     private TwillioService twillioService;
 
-    public void sendNoShowMessage(String patientName, String appointmentId) {
+    public void sendNoShowMessage(String patientName, String patientPhone, LocalDate appointmentDate,String appointmentId) {
+        String messageBody = "";
         String noshowMessage = String.format(twilioConfig.getAppNoShow(), patientName, appointmentId);
-//        twillioService.getTwilioService(noshowMessage, "+91" + patientPhone);
+        messageBody = String.format(twilioConfig.getAppNoShow(), patientName, appointmentDate, appointmentId);
+        twillioService.getTwilioService(messageBody, "91" + patientPhone);
+        System.out.println("message Sent");
         TextMessage textMessage = new TextMessage();
         textMessage.setVisitAppointmentId(appointmentId);
         textMessage.setMessageBody(noshowMessage);
