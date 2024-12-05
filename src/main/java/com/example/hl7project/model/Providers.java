@@ -9,6 +9,9 @@ import java.util.List;
 public class Providers {
 
     @Id
+    @Column(name = "provider_id", length = 50)
+    private String providerID;  // Unique provider ID
+
     @Column(name = "provider_code", length = 50)
     private String providerCode;  // Unique provider ID
 
@@ -39,6 +42,22 @@ public class Providers {
 
     public String getProviderCode() {
         return providerCode;
+    }
+
+    public String getProviderID() {
+        return providerID;
+    }
+
+    public void setProviderID(String providerID) {
+        this.providerID = providerID;
+    }
+
+    public List<Appointment> getAppointmentList() {
+        return appointmentList;
+    }
+
+    public void setAppointmentList(List<Appointment> appointmentList) {
+        this.appointmentList = appointmentList;
     }
 
     public void setProviderCode(String providerCode) {

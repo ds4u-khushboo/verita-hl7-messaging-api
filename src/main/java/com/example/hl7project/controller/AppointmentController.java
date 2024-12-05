@@ -43,9 +43,6 @@ public class AppointmentController {
     private SIUInboundService siuInboundService;
 
     @Autowired
-    private TwilioTest twilioTest;
-
-    @Autowired
     private HL7UtilityService hl7UtilityService;
 
     @Autowired
@@ -66,17 +63,17 @@ public class AppointmentController {
         return siuInboundService.processMessage(hl7mesage);
     }
 
-    @GetMapping("/process")
-    public ResponseEntity<String> processMessages(@RequestParam Long patientId) {
-        try {
-            // Trigger message processing
-            twilioTest.processMessage(patientId);
-            return ResponseEntity.ok("Message processing completed successfully.");
-        } catch (Exception e) {
-            // Handle and respond with errors
-            return ResponseEntity.status(500).body("Error during message processing: " + e.getMessage());
-        }
-    }
+//    @GetMapping("/process")
+//    public ResponseEntity<String> processMessages(@RequestParam Long patientId) {
+//        try {
+//            // Trigger message processing
+//            twilioTest.processMessage(patientId);
+//            return ResponseEntity.ok("Message processing completed successfully.");
+//        } catch (Exception e) {
+//            // Handle and respond with errors
+//            return ResponseEntity.status(500).body("Error during message processing: " + e.getMessage());
+//        }
+//    }
 //    @PostMapping("/sendSMs")
 //    public ResponseEntity<String> sendSMS(@RequestBody MessageDTO message) {
 //        return appointmentService.getSmsConfirm(message);
@@ -219,16 +216,16 @@ public class AppointmentController {
 //    public NoShowReportDTO getNoShowReport() {
 //        return appointmentService.getNoShowReport();
 //    }
-    @GetMapping("messgaeByStatus")
-    public void getMessages() {
-        try {
-            schedulerService.multipleppoinmentsScheudlerWithStatus();
-            System.out.println("multiple appointment come");
-        }
-        catch (Exception e){
-            e.printStackTrace();
-        }
-    }
+//    @GetMapping("messgaeByStatus")
+//    public void getMessages() {
+//        try {
+//            schedulerService.multipleppoinmentsScheudlerWithStatus();
+//            System.out.println("multiple appointment come");
+//        }
+//        catch (Exception e){
+//            e.printStackTrace();
+//        }
+//    }
 
     @GetMapping("/providerName")
     private void getAppByProvider(@RequestParam Long patientId) {

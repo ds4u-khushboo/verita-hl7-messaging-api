@@ -43,13 +43,13 @@ public class SchedulerService {
 //
 //    }
 
-    @Scheduled(cron = "0 40 11 * * ?", zone = "America/New_York")
-    public void multipleppoinmentsScheudlerWithStatus() {
-        logger.info("Scheduled task started at: {}Scheduled task started at: {", LocalDateTime.now(ZoneId.of("America/New_York")));
-        noShowService.sendConfirmationMessageForAllAppointments();
-        logger.info("Scheduled task finished at: {}", LocalDateTime.now(ZoneId.of("America/New_York")));
-
-    }
+//    @Scheduled(cron = "0 40 11 * * ?", zone = "America/New_York")
+//    public void multipleppoinmentsScheudlerWithStatus() {
+//        logger.info("Scheduled task started at: {}Scheduled task started at: {", LocalDateTime.now(ZoneId.of("America/New_York")));
+//        noShowService.sendConfirmationMessageForAllAppointments();
+//        logger.info("Scheduled task finished at: {}", LocalDateTime.now(ZoneId.of("America/New_York")));
+//
+//    }
 
     @Scheduled(cron = "0 0 10 * * ?", zone = "America/New_York")
     public void checkAppointmentsAndSendMessages() {

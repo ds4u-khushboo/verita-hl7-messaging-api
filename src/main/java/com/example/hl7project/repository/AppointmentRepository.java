@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -102,4 +103,24 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     List<Appointment> findAppointmentsByPatientAndDateRange(@Param("phoneNumber") String phoneNumber,
                                                             @Param("startDate") LocalDateTime startDate,
                                                             @Param("endDate") LocalDateTime endDate);
-}
+
+
+    @Query("SELECT COUNT(a) > 0 FROM Appointment a " +
+            "JOIN Providers p ON a.providers.providerID = p.providerID " +
+            "WHERE a.externalPatientId = :patientId " +
+            "AND p.specialty = :specialty " +
+            "AND a.appointmentDate BETWEEN :startDate AND :endDate")
+    boolean existsNewAppointmentWithSameSpecialty(
+            @Param("patientId") String patientId,
+            @Param("specialty") String specialty,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate);
+
+//    public boolean existsNewAppointmentWithDifferentProvider(String externalPatientId, LocalDate startDate, LocalDate endDate, String specialty) {
+        // Implement a query to check for any appointment for the patient with a different provider within the date range
+//        Appointment fin(externalPatientId, startDate, endDate, specialty).isPresent();
+
+//        Appointment findByExternalPatientIdAndaAndAppointmentDateAndpAndProvidersNot
+    }
+
+

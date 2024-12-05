@@ -302,24 +302,24 @@ public class NoShowService {
 //                .orElseThrow(() -> new RuntimeException("Patient not found"));
 //        sendMessageToPatient(patient.getHomePhone(), message);
 //    }
-    private void rescheduleAppointment(Appointment appointment) {
-        Providers newProvider = findAnotherProviderWithSameSpecialty(appointment.getProviders().getSpecialty());
-        if (newProvider != null) {
-            Appointment newAppointment = new Appointment();
-            newAppointment.setPatient(appointment.getPatient());
-            newAppointment.setProviders(newProvider);
-            newAppointment.setAppointmentDate(LocalDate.now().plusDays(7).toString()); // 7 days later
-            newAppointment.setVisitStatusCode("R/S"); // Rescheduled status
-            appointmentRepository.save(newAppointment);
-
-            String message = String.format("Dear %s, your missed appointment has been rescheduled to %s. Please confirm the new appointment.",
-                    appointment.getPatient().getName(), newAppointment.getAppointmentDate());
-            twillioService.getTwilioService(message, "+91" + appointment.getPatient().getHomePhone());
-
-            System.out.println("Message Sent");
-            System.out.println("Rescheduled appointment for patient " + appointment.getPatient().getName());
-        }
-    }
+//    private void rescheduleAppointment(Appointment appointment) {
+//        Providers newProvider = findAnotherProviderWithSameSpecialty(appointment.getProviders().getSpecialty());
+//        if (newProvider != null) {
+//            Appointment newAppointment = new Appointment();
+//            newAppointment.setPatient(appointment.getPatient());
+//            newAppointment.setProviders(newProvider);
+//            newAppointment.setAppointmentDate(LocalDate.now().plusDays(7).toString()); // 7 days later
+//            newAppointment.setVisitStatusCode("R/S"); // Rescheduled status
+//            appointmentRepository.save(newAppointment);
+//
+//            String message = String.format("Dear %s, your missed appointment has been rescheduled to %s. Please confirm the new appointment.",
+//                    appointment.getPatient().getName(), newAppointment.getAppointmentDate());
+//            twillioService.getTwilioService(message, "+91" + appointment.getPatient().getHomePhone());
+//
+//            System.out.println("Message Sent");
+//            System.out.println("Rescheduled appointment for patient " + appointment.getPatient().getName());
+//        }
+//    }
 
     private Providers findAnotherProviderWithSameSpecialty(String specialty) {
         return providerRepository.findBySpecialty(specialty).stream().findFirst().orElse(null);

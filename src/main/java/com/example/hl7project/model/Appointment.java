@@ -68,7 +68,7 @@ public class Appointment {
     private Patient patient;
 
     @ManyToOne
-    @JoinColumn(name = "provider_code")
+    @JoinColumn(name = "provider_id")
     private Providers providers;
 //    @OneToMany(mappedBy = "appointment", cascade = CascadeType.ALL)
 //    private List<InboundHL7Message> inboundMessages;

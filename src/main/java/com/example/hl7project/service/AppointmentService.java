@@ -2,10 +2,13 @@ package com.example.hl7project.service;
 
 import com.example.hl7project.model.Appointment;
 import com.example.hl7project.model.Patient;
+import com.example.hl7project.model.Providers;
 import com.example.hl7project.repository.AppointmentRepository;
 import com.example.hl7project.repository.PatientRepository;
+import com.example.hl7project.repository.ProviderRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -25,7 +28,10 @@ public class AppointmentService {
     @Autowired
     private PatientService patientService;
 
-    public Appointment saveAppointmentData(Map<String, String> schData, Map<String, String> mshData, Map<String, String> patientData) {
+    @Autowired
+    private ProviderRepository providerRepository;
+
+    public Appointment saveAppointmentData(Map<String, String> schData, Map<String, String> pv1Data, Map<String, String> mshData, Map<String, String> patientData) {
 
         Patient patient = patientRepository.findByExternalPatientId(patientData.get("External Patient ID"));
         if (patient == null) {
@@ -46,6 +52,14 @@ public class AppointmentService {
         appointment.setNotes(schData.get("Encounter Notes"));
         appointment.setExternalPatientId(patientData.get("External Patient ID"));
         appointment.setCmCode("NEW");
+        String providerCode = pv1Data.get("Provider");
+        Providers provider = providerRepository.findByProviderCode(providerCode); // Assuming `providerCode` is the unique identifier for the provider
+        if (provider != null) {
+            appointment.setProviders(provider);
+        } else {
+            System.err.println("Provider not found with code: " + providerCode);
+            // You may want to handle this case by throwing an exception or setting a default provider
+        }
         String messageDateTime = mshData.get("messageDateTime");
         if (messageDateTime != null) {
             try {
@@ -65,7 +79,7 @@ public class AppointmentService {
     public Appointment updateAppointmentData(Map<String, String> schData, Map<String, String> mshData) {
         // Retrieve the existing appointment using the appointment ID from schData
         Long appointmentId = Long.valueOf(schData.get("Visit/Appointment ID"));
-       Appointment existingAppointment = appointmentRepository.findByVisitAppointmentId(appointmentId);
+        Appointment existingAppointment = appointmentRepository.findByVisitAppointmentId(appointmentId);
 
         if (existingAppointment == null) {
             // If the appointment is not found, you can handle the error or throw an exception
@@ -96,6 +110,7 @@ public class AppointmentService {
 
         return existingAppointment;
     }
+
     public void deleteAppointment(Long appointmentId) {
         appointmentRepository.deleteByVisitAppointmentId(appointmentId);
     }

@@ -10,13 +10,13 @@ public class NotificationService {
     private TwillioService twillioService;
 
     public void sendAppointmentNotification(String phoneNumber, String message) {
-        twillioService.getTwilioService(message, "91"+ phoneNumber);
+        twillioService.getTwilioService(message+"Scheduled", "91"+ phoneNumber);
     }
 
     public void sendPatientCreateNotification(String phoneNumber, String message) {
         twillioService.getTwilioService(message, "91" + phoneNumber);
     }
     public void sendNoShowNotification(String phoneNumber, String message) {
-        twillioService.getTwilioService(message, "91" +phoneNumber);
+        twillioService.getTwilioService(message+"ns", "91" +phoneNumber);
     }
 }

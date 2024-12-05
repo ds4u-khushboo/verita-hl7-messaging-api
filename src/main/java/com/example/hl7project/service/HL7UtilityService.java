@@ -209,6 +209,7 @@ public class HL7UtilityService {
             return null;
         }
     }
+
     public static String formatHL7Date(String hl7Date) throws Exception {
         // Parse the original HL7 date string (e.g., 20241129T121813.629972300)
         SimpleDateFormat originalFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
@@ -218,6 +219,7 @@ public class HL7UtilityService {
         SimpleDateFormat targetFormat = new SimpleDateFormat("yyyyMMddHHmmss");
         return targetFormat.format(date);
     }
+
     public Map<String, String> extractPatientDetailsFromJson(AppointmentRequest json) {
         Map<String, String> patientDetails = new HashMap<>();
         JsonObject jsonObject = new JsonObject();
@@ -231,6 +233,7 @@ public class HL7UtilityService {
 
         return patientDetails;
     }
+
     public String buildSIUHl7Message(AppointmentRequest appointmentRequest) {
         try {
             // Build MSH Segment
@@ -503,7 +506,7 @@ public class HL7UtilityService {
 
     public Map<String, String> extractDataFromMshSegment(List<String> mshSegment) {
         Map<String, String> mshData = new HashMap<>();
-        System.out.println("SCH Segment: " + mshSegment);
+        System.out.println("MSH Segment: " + mshSegment);
         // Accessing relevant indices based on the SCH segment structure
         mshData.put("Segment Type ID", (mshSegment.size() > 0) ? mshSegment.get(0) : null); // SCH.00 - Required
         mshData.put("messageType", (mshSegment.size() > 8) ? mshSegment.get(8) : null); // SCH.08 - Required
@@ -511,5 +514,17 @@ public class HL7UtilityService {
 
         System.out.println("mshData::: " + mshData);
         return mshData;
+    }
+
+    public Map<String, String> extractDataFromPV1Segment(List<String> pv1Segment) {
+        Map<String, String> pv1Data = new HashMap<>();
+        System.out.println("MSH Segment: " + pv1Segment);
+        // Accessing relevant indices based on the SCH segment structure
+        pv1Data.put("Provider", (pv1Segment.size() > 7) ? pv1Segment.get(7) : null);
+        pv1Data.put("externalVisitID", (pv1Segment.size() > 19) ? pv1Segment.get(19) : null);
+        pv1Data.put("assignedLocation", (pv1Segment.size() > 3) ? pv1Segment.get(3) : null);
+
+        System.out.println("mshData::: " + pv1Data);
+        return pv1Data;
     }
 }

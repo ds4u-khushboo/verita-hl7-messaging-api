@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @EnableScheduling
@@ -23,11 +24,11 @@ public class NoShowServiceImpl {
     @Autowired
     private TwillioService twillioService;
 
-    public void sendNoShowMessage(String patientName, String patientPhone, LocalDate appointmentDate,String appointmentId) {
+    public void sendNoShowMessage(String patientName, String patientPhone, String appointmentDate,String appointmentId) {
         String messageBody = "";
         String noshowMessage = String.format(twilioConfig.getAppNoShow(), patientName, appointmentId);
         messageBody = String.format(twilioConfig.getAppNoShow(), patientName, appointmentDate, appointmentId);
-        twillioService.getTwilioService(messageBody, "91" + patientPhone);
+        twillioService.getTwilioService(messageBody+":NS", "91" + patientPhone);
         System.out.println("message Sent");
         TextMessage textMessage = new TextMessage();
         textMessage.setVisitAppointmentId(appointmentId);
@@ -36,8 +37,15 @@ public class NoShowServiceImpl {
         textMessageRepository.save(textMessage);
     }
 
+    public String generateUUID() {
+        UUID guid = UUID.randomUUID();
+
+        // Print the GUID
+        return guid.toString();
+
+    }
     //send no show reminder 1
-    public void sendNoShowReminderMessage(String patientName, String patientPhone, LocalDate appointmentDate, String appointmentId, Long textMessageId) {
+    public void sendNoShowReminderMessage(String patientName, String patientPhone, String appointmentId, Long textMessageId) {
 
         Optional<TextMessage> textMessageOptional = textMessageRepository.findById(textMessageId);
 
@@ -50,13 +58,14 @@ public class NoShowServiceImpl {
                 textMessage.setTypeCode("NSR1");
                 System.out.println("patientPhone::" + patientPhone);
 
-                messageBody = String.format(twilioConfig.getAppNoShow(), patientName, appointmentDate, appointmentId);
+                String uniqueCode=
+                messageBody = String.format(twilioConfig.getWeeklyReminderMessage(), patientName, appointmentId);
                 twillioService.getTwilioService(messageBody, "91" + patientPhone);
                 System.out.println("patientPhone::" + patientPhone);
                 System.out.println("message Sent:::");
             } else if (typeCode.equals("NSR1")) {
                 textMessage.setTypeCode("NSR2");
-                messageBody = String.format(twilioConfig.getAppNoShow(), patientName, appointmentDate, appointmentId);
+                messageBody = String.format(twilioConfig.getMonthlyReminderMessage(), patientName, appointmentId);
                 twillioService.getTwilioService(messageBody, "91" + patientPhone);
                 System.out.println("message Sent");
             }

@@ -1,5 +1,6 @@
 package com.example.hl7project.service;
 
+import com.example.hl7project.configuration.TwilioConfig;
 import com.example.hl7project.dto.*;
 import com.example.hl7project.model.*;
 import com.example.hl7project.repository.*;
@@ -34,16 +35,22 @@ public class SIUInboundService {
     private PatientRepository patientRepository;
 
     @Autowired
+    private ProviderRepository providerRepository;
+
+    @Autowired
     private HL7UtilityService messageProcessingService;
 
     @Autowired
     private AppointmentService appointmentService;
 
     @Autowired
-    private NoShowService noShowService;
+    private AppointmentConfirmationService appointmentConfirmationService;
 
     @Autowired
     private SchedulerService schedulerService;
+
+    @Autowired
+    private TwilioConfig twilioConfig;
 
     @Autowired
     private NotificationService notificationService;
@@ -76,10 +83,18 @@ public class SIUInboundService {
                 logger.error("PID segment not found in message: {}", hl7Message);
                 throw new Exception("PID segment not found.");
             }
+
+            List<String> pv1Segment = hl7Map.get("PV1");
+            if (pidSegment == null) {
+                logger.error("PV1 not found in message: {}", hl7Message);
+                throw new Exception("PV1 segment not found.");
+            }
+
             logger.debug("Extracting patient data from PID segment");
             Map<String, String> patientData = messageProcessingService.extractPatientData(pidSegment);
             Map<String, String> schData = messageProcessingService.extractDataFromSchSegment(schSegment);
             Map<String, String> mshData = messageProcessingService.extractDataFromMshSegment(mshSegment);
+            Map<String, String> pv1Data = messageProcessingService.extractDataFromPV1Segment(pv1Segment);
 
             String messageType = mshData.get("messageType");
             System.out.println("messageType:::" + messageType);
@@ -89,14 +104,16 @@ public class SIUInboundService {
             System.out.println("patientPhone:::" + patientPhone);
             String patientName = patientData.get("Patient Name");
             System.out.println("patientName:::" + patientName);
+            String Provider = pv1Data.get("Provider");
+            System.out.println("Provider:::" + Provider);
+
             logger.debug("Message type: {}, Appointment ID: {}, Patient Phone: {}", messageType, appointmentId, patientPhone);
-            String noshowMessage = String.format("Your appointment was missed on %s at %s. Appointment ID: %s.",
-                    schData.get("Appointment Date"), schData.get("Appointment Time"), appointmentId);
+            String noshowMessage = String.format(twilioConfig.getAppNoShow(),
+                    schData.get("Appointment Date"), appointmentId);
 
             switch (messageType) {
                 case "SIU^S12":
                     logger.info("Processing SIU^S12 message: Appointment Scheduling.");
-                    System.out.println("appointmentId:::" + appointmentId);
                     if (appointmentId == null) {
                         logger.error("Appointment ID is null. Cannot process the appointment.");
                         break;
@@ -109,13 +126,13 @@ public class SIUInboundService {
                         System.out.println("appointmentOptional" + appointmentOptional);
 //                       String appointments= appointmentRepository.findOneAppointmentWithNewConfirmationStatus().toString();
 //                       System.out.println("appointments"+appointments);
-                        appointmentService.saveAppointmentData(schData, mshData, patientData);
-                        String smsMessage = String.format("Your appointment is scheduled for %s at %s. Appointment ID: %s",
-                                schData.get("Appointment Date"), schData.get("Appointment Time"), appointmentId);
+                        appointmentService.saveAppointmentData(schData, pv1Data, mshData, patientData);
+                        String smsMessage = String.format(twilioConfig.getAppNoShow(),
+                                schData.get("Appointment Date"), schData.get("Appointment Time"), appointmentId + "NS");
                         notificationService.sendAppointmentNotification(patientPhone, smsMessage);
-                        schedulerService.multipleppoinmentsScheudlerWithStatus();
+                        //    schedulerService.multipleppoinmentsScheudlerWithStatus();
                         //      noShowService.testAppointmentMessage(appointmentId,patientPhone,patientData.get("External Patient ID"));
-
+                        appointmentConfirmationService.processMessage(Long.valueOf(patientData.get("External Patient ID")));
                         logger.info("Appointment scheduled and notification sent for Appointment ID: {}", appointmentId);
                         messageService.saveMessageEntity(messageType, hl7Message, patientPhone, String.valueOf(appointmentId), "");
                         updateFirstAppointmentIsConfirmRequestSent(String.valueOf(appointmentId));
@@ -155,7 +172,7 @@ public class SIUInboundService {
                         messageService.saveMessageEntity(messageType, hl7Message, patientPhone, String.valueOf(appointmentId), "");
 
                         // Send the No-Show message (using your existing service method)
-                        noShowServiceImpl.sendNoShowMessage(patientName, patientPhone, LocalDate.parse(appointment.getAppointmentDate()), String.valueOf(appointmentId));
+                        noShowServiceImpl.sendNoShowMessage(patientName, patientPhone, appointment.getAppointmentDate(), String.valueOf(appointmentId));
 
                         // Optionally, send additional notifications if necessary (uncomment if needed)
                         notificationService.sendNoShowNotification(patientPhone, noshowMessage);
@@ -185,20 +202,45 @@ public class SIUInboundService {
     public String sendNoShowAppointmentMessages() {
         List<AppointmentTextMessageDTO> list = getAppointmentTextMessageDTO();
         System.out.println("Scheduled task started: " + LocalDateTime.now());
-
+        System.out.println("list" + list.get(0));
+        System.out.println("list" + list.size());
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
         for (AppointmentTextMessageDTO appointment : list) {
+            System.out.println("noShowDate::" + appointment.getAppointmentDate());
             System.out.println("appointment.getAppointmentDate()" + appointment.getAppointmentDate());
             Patient patient = patientRepository.findByExternalPatientId(appointment.getExternalPatientId());
+            System.out.println("appointment.getExternalPatientId()" + appointment.getExternalPatientId());
+            Providers noShowProvider = providerRepository.findByProviderCode(appointment.getProviderCode());
+            LocalDate noShowDate = LocalDate.parse(appointment.getAppointmentDate(), formatter);
+            System.out.println("noShowDate:::::" + noShowDate);
+//            Patient patient = patientRepository.findByExternalPatientId(appointment.getExternalPatientId());
             System.out.println("Processing appointment for patient: " + patient.getName() + " on " + appointment.getAppointmentDate());
 //            long daysSinceAppointment = ChronoUnit.DAYS.between(appointment.getAppointmentDate(), LocalDate.now());
-            System.out.println("patient.getHomePhone()" + patient.getHomePhone());
+            System.out.println("patient.getHomePhone()" + patient.getHomePhone().replace("^", ""));
+
+            if (!(appointment.getVisitStatusCode().equals("NS"))) {
+                continue; // Skip if the status is not NS
+            }
+
+            // Check if there's a new appointment with the same specialty
+            boolean hasNewAppointmentWithSameSpecialty = appointmentRepository.existsNewAppointmentWithSameSpecialty(
+                    patient.getExternalPatientId(),
+                    noShowProvider.getSpecialty(),
+                    noShowDate,
+                    noShowDate.plusDays(14)
+            );
+
+            if (hasNewAppointmentWithSameSpecialty) {
+                System.out.println("Patient has a new appointment with the same specialty provider within 14 days. Skipping reminder.");
+                continue; // Skip sending reminder
+            }
 //            System.out.println("patient.getAdditionalPhone()" + patient.getAdditionalPhone());
             if (appointment.getTypeCode() == null) {
                 noShowServiceImpl.sendNoShowMessage(patient.getName(), patient.getHomePhone(), appointment.getAppointmentDate(), String.valueOf(appointment.getVisitAppointmentId()));
-            } else if (appointment.getTypeCode().equals("NS") && appointment.getDays() > 14) {
-                noShowServiceImpl.sendNoShowReminderMessage(patient.getName(), patient.getHomePhone(), appointment.getAppointmentDate(), String.valueOf(appointment.getVisitAppointmentId()), appointment.getTextMessageId());
-            } else if (appointment.getTypeCode().equals("NSR1") && appointment.getDays() > 28) {
-                noShowServiceImpl.sendNoShowReminderMessage(patient.getName(), patient.getHomePhone(), appointment.getAppointmentDate(), String.valueOf(appointment.getVisitAppointmentId()), appointment.getTextMessageId());
+            } else if (appointment.getTypeCode().equals("NS") && appointment.getDays() > twilioConfig.getWeeklyReminderDays()) {
+                noShowServiceImpl.sendNoShowReminderMessage(patient.getName(), patient.getHomePhone(), String.valueOf(appointment.getVisitAppointmentId()), appointment.getTextMessageId());
+            } else if (appointment.getTypeCode().equals("NSR1") && appointment.getDays() > twilioConfig.getMonthlyReminderDays()) {
+                noShowServiceImpl.sendNoShowReminderMessage(patient.getName(), patient.getHomePhone(), String.valueOf(appointment.getVisitAppointmentId()), appointment.getTextMessageId());
             }
         }
         return "success";
@@ -222,6 +264,7 @@ public class SIUInboundService {
                 throw new IllegalArgumentException("Expected Long or String, but got: " + value.getClass());
             }
             dto.setExternalPatientId((String) row[1]);
+            dto.setAppointmentDate((String) row[2]);
             dto.setVisitStatusCode((String) row[3]);
             dto.setTextMessageId(row[4] != null ? Long.parseLong(row[4].toString()) : null);
             dto.setTypeCode(row[5] != null ? (String) row[5] : null);

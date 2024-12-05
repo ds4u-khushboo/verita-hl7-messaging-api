@@ -1,6 +1,5 @@
 package com.example.hl7project.configuration;
 
-import com.example.hl7project.service.SIUInboundService;
 import com.example.hl7project.service.TwillioService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -27,11 +26,24 @@ public class TwilioConfig {
     @Value("${APPOINTMENT_NO_SHOW}")
     private String appNoShow;
 
-    @Value("APPOINTMENT_CANCELLATION")
+    @Value("${APPOINTMENT_CANCELLATION}")
     private String cancellation;
 
-    @Value("APPOINTMENT_DELETION")
+    @Value("${APPOINTMENT_DELETION}")
     private String deletion;
+
+    @Value("${no_show_reminder_wekkly}")
+    private int weeklyReminderDays;
+
+    @Value("${no_show_reminder_days_monthly}")
+    private int monthlyReminderDays;
+
+    @Value("${APPOINTMENT_NO_SHOW_REMINDER_2Weeks}")
+    private String weeklyReminderMessage;
+
+    @Value("${APPOINTMENT_NO_SHOW_REMINDER_4Weeks}")
+    private String monthlyReminderMessage;
+
     @Bean
     public TwillioService twilioService() {
         return new TwillioService();
@@ -45,22 +57,6 @@ public class TwilioConfig {
         this.accountSid = accountSid;
     }
 
-    public String getCancellation() {
-        return cancellation;
-    }
-
-    public void setCancellation(String cancellation) {
-        this.cancellation = cancellation;
-    }
-
-    public String getDeletion() {
-        return deletion;
-    }
-
-    public void setDeletion(String deletion) {
-        this.deletion = deletion;
-    }
-
     public String getAuthToken() {
         return authToken;
     }
@@ -69,7 +65,6 @@ public class TwilioConfig {
         this.authToken = authToken;
     }
 
-    //
     public String getFromNumber() {
         return fromNumber;
     }
@@ -101,4 +96,53 @@ public class TwilioConfig {
     public void setAppNoShow(String appNoShow) {
         this.appNoShow = appNoShow;
     }
+
+    public String getCancellation() {
+        return cancellation;
+    }
+
+    public void setCancellation(String cancellation) {
+        this.cancellation = cancellation;
+    }
+
+    public String getDeletion() {
+        return deletion;
+    }
+
+    public void setDeletion(String deletion) {
+        this.deletion = deletion;
+    }
+
+    public int getWeeklyReminderDays() {
+        return weeklyReminderDays;
+    }
+
+    public void setWeeklyReminderDays(int weeklyReminderDays) {
+        this.weeklyReminderDays = weeklyReminderDays;
+    }
+
+    public int getMonthlyReminderDays() {
+        return monthlyReminderDays;
+    }
+
+    public void setMonthlyReminderDays(int monthlyReminderDays) {
+        this.monthlyReminderDays = monthlyReminderDays;
+    }
+
+    public String getWeeklyReminderMessage() {
+        return weeklyReminderMessage;
+    }
+
+    public void setWeeklyReminderMessage(String weeklyReminderMessage) {
+        this.weeklyReminderMessage = weeklyReminderMessage;
+    }
+
+    public String getMonthlyReminderMessage() {
+        return monthlyReminderMessage;
+    }
+
+    public void setMonthlyReminderMessage(String monthlyReminderMessage) {
+        this.monthlyReminderMessage = monthlyReminderMessage;
+    }
 }
+
