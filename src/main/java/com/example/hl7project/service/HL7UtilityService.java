@@ -518,13 +518,31 @@ public class HL7UtilityService {
 
     public Map<String, String> extractDataFromPV1Segment(List<String> pv1Segment) {
         Map<String, String> pv1Data = new HashMap<>();
-        System.out.println("MSH Segment: " + pv1Segment);
-        // Accessing relevant indices based on the SCH segment structure
-        pv1Data.put("Provider", (pv1Segment.size() > 7) ? pv1Segment.get(7) : null);
+        System.out.println("PV1 Segment: " + pv1Segment);
+
+        // Accessing relevant indices based on the PV1 segment structure
+        String providerField = (pv1Segment.size() > 7) ? pv1Segment.get(7) : null;
+
+        // Extracting ID, Last Name, First Name, and Middle Name from providerField
+        if (providerField != null) {
+            String[] providerParts = providerField.split("\\^");
+            pv1Data.put("ID", (providerParts.length > 0) ? providerParts[0] : null);
+            pv1Data.put("LastName", (providerParts.length > 1) ? providerParts[1] : null);
+            pv1Data.put("FirstName", (providerParts.length > 2) ? providerParts[2] : null);
+            pv1Data.put("MiddleName", (providerParts.length > 3) ? providerParts[3] : null);
+        } else {
+            // Assigning null values if providerField is null
+            pv1Data.put("ID", null);
+            pv1Data.put("LastName", null);
+            pv1Data.put("FirstName", null);
+            pv1Data.put("MiddleName", null);
+        }
+
         pv1Data.put("externalVisitID", (pv1Segment.size() > 19) ? pv1Segment.get(19) : null);
         pv1Data.put("assignedLocation", (pv1Segment.size() > 3) ? pv1Segment.get(3) : null);
 
-        System.out.println("mshData::: " + pv1Data);
+        System.out.println("Extracted PV1 Data: " + pv1Data);
         return pv1Data;
     }
+
 }

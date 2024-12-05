@@ -49,7 +49,7 @@ public class AppointmentConfirmationService {
                             // If 3 hours have not passed, send a notification to Twilio or log it
                             LocalDateTime nextSendTime = sentAt.plusHours(3);
                             System.out.println("Next message should be sent after: " + nextSendTime);
-                            sendDelayedNotification(nextSendTime);
+                           // sendDelayedNotification(nextSendTime);
                         }
                     }
                 }

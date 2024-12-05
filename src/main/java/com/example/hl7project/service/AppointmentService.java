@@ -6,12 +6,16 @@ import com.example.hl7project.model.Providers;
 import com.example.hl7project.repository.AppointmentRepository;
 import com.example.hl7project.repository.PatientRepository;
 import com.example.hl7project.repository.ProviderRepository;
+import com.example.hl7project.utility.ConfirmationMessageStatus;
+import com.example.hl7project.utility.ReminderMessageStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.Formatter;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -52,6 +56,10 @@ public class AppointmentService {
         appointment.setNotes(schData.get("Encounter Notes"));
         appointment.setExternalPatientId(patientData.get("External Patient ID"));
         appointment.setCmCode("NEW");
+        appointment.setConfirmationMessageStatus(ConfirmationMessageStatus.NONE);
+        appointment.setReminderMessageStatus(ReminderMessageStatus.NONE);
+//        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddhhmmss");
+//        appointment.setAppointmentDateUtc(LocalDate.parse(schData.get("Appointment Date")));
         String providerCode = pv1Data.get("Provider");
         Providers provider = providerRepository.findByProviderCode(providerCode); // Assuming `providerCode` is the unique identifier for the provider
         if (provider != null) {

@@ -6,7 +6,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-public class TwilioConfig {
+public class TextMessageConfig {
 
     @Value("${twilio.accountSid}")
     private String accountSid;
@@ -32,18 +32,20 @@ public class TwilioConfig {
     @Value("${APPOINTMENT_DELETION}")
     private String deletion;
 
-    @Value("${no_show_reminder_wekkly}")
-    private int weeklyReminderDays;
+    @Value("${NO_SHOW_REMINDER_2_WEEK_DAYS}")
+    private Integer NoShowReminderTwoWeekDays;
 
-    @Value("${no_show_reminder_days_monthly}")
-    private int monthlyReminderDays;
+    @Value("${NO_SHOW_REMINDER_4_WEEK_DAYS}")
+    private Integer NoShowReminderFourWeekDays;
 
     @Value("${APPOINTMENT_NO_SHOW_REMINDER_2Weeks}")
-    private String weeklyReminderMessage;
+    private String appointment2WeeksReminder;
 
     @Value("${APPOINTMENT_NO_SHOW_REMINDER_4Weeks}")
-    private String monthlyReminderMessage;
+    private String appointment4WeeksReminder;
 
+    @Value("${time_difference_multiple_appointment}")
+    private String timeDifference;
     @Bean
     public TwillioService twilioService() {
         return new TwillioService();
@@ -93,6 +95,14 @@ public class TwilioConfig {
         return appNoShow;
     }
 
+    public String getTimeDifference() {
+        return timeDifference;
+    }
+
+    public void setTimeDifference(String timeDifference) {
+        this.timeDifference = timeDifference;
+    }
+
     public void setAppNoShow(String appNoShow) {
         this.appNoShow = appNoShow;
     }
@@ -113,36 +123,37 @@ public class TwilioConfig {
         this.deletion = deletion;
     }
 
-    public int getWeeklyReminderDays() {
-        return weeklyReminderDays;
+
+    public String getAppointment2WeeksReminder() {
+        return appointment2WeeksReminder;
     }
 
-    public void setWeeklyReminderDays(int weeklyReminderDays) {
-        this.weeklyReminderDays = weeklyReminderDays;
+    public void setAppointment2WeeksReminder(String appointment2WeeksReminder) {
+        this.appointment2WeeksReminder = appointment2WeeksReminder;
     }
 
-    public int getMonthlyReminderDays() {
-        return monthlyReminderDays;
+    public String getAppointment4WeeksReminder() {
+        return appointment4WeeksReminder;
     }
 
-    public void setMonthlyReminderDays(int monthlyReminderDays) {
-        this.monthlyReminderDays = monthlyReminderDays;
+    public Integer getNoShowReminderTwoWeekDays() {
+        return NoShowReminderTwoWeekDays;
     }
 
-    public String getWeeklyReminderMessage() {
-        return weeklyReminderMessage;
+    public void setNoShowReminderTwoWeekDays(int noShowReminderTwoWeekDays) {
+        NoShowReminderTwoWeekDays = noShowReminderTwoWeekDays;
     }
 
-    public void setWeeklyReminderMessage(String weeklyReminderMessage) {
-        this.weeklyReminderMessage = weeklyReminderMessage;
+    public Integer getNoShowReminderFourWeekDays() {
+        return NoShowReminderFourWeekDays;
     }
 
-    public String getMonthlyReminderMessage() {
-        return monthlyReminderMessage;
+    public void setNoShowReminderFourWeekDays(int noShowReminderFourWeekDays) {
+        NoShowReminderFourWeekDays = noShowReminderFourWeekDays;
     }
 
-    public void setMonthlyReminderMessage(String monthlyReminderMessage) {
-        this.monthlyReminderMessage = monthlyReminderMessage;
+    public void setAppointment4WeeksReminder(String appointment4WeeksReminder) {
+        this.appointment4WeeksReminder = appointment4WeeksReminder;
     }
 }
 

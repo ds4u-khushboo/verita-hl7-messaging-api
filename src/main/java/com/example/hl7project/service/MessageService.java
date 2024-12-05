@@ -21,11 +21,11 @@ public class MessageService {
     @Autowired
     private TextMessageRepository textMessageRepository;
 
-    public void saveMessageEntity(String messageType, String hl7Message, String phoneNumber, String appointmentId, String patientId) {
+    public void saveMessageEntity(String messageType, String hl7Message,String textMessage, String phoneNumber, String appointmentId, String patientId) {
         InboundHL7Message inboundHL7Message = new InboundHL7Message();
         inboundHL7Message.setRawMessage(hl7Message);
         inboundHL7Message.setMessageType(messageType);
-//        inboundHL7Message.setMessageText();
+        inboundHL7Message.setMessageText(textMessage);
         inboundHL7Message.setPhoneNumber(phoneNumber);
         inboundHL7Message.setVisitAppointmentId(appointmentId);
         inboundHL7Message.setSentAt(String.valueOf(LocalDateTime.now()));

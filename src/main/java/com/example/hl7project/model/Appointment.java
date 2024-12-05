@@ -1,9 +1,10 @@
 package com.example.hl7project.model;
-
+import com.example.hl7project.utility.ConfirmationMessageStatus;
+import com.example.hl7project.utility.ReminderMessageStatus;
 import jakarta.persistence.*;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "appointments")
 public class Appointment {
@@ -15,6 +16,9 @@ public class Appointment {
 
     @Column(name = "appointment_date")
     private String appointmentDate;
+
+    @Column(name = "appointment_date_utc")
+    private LocalDate appointmentDateUtc;
 
     @Column(name = "appointment_time")
     private String appointmentTime;
@@ -58,11 +62,42 @@ public class Appointment {
     @Column(name = "external_patient_id", length = 255)
     private String externalPatientId;
 
+    public LocalDate getAppointmentDateUtc() {
+        return appointmentDateUtc;
+    }
+
+    public void setAppointmentDateUtc(LocalDate appointmentDateUtc) {
+        this.appointmentDateUtc = appointmentDateUtc;
+    }
+
+    public ReminderMessageStatus getReminderMessageStatus() {
+        return reminderMessageStatus;
+    }
+
+    public void setReminderMessageStatus(ReminderMessageStatus reminderMessageStatus) {
+        this.reminderMessageStatus = reminderMessageStatus;
+    }
+
+    public com.example.hl7project.utility.ConfirmationMessageStatus getConfirmationMessageStatus() {
+        return ConfirmationMessageStatus;
+    }
+
+    public void setConfirmationMessageStatus(com.example.hl7project.utility.ConfirmationMessageStatus confirmationMessageStatus) {
+        ConfirmationMessageStatus = confirmationMessageStatus;
+    }
+
     @Column(name = "visit_appointment_id")
     private Long visitAppointmentId;
     @Column(name = "sms_sent_status")
     private Integer smsSentStatus;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "reminder_message_status", columnDefinition = "varchar(255) default 'NONE'")
+    private ReminderMessageStatus reminderMessageStatus;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "confirmation_message_status", columnDefinition = "varchar(255) default 'NONE'")
+    private com.example.hl7project.utility.ConfirmationMessageStatus ConfirmationMessageStatus;
     @ManyToOne
     @JoinColumn(name = "external_patient_id", referencedColumnName = "external_patient_id", nullable = false, insertable = false, updatable = false)
     private Patient patient;
@@ -100,6 +135,7 @@ public class Appointment {
     public void setAppointmentTime(String appointmentTime) {
         this.appointmentTime = appointmentTime;
     }
+
 
     public String getAppointmentReason() {
         return appointmentReason;

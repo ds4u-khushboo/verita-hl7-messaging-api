@@ -1,6 +1,7 @@
 package com.example.hl7project.repository;
 
 import com.example.hl7project.dto.AppointmentTestMessageProjection;
+import com.example.hl7project.dto.AppointmentTextMessageDTO;
 import com.example.hl7project.model.Appointment;
 import com.example.hl7project.model.Patient;
 import org.springframework.data.domain.Pageable;
@@ -21,36 +22,15 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
 
     //    public Optional<Appointment> findByPlacerAppointmentId(String placerApppointmnetId);
      boolean existsByVisitAppointmentId(Long appointmentId);
-
-
-    @Query(value = "SELECT \n" +
-            "    ap.visit_appointment_id,\n" +
-            "    ap.external_patient_id,\n"+
-            "    ap.appointment_date,\n" +
-            "    ap.visit_status_code,\n" +
-            "    mt.id AS text_message_id,\n" +
-            "    mt.type_code,\n" +
-            "    mt.created_at,\n" +
-            "    DATEDIFF(NOW(), ap.appointment_date) AS days\n" +
-            "FROM messaging_app.appointments ap\n" +
-            "LEFT JOIN (\n" +
-            "    SELECT \n" +
-            "        id,\n" +
-            "        visit_appointment_id,\n" +
-            "        type_code,\n" +
-            "        created_at,\n" +
-            "        ROW_NUMBER() OVER (PARTITION BY visit_appointment_id ORDER BY created_at DESC) AS rn\n" +
-            "    FROM messaging_app.text_messages\n" +
-            ") mt ON ap.visit_appointment_id = mt.visit_appointment_id AND mt.rn = 1\n" +
-            "WHERE ap.visit_status_code = 'N/S'\n" +
-            "AND (\n" +
-            "    mt.id IS NULL OR\n" +
-            "    (mt.type_code IN ('NS', 'NSR1') AND DATEDIFF(NOW(), ap.appointment_date) > 14)\n" +
-            ")\n" +
-            "ORDER BY mt.type_code, mt.created_at", nativeQuery = true)
+    @Query(value = "SELECT ap.visitAppointmentId, ap.externalPatientId, ap.appointmentDate, ap.visitStatusCode, ap.reminderMessageStatus, " +
+            "DATEDIFF(CURRENT_DATE, ap.appointmentDateUtc) AS days " +
+            "FROM Appointment ap " +
+            "WHERE ap.visitStatusCode = 'N/S' " +
+            "AND ap.reminderMessageStatus <> 'NO_SHOW_4_WEEK' " +
+            "ORDER BY ap.appointmentDate")
     List<Object[]> findNoShowAppointmentsToSendTextMessages();
 
-//    public Optional<Appointment> findByVisitAppointmentId(Long appointmentId);
+    //public Optional<Appointment> findByVisitAppointmentId(Long appointmentId);
 
      Appointment findByVisitAppointmentId(Long appointmentId);
 

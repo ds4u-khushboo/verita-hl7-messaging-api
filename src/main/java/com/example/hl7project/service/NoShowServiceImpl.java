@@ -1,16 +1,13 @@
 package com.example.hl7project.service;
 
-import com.example.hl7project.configuration.TwilioConfig;
-import com.example.hl7project.model.TextMessage;
+import com.example.hl7project.configuration.TextMessageConfig;
+import com.example.hl7project.model.Appointment;
+import com.example.hl7project.repository.AppointmentRepository;
 import com.example.hl7project.repository.TextMessageRepository;
+import com.example.hl7project.utility.ReminderMessageStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.stereotype.Service;
-
-import java.time.LocalDate;
-import java.util.Optional;
-import java.util.UUID;
-
 @Service
 @EnableScheduling
 public class NoShowServiceImpl {
@@ -19,62 +16,37 @@ public class NoShowServiceImpl {
     private TextMessageRepository textMessageRepository;
 
     @Autowired
-    private TwilioConfig twilioConfig;
+    private TextMessageConfig twilioConfig;
 
     @Autowired
     private TwillioService twillioService;
 
-    public void sendNoShowMessage(String patientName, String patientPhone, String appointmentDate,String appointmentId) {
-        String messageBody = "";
-        String noshowMessage = String.format(twilioConfig.getAppNoShow(), patientName, appointmentId);
-        messageBody = String.format(twilioConfig.getAppNoShow(), patientName, appointmentDate, appointmentId);
-        twillioService.getTwilioService(messageBody+":NS", "91" + patientPhone);
-        System.out.println("message Sent");
-        TextMessage textMessage = new TextMessage();
-        textMessage.setVisitAppointmentId(appointmentId);
-        textMessage.setMessageBody(noshowMessage);
-        textMessage.setTypeCode("NS");
-        textMessageRepository.save(textMessage);
-    }
+    @Autowired
+    private AppointmentRepository appointmentRepository;
 
-    public String generateUUID() {
-        UUID guid = UUID.randomUUID();
 
-        // Print the GUID
-        return guid.toString();
-
-    }
     //send no show reminder 1
-    public void sendNoShowReminderMessage(String patientName, String patientPhone, String appointmentId, Long textMessageId) {
+    public void sendNoShowReminderMessage(String patientName, String patientPhone, String appointmentId) {
 
-        Optional<TextMessage> textMessageOptional = textMessageRepository.findById(textMessageId);
-
-        if (textMessageOptional.isPresent()) {
-            TextMessage textMessage = textMessageOptional.get();
-            String typeCode = textMessage.getTypeCode();
+        Appointment appointment = appointmentRepository.findByVisitAppointmentId(Long.valueOf(appointmentId));
+        if (appointment != null) {
             String messageBody = "";
-            // Compare strings using equals(), not ==
-            if ("NS".equals(typeCode)) {
-                textMessage.setTypeCode("NSR1");
-                System.out.println("patientPhone::" + patientPhone);
-
-                String uniqueCode=
-                messageBody = String.format(twilioConfig.getWeeklyReminderMessage(), patientName, appointmentId);
+            if (appointment.getReminderMessageStatus().equals(ReminderMessageStatus.NONE)) {
+                messageBody = String.format(twilioConfig.getAppNoShow(), patientName, appointmentId);
                 twillioService.getTwilioService(messageBody, "91" + patientPhone);
-                System.out.println("patientPhone::" + patientPhone);
-                System.out.println("message Sent:::");
-            } else if (typeCode.equals("NSR1")) {
-                textMessage.setTypeCode("NSR2");
-                messageBody = String.format(twilioConfig.getMonthlyReminderMessage(), patientName, appointmentId);
+                appointment.setReminderMessageStatus(ReminderMessageStatus.NO_SHOW);
+            } else if (appointment.getReminderMessageStatus().equals(ReminderMessageStatus.NO_SHOW)) {
+                messageBody = String.format(twilioConfig.getAppointment2WeeksReminder(), patientName, appointmentId);
                 twillioService.getTwilioService(messageBody, "91" + patientPhone);
-                System.out.println("message Sent");
+                appointment.setReminderMessageStatus(ReminderMessageStatus.NO_SHOW_2_WEEK);
+            } else if (appointment.getReminderMessageStatus().equals(ReminderMessageStatus.NO_SHOW_2_WEEK)) {
+                messageBody = String.format(twilioConfig.getAppointment4WeeksReminder(), patientName, appointmentId);
+                twillioService.getTwilioService(messageBody, "91" + patientPhone);
+                appointment.setReminderMessageStatus(ReminderMessageStatus.NO_SHOW_4_WEEK);
             }
-            textMessageRepository.save(textMessage);
+            appointmentRepository.save(appointment);
         } else {
-            // Handle case where textMessage is not found (optional)
-            System.out.println("Text message not found with ID: " + textMessageId);
+            System.out.println("Text message not found with ID: " + appointmentId);
         }
     }
-
-
 }

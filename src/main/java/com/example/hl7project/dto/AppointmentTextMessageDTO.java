@@ -1,5 +1,8 @@
 package com.example.hl7project.dto;
 
+import com.example.hl7project.utility.ConfirmationMessageStatus;
+import com.example.hl7project.utility.ReminderMessageStatus;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -11,10 +14,11 @@ public class AppointmentTextMessageDTO {
     private String appointmentDate;
     private String providerCode;
     private String visitStatusCode;
-    private Long textMessageId;
-    private String typeCode;
-    private LocalDateTime createdAt;
-    private Long days;
+    private Integer days;
+
+    private ConfirmationMessageStatus ConfirmationMessageStatus;
+
+    private ReminderMessageStatus reminderMessageStatus;
 
 //    public AppointmentTextMessageDTO(Long visitAppointmentId, String externalPatientId, String appointmentDate, String visitStatusCode, Long textMessageId, String typeCode, LocalDateTime createdAt, Long days) {
 //        this.visitAppointmentId = visitAppointmentId;
@@ -30,6 +34,7 @@ public class AppointmentTextMessageDTO {
     public AppointmentTextMessageDTO() {
 
     }
+
 
     public String getProviderCode() {
         return providerCode;
@@ -63,25 +68,7 @@ public class AppointmentTextMessageDTO {
         this.visitStatusCode = visitStatusCode;
     }
 
-    public Long getTextMessageId() {
-        return textMessageId;
-    }
 
-    public void setTextMessageId(Long textMessageId) {
-        this.textMessageId = textMessageId;
-    }
-
-    public String getTypeCode() {
-        return typeCode;
-    }
-
-    public void setTypeCode(String typeCode) {
-        this.typeCode = typeCode;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
 
     public String getExternalPatientId() {
         return externalPatientId;
@@ -91,15 +78,27 @@ public class AppointmentTextMessageDTO {
         this.externalPatientId = externalPatientId;
     }
 
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
+    public com.example.hl7project.utility.ConfirmationMessageStatus getConfirmationMessageStatus() {
+        return ConfirmationMessageStatus;
     }
 
-    public Long getDays() {
+    public void setConfirmationMessageStatus(com.example.hl7project.utility.ConfirmationMessageStatus confirmationMessageStatus) {
+        ConfirmationMessageStatus = confirmationMessageStatus;
+    }
+
+    public ReminderMessageStatus getReminderMessageStatus() {
+        return reminderMessageStatus;
+    }
+
+    public void setReminderMessageStatus(ReminderMessageStatus reminderMessageStatus) {
+        this.reminderMessageStatus = reminderMessageStatus;
+    }
+
+    public Integer getDays() {
         return days;
     }
 
-    public void setDays(Long days) {
+    public void setDays(Integer days) {
         this.days = days;
     }
 }
