@@ -30,7 +30,7 @@ public class HL7MessageBuilderService {
 //
 //        if (isExistingPatient)
 //            // Retrieve the existing patient data
-//            patient = patientRepository.findByExternalPatientId(mrn);
+//            patient = patientRepository.findByPatientId(mrn);
 //            System.out.println("patient::::" + patient);
 
             // Build MSH segment

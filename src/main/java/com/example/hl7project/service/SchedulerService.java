@@ -20,19 +20,17 @@ public class SchedulerService {
     private PatientRepository patientRepository;
 
     @Autowired
-    private SIUInboundService siuInboundService;
+    private AppointmentService appointmentService;
 
     @Autowired
     private NoShowService noShowService;
 
     private static final Logger logger = LoggerFactory.getLogger(SIUInboundService.class);
-    private static final ZoneId EST_ZONE = ZoneId.of("America/New_York");
 
-    @Scheduled(cron = "0 55 4 * * ?", zone = "America/New_York") // Runs every day at 10:00 PM EST
-    public void noshowScheudler() {
+    @Scheduled(cron = "0 0 10 * * ?", zone = "America/New_York") // Runs every day at 10:00 PM EST
+    public String scheduleNoShowAppointmentsReminders() {
         logger.info("Scheduled task started at: {}", LocalDateTime.now());
-        siuInboundService.sendNoShowAppointmentMessages();
-        logger.info("Scheduled task finished at: {}", LocalDateTime.now());
+        return appointmentService.sendNoShowAppointmentMessages();
     }
 
 //    @Scheduled(cron = "0 0 10 * * ?") // Runs every day at 10 AM
@@ -60,7 +58,7 @@ public class SchedulerService {
 
         for (Patient patient : allPatients) {
             // Check if the patient has booked an appointment in the past 15 or 30 days
-            noShowService.checkAppointmentStatus(patient.getHomePhone(), patient.getExternalPatientId());
+            noShowService.checkAppointmentStatus(patient.getHomePhone(), patient.getPatientId());
             logger.info("Scheduled task finished at: {}", LocalDateTime.now(ZoneId.of("America/New_York")));
         }
     }

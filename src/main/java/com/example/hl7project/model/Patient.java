@@ -15,8 +15,8 @@ public class Patient {
 //    private Long id;
 
     @Id
-    @Column(name = "external_patient_id", unique = true, nullable = false)
-    private String externalPatientId;
+    @Column(name = "patient_id", unique = true, nullable = false)
+    private String patientId;
 
     @Column(name = "external_patient_mrn")
     private String externalPatientMRN;
@@ -70,8 +70,8 @@ public class Patient {
     @Column(name = "updated_at")
     private java.time.LocalDateTime updatedAt;
 
-    @OneToMany(mappedBy = "patient",  fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
-    private List<Appointment> appointments;
+//    @OneToMany(mappedBy = "patient",  fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
+//    private List<Appointment> appointments;
 
 //    public Long getId() {
 //        return id;
@@ -186,12 +186,12 @@ public class Patient {
         this.createdAt = createdAt;
     }
 
-    public String getExternalPatientId() {
-        return externalPatientId;
+    public String getPatientId() {
+        return patientId;
     }
 
-    public void setExternalPatientId(String externalPatientId) {
-        this.externalPatientId = externalPatientId;
+    public void setPatientId(String patientId) {
+        this.patientId = patientId;
     }
 
     public String getLanguage() {
@@ -208,14 +208,6 @@ public class Patient {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
-    }
-
-    public List<Appointment> getAppointments() {
-        return appointments;
-    }
-
-    public void setAppointments(List<Appointment> appointments) {
-        this.appointments = appointments;
     }
 
     public String getExternalPatientMRN() {

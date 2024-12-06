@@ -10,8 +10,8 @@ import java.time.LocalDateTime;
 public class AppointmentTextMessageDTO {
     private Long visitAppointmentId;
 
-    private String externalPatientId;
-    private String appointmentDate;
+    private String patientId;
+    private LocalDateTime appointmentDate;
     private String providerCode;
     private String visitStatusCode;
     private Integer days;
@@ -52,11 +52,11 @@ public class AppointmentTextMessageDTO {
         this.visitAppointmentId = visitAppointmentId;
     }
 
-    public String getAppointmentDate() {
+    public LocalDateTime getAppointmentDate() {
         return appointmentDate;
     }
 
-    public void setAppointmentDate(String appointmentDate) {
+    public void setAppointmentDate(LocalDateTime appointmentDate) {
         this.appointmentDate = appointmentDate;
     }
 
@@ -68,14 +68,12 @@ public class AppointmentTextMessageDTO {
         this.visitStatusCode = visitStatusCode;
     }
 
-
-
-    public String getExternalPatientId() {
-        return externalPatientId;
+    public String getPatientId() {
+        return patientId;
     }
 
-    public void setExternalPatientId(String externalPatientId) {
-        this.externalPatientId = externalPatientId;
+    public void setPatientId(String patientId) {
+        this.patientId = patientId;
     }
 
     public com.example.hl7project.utility.ConfirmationMessageStatus getConfirmationMessageStatus() {

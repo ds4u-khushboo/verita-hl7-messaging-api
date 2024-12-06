@@ -1,24 +1,25 @@
 package com.example.hl7project.service;
 
+import com.example.hl7project.configuration.TextMessageConfig;
+import com.example.hl7project.dto.AppointmentTextMessageDTO;
 import com.example.hl7project.model.Appointment;
 import com.example.hl7project.model.Patient;
-import com.example.hl7project.model.Providers;
+import com.example.hl7project.model.Provider;
 import com.example.hl7project.repository.AppointmentRepository;
 import com.example.hl7project.repository.PatientRepository;
 import com.example.hl7project.repository.ProviderRepository;
 import com.example.hl7project.utility.ConfirmationMessageStatus;
 import com.example.hl7project.utility.ReminderMessageStatus;
+import com.example.hl7project.utility.Utility;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.util.Formatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 @Service
 public class AppointmentService {
@@ -27,47 +28,54 @@ public class AppointmentService {
     private PatientRepository patientRepository;
 
     @Autowired
+    private TextMessageConfig textMessageConfig;
+
+    @Autowired
     private AppointmentRepository appointmentRepository;
 
     @Autowired
     private PatientService patientService;
 
     @Autowired
+    private Utility utility;
+    @Autowired
     private ProviderRepository providerRepository;
+
+    @Autowired
+    private NoShowServiceImpl noShowServiceImpl;
 
     public Appointment saveAppointmentData(Map<String, String> schData, Map<String, String> pv1Data, Map<String, String> mshData, Map<String, String> patientData) {
 
-        Patient patient = patientRepository.findByExternalPatientId(patientData.get("External Patient ID"));
+        Patient patient = patientRepository.findByPatientId(patientData.get("External Patient ID"));
         if (patient == null) {
             patientService.savePatientData(patientData); // Save the patient data
         }
         Appointment appointment = new Appointment();
         appointment.setId(1L);
-        appointment.setAppointmentDate(schData.get("Appointment Date"));
-        appointment.setAppointmentTime(schData.get("Appointment Time"));
+        appointment.setAppointmentDate(utility.hl7DateToDateTime(schData.get("Appointment Date")));
         appointment.setAppointmentReason(schData.get("Appointment Reason"));
         appointment.setVisitStatusCode(schData.get("Visit Status Code"));
 //        appointment.setResourceName(schData.get("Resource Name"));
-        appointment.setAppointmentDatetime(schData.get("Appointment Timing Quantity"));
+        appointment.setAppointmentDateStr(schData.get("Appointment Date"));
         appointment.setVisitAppointmentId(Long.valueOf(schData.get("Visit/Appointment ID")));
         appointment.setDuration(schData.get("Appointment Duration"));
         appointment.setDurationUnits(schData.get("Appointment Duration Units"));
         appointment.setAppointmentType(schData.get("Appointment Type"));
         appointment.setNotes(schData.get("Encounter Notes"));
-        appointment.setExternalPatientId(patientData.get("External Patient ID"));
-        appointment.setCmCode("NEW");
+        appointment.setPatientId(patientData.get("External Patient ID"));
         appointment.setConfirmationMessageStatus(ConfirmationMessageStatus.NONE);
         appointment.setReminderMessageStatus(ReminderMessageStatus.NONE);
+        appointment.setProvider(pv1Data.get("providerId"));
 //        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddhhmmss");
 //        appointment.setAppointmentDateUtc(LocalDate.parse(schData.get("Appointment Date")));
         String providerCode = pv1Data.get("Provider");
-        Providers provider = providerRepository.findByProviderCode(providerCode); // Assuming `providerCode` is the unique identifier for the provider
-        if (provider != null) {
-            appointment.setProviders(provider);
-        } else {
-            System.err.println("Provider not found with code: " + providerCode);
-            // You may want to handle this case by throwing an exception or setting a default provider
-        }
+        Provider provider = providerRepository.findByProviderId(providerCode);
+//        if (provider != null) {
+//            appointment.getProvider().setProviderName(String.valueOf(provider));
+//        } else {
+//            System.err.println("Provider not found with code: " + providerCode);
+//            // You may want to handle this case by throwing an exception or setting a default provider
+//        }
         String messageDateTime = mshData.get("messageDateTime");
         if (messageDateTime != null) {
             try {
@@ -128,5 +136,69 @@ public class AppointmentService {
         return appointmentRepository.existsByVisitAppointmentId(appointmentId);
     }
 
+
+    public void checkAndUpdateSameSpecialtyNowShowAppointment(String patientId, String providerName) {
+//        Provider provider=providerRepository.findByProviderId(providerId);
+        Provider provider = providerRepository.findByProviderName(providerName);
+        List<Object[]> appointmentDTOList = appointmentRepository.findAppointmentsByPatientAndSpecialty(patientId, provider.getSpecialty());
+        if (!appointmentDTOList.isEmpty()) {
+            for (Object[] appointmentDto : appointmentDTOList) {
+                Long visitAppointmentId = (Long) appointmentDto[0];
+                Appointment appointment = appointmentRepository.findByVisitAppointmentId(visitAppointmentId);
+                appointment.setReminderMessageStatus(ReminderMessageStatus.ABORT);
+                appointmentRepository.save(appointment);
+            }
+        }
+
+
+    }
+
+    public String sendNoShowAppointmentMessages() {
+        List<AppointmentTextMessageDTO> list = getAppointmentTextMessageDTO();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
+        for (AppointmentTextMessageDTO appointment : list) {
+            Patient patient = patientRepository.findByPatientId(appointment.getPatientId());
+            ReminderMessageStatus status = appointment.getReminderMessageStatus();
+            Integer days = appointment.getDays();
+
+            if (status.equals(ReminderMessageStatus.NONE) ||
+                    (status.equals(ReminderMessageStatus.NO_SHOW) && days > textMessageConfig.getNoShowReminderTwoWeekDays()) ||
+                    (status.equals(ReminderMessageStatus.NO_SHOW_2_WEEK) && days > textMessageConfig.getNoShowReminderFourWeekDays())) {
+
+                noShowServiceImpl.sendNoShowReminderMessage(
+                        patient.getName(),
+                        patient.getHomePhone(),
+                        String.valueOf(appointment.getVisitAppointmentId())
+                );
+            }
+        }
+        return "success";
+    }
+
+    private List<AppointmentTextMessageDTO> getAppointmentTextMessageDTO() {
+        List<Object[]> results = appointmentRepository.findNoShowAppointmentsToSendTextMessages();
+        List<AppointmentTextMessageDTO> reminders = new ArrayList<>();
+        for (Object[] row : results) {
+            AppointmentTextMessageDTO dto = new AppointmentTextMessageDTO();
+            Object value = row[0];
+            if (value instanceof Long) {
+                dto.setVisitAppointmentId((Long) value);
+            } else if (value instanceof String) {
+                // If it's a String, convert it to Long
+                dto.setVisitAppointmentId(Long.valueOf((String) value));
+            } else {
+                // Handle the case where the value is neither Long nor String
+                throw new IllegalArgumentException("Expected Long or String, but got: " + value.getClass());
+            }
+            dto.setPatientId((String) row[1]);
+            dto.setAppointmentDate((LocalDateTime) row[2]);
+            dto.setVisitStatusCode((String) row[3]);
+            dto.setReminderMessageStatus((ReminderMessageStatus) row[4]);
+            dto.setDays((Integer) row[5]);
+            // Add the DTO to the list
+            reminders.add(dto);
+        }
+        return reminders;
+    }
 
 }

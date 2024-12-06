@@ -7,5 +7,6 @@ public enum ReminderMessageStatus {
     NONE,
     NO_SHOW,
     NO_SHOW_2_WEEK,
-    NO_SHOW_4_WEEK
+    NO_SHOW_4_WEEK,
+    ABORT
 }

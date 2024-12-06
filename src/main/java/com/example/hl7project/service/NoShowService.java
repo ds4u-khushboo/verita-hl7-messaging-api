@@ -3,7 +3,7 @@ package com.example.hl7project.service;
 import com.example.hl7project.dto.AppointmentTestMessageProjection;
 import com.example.hl7project.model.Appointment;
 import com.example.hl7project.model.Patient;
-import com.example.hl7project.model.Providers;
+import com.example.hl7project.model.Provider;
 import com.example.hl7project.repository.AppointmentRepository;
 import com.example.hl7project.repository.PatientRepository;
 import com.example.hl7project.repository.ProviderRepository;
@@ -12,9 +12,7 @@ import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @Service
@@ -49,7 +47,7 @@ public class NoShowService {
             Timestamp createdAt = (Timestamp) data[3];
             Long minutesElapsed = (Long) data[4];
             Integer isPreviousNew = (Integer) data[5];
-            Patient patient = patientRepository.findByExternalPatientId(patientId);
+            Patient patient = patientRepository.findByPatientId(patientId);
 
             if (patient != null) {
                 String patientPhone = patient.getHomePhone();
@@ -133,8 +131,6 @@ public class NoShowService {
 
         if (optionalAppointment != null) {
 //            Appointment appointment = optionalAppointment.get();
-            optionalAppointment.setCmCode(status);
-            optionalAppointment.setConfirmRequestSent(true);
             appointmentRepository.save(optionalAppointment); // Persist the changes
         } else {
             System.out.println("Appointment not found with ID: " + visitAppointmentId);
@@ -161,73 +157,59 @@ public class NoShowService {
         // messageService.sendMessage(patientId, message);
     }
 
-    public int getSmsSentStatus(String status) {
-        List<Appointment> appointmentList = appointmentRepository.findByVisitStatusCode(status);
-        if (appointmentList.isEmpty()) {
-            return 0;
-        }
-        for (Appointment appointment : appointmentList) {
-            Integer smsSentStatus = appointment.getSmsSentStatus();
-            return smsSentStatus != null ? smsSentStatus : 0; // Return 0 if smsSentStatus is null
-        }
-        return 0;
-    }
-
-    public void checkAppointmentConfirmations() {
-        // Fetch appointments where confirmation requests have not been sent yet
-        List<Appointment> appointmentsToCheck = appointmentRepository.findByIsConfirmRequestSentTrue();
-
-        System.out.println("appointmentsToCheck: " + appointmentsToCheck);
-        for (Appointment appointment : appointmentsToCheck) {
-            // Find the most recent appointment for this patient
-            List<Appointment> patientAppointments = appointmentRepository.findByPatientAndAppointmentDate(appointment.getPatient(), appointment.getAppointmentDate());
-
-            // Sort by appointment creation time (latest first)
-            patientAppointments.sort(Comparator.comparing(Appointment::getCreatedAt).reversed());
-
-            // If there are multiple appointments, check the most recent previous appointment (last created)
-            if (patientAppointments.size() > 1) {
-                Appointment previousAppointment = patientAppointments.get(1); // The previous one (last created)
-
-                // Handle the previous appointment confirmation
-                handlePreviousAppointment(previousAppointment, appointment);  // Current appointment is passed as second appointment
-            }
-        }
-    }
-
-    private void handlePreviousAppointment(Appointment previousAppointment, Appointment currentAppointment) {
-        // Check if the confirmation request for the previous appointment has been replied to
-        if (previousAppointment.getConfirmRequestReplied() != null && previousAppointment.getConfirmRequestReplied()) {
-            // If confirmed, send the message for the second appointment immediately
-            sendSecondAppointmentMessage(currentAppointment);
-        } else {
-            scheduleMessageWithDelay(currentAppointment, 3 * 60 * 60 * 1000);
-        }
-    }
-
-    private void scheduleMessageWithDelay(Appointment secondAppointment, long delayMillis) {
-        // Log the message to track timing
-        System.out.println("Scheduling message for second appointment after 5 minutes...");
-
-        // Schedule the task with a 5-minute delay
-        taskScheduler.schedule(() -> sendSecondAppointmentMessage(secondAppointment), new Date(System.currentTimeMillis() + 300000));  // Delay for 5 minutes (300,000 ms)
-    }
-
-    private void sendSecondAppointmentMessage(Appointment secondAppointment) {
-        // Construct and send message for the second appointment
-        System.out.println("secondAppointment.getPatient(), secondAppointment.getAppointmentDate()" + secondAppointment.getPatient());
-        System.out.println("secondAppointment.getAppointmentDate())" + secondAppointment.getAppointmentDate());
-        String message = String.format("Dear %s, we noticed you missed your first appointment. Your second appointment is scheduled for %s. Please confirm at your earliest convenience.",
-                secondAppointment.getPatient(), secondAppointment.getAppointmentDate());
-
-        // Send message via Twilio or your messaging service
-        twillioService.getTwilioService(message, "+91" + secondAppointment.getPatient().getHomePhone());
-        System.out.println("Second appointment message sent for: " + secondAppointment.getPatient().getName());
-
-        // Log the message
-        secondAppointment.setConfirmRequestSent(true);
-        appointmentRepository.save(secondAppointment);
-    }
+//    public void checkAppointmentConfirmations() {
+//        // Fetch appointments where confirmation requests have not been sent yet
+//        List<Appointment> appointmentsToCheck = appointmentRepository.findByIsConfirmRequestSentTrue();
+//
+//        System.out.println("appointmentsToCheck: " + appointmentsToCheck);
+//        for (Appointment appointment : appointmentsToCheck) {
+//            // Find the most recent appointment for this patient
+//            List<Appointment> patientAppointments = appointmentRepository.findByPatientAndAppointmentDate(appointment.getPatient(), appointment.getAppointmentDate());
+//
+//            // Sort by appointment creation time (latest first)
+//            patientAppointments.sort(Comparator.comparing(Appointment::getCreatedAt).reversed());
+//
+//            // If there are multiple appointments, check the most recent previous appointment (last created)
+//            if (patientAppointments.size() > 1) {
+//                Appointment previousAppointment = patientAppointments.get(1); // The previous one (last created)
+//
+//                // Handle the previous appointment confirmation
+//                handlePreviousAppointment(previousAppointment, appointment);  // Current appointment is passed as second appointment
+//            }
+//        }
+//    }
+//
+//    private void handlePreviousAppointment(Appointment previousAppointment, Appointment currentAppointment) {
+//        // Check if the confirmation request for the previous appointment has been replied to
+//        if (previousAppointment.getConfirmRequestReplied() != null && previousAppointment.getConfirmRequestReplied()) {
+//            // If confirmed, send the message for the second appointment immediately
+//            sendSecondAppointmentMessage(currentAppointment);
+//        } else {
+//            scheduleMessageWithDelay(currentAppointment, 3 * 60 * 60 * 1000);
+//        }
+//    }
+//
+//    private void scheduleMessageWithDelay(Appointment secondAppointment, long delayMillis) {
+//        // Log the message to track timing
+//        System.out.println("Scheduling message for second appointment after 5 minutes...");
+//
+//        // Schedule the task with a 5-minute delay
+//        taskScheduler.schedule(() -> sendSecondAppointmentMessage(secondAppointment), new Date(System.currentTimeMillis() + 300000));  // Delay for 5 minutes (300,000 ms)
+//    }
+//
+//    private void sendSecondAppointmentMessage(Appointment secondAppointment) {
+//        // Construct and send message for the second appointment
+//       String message = String.format("Dear %s, we noticed you missed your first appointment. Your second appointment is scheduled for %s. Please confirm at your earliest convenience.",
+//                secondAppointment.getPatient(), secondAppointment.getAppointmentDate());
+//
+//        // Send message via Twilio or your messaging service
+//        twillioService.getTwilioService(message, "+91" + secondAppointment.getPatient().getHomePhone());
+//        System.out.println("Second appointment message sent for: " + secondAppointment.getPatient().getName());
+//
+//        // Log the message
+//        secondAppointment.setConfirmRequestSent(true);
+//        appointmentRepository.save(secondAppointment);
+//    }
 
     public Boolean handleNoShowAndRebook(Long patientId) {
         // Get patient details
@@ -238,25 +220,23 @@ public class NoShowService {
         Appointment latestAppointment = appointmentRepository.findLatestByPatient(patientId);
 
         if (latestAppointment != null && "N/S".equals(latestAppointment.getVisitStatusCode())) {
-            String specialty = latestAppointment.getProviders().getSpecialty();
+            String specialty = latestAppointment.getProvider();
 
             // Find available providers with the same specialty
-            List<Providers> availableProviders = providerRepository.findBySpecialty(specialty);
+            List<Provider> availableProviders = providerRepository.findBySpecialty(specialty);
 
             // If there's an available provider, book the next appointment
             if (!availableProviders.isEmpty()) {
-                Providers nextProvider = availableProviders.get(0);
+                Provider nextProvider = availableProviders.get(0);
                 Appointment newAppointment = new Appointment();
-                newAppointment.setPatient(patient);
-                newAppointment.setProviders(nextProvider);
-                newAppointment.setAppointmentTime(String.valueOf(LocalDateTime.now().plusDays(1)));
+                newAppointment.setPatientId(String.valueOf(patientId));
+                newAppointment.setProvider(String.valueOf(nextProvider));
                 newAppointment.setVisitStatusCode("PEN");
-                newAppointment.setExternalPatientId(patient.getExternalPatientId());
                 // Save the new appointment
                 appointmentRepository.save(newAppointment);
 
                 // Send message to patient
-                sendMessageToPatient(patient.getHomePhone(), String.format("Dear %s your appointment has been scheduled on %s with Dr. ", patient.getName(), newAppointment.getAppointmentTime(), nextProvider.getFirstName() + nextProvider.getLastName()));
+                sendMessageToPatient(patient.getHomePhone(), String.format("Dear %s your appointment has been scheduled on %s with Dr. ", patient.getName(), newAppointment.getAppointmentDate()));
             } else {
                 // No available provider, send a message about the unavailability
                 sendMessageToPatient(patient.getHomePhone(), "Unfortunately, no providers are available for rescheduling your appointment.");
@@ -272,10 +252,10 @@ public class NoShowService {
             LocalDateTime thirtyDaysAgo = LocalDateTime.now().minusDays(30);
 
             List<Appointment> recentAppointments = appointmentRepository.findAppointmentsByPatientAndDateRange(
-                    patientPhone, thirtyDaysAgo, LocalDateTime.now());
+                     thirtyDaysAgo, LocalDateTime.now());
 
             boolean hasAppointmentWithin15Days = recentAppointments.stream()
-                    .anyMatch(app -> LocalDateTime.parse(app.getAppointmentTime()).isAfter(fifteenDaysAgo));
+                    .anyMatch(app -> LocalDateTime.parse(app.getAppointmentDateStr()).isAfter(fifteenDaysAgo));
 
             // If no appointment within 15 days, send message
             if (!hasAppointmentWithin15Days) {
@@ -303,7 +283,7 @@ public class NoShowService {
 //        sendMessageToPatient(patient.getHomePhone(), message);
 //    }
 //    private void rescheduleAppointment(Appointment appointment) {
-//        Providers newProvider = findAnotherProviderWithSameSpecialty(appointment.getProviders().getSpecialty());
+//        Provider newProvider = findAnotherProviderWithSameSpecialty(appointment.getProviders().getSpecialty());
 //        if (newProvider != null) {
 //            Appointment newAppointment = new Appointment();
 //            newAppointment.setPatient(appointment.getPatient());
@@ -321,26 +301,8 @@ public class NoShowService {
 //        }
 //    }
 
-    private Providers findAnotherProviderWithSameSpecialty(String specialty) {
+    private Provider findAnotherProviderWithSameSpecialty(String specialty) {
         return providerRepository.findBySpecialty(specialty).stream().findFirst().orElse(null);
     }
 
-    private boolean shouldSendReminder(Appointment appointment, int daysAfterAppointment) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
-
-        // Parsing appointment datetime which includes both date and time (Appointment Timing Quantity)
-        String appointmentDateTimeString = appointment.getAppointmentDate();
-
-        if (appointmentDateTimeString == null) {
-            return false; // If appointment time is not available, do not send reminder
-        }
-
-        LocalDate appointmentDateTime = LocalDate.parse(appointmentDateTimeString, formatter);
-
-        // Calculate reminder date based on the number of days after the appointment
-        LocalDate reminderDateTime = appointmentDateTime.plusDays(daysAfterAppointment);
-
-        // Check if the reminder date has passed and SMS has been sent less than twice
-        return LocalDate.now().isAfter(reminderDateTime) && appointment.getSmsSentStatus() < 2;
-    }
 }

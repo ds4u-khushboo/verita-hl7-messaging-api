@@ -4,7 +4,6 @@ import java.sql.Timestamp;
 
 public class AppointmentTestMessageProjection {
     private Long VisitAppointmentId;
-    private String ExternalPatientId;
     private  String CmCode;
     private Timestamp CreatedAt;
     private Integer MinutesElapsed;
@@ -12,7 +11,6 @@ public class AppointmentTestMessageProjection {
 
     public AppointmentTestMessageProjection(Long visitAppointmentId, String externalPatientId, String cmCode, Timestamp createdAt, Integer minutesElapsed, Integer isPreviousNew) {
         VisitAppointmentId = visitAppointmentId;
-        ExternalPatientId = externalPatientId;
         CmCode = cmCode;
         CreatedAt = createdAt;
         MinutesElapsed = minutesElapsed;
@@ -24,9 +22,6 @@ public class AppointmentTestMessageProjection {
         return VisitAppointmentId;
     }
 
-    public String getExternalPatientId() {
-        return ExternalPatientId;
-    }
 
     public String getCmCode() {
         return CmCode;

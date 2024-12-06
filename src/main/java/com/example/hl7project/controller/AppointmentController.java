@@ -14,7 +14,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -92,22 +91,22 @@ public class AppointmentController {
 //    }
 
 
-    @GetMapping("/multipleApp")
-    public String getMultiple() {
-        noShowService.checkAppointmentConfirmations();
-        return "multiple appointment come";
-    }
+//    @GetMapping("/multipleApp")
+//    public String getMultiple() {
+//        noShowService.checkAppointmentConfirmations();
+//        return "multiple appointment come";
+//    }
 
     @RequestMapping("/listByName")
     public List<Patient> getListByName(@RequestParam String patientName) {
         return patientRepository.findByName(patientName);
     }
 
-    @PostMapping("/trigger-scheduler")
-    public ResponseEntity<String> triggerScheduler() {
-        schedulerService.noshowScheudler();  // Trigger the scheduled method manually
-        return ResponseEntity.ok("Scheduled task triggered.");
-    }
+//    @PostMapping("/trigger-scheduler")
+//    public ResponseEntity<String> triggerScheduler() {
+//        schedulerService.noshowScheudler();  // Trigger the scheduled method manually
+//        return ResponseEntity.ok("Scheduled task triggered.");
+//    }
 
     @RequestMapping("/listByPhNumber")
     public List<Patient> getListByPhNumber(@RequestParam String phNumber) {
@@ -198,13 +197,10 @@ public class AppointmentController {
         }
     }
 
-    @GetMapping("/without-recent-texts")
-
-    public String getAppointmentsWithoutRecentTextMessages() {
-        String appointments = siuInboundService.sendNoShowAppointmentMessages();
-        System.out.println("Scheduled task result: " + appointments);
-
-        return appointments;
+    @GetMapping("/process-no-show-reminders")
+    public String processNoShowReminder() {
+        String appointments = schedulerService.scheduleNoShowAppointmentsReminders();
+        return "Scheduled task result: " + appointments;
     }
 
     //    @GetMapping("/reminder")

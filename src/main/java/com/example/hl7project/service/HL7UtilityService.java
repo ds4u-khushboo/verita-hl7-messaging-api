@@ -473,24 +473,25 @@ public class HL7UtilityService {
         schData.put("Appointment Duration", (schSegment.size() > 9) ? schSegment.get(9) : null); // SCH.09 - Required
         schData.put("Appointment Duration Units", (schSegment.size() > 10) ? schSegment.get(10) : null); // SCH.10 - Not supported
         schData.put("Appointment Timing Quantity", (schSegment.size() > 11) ? schSegment.get(11) : null); // SCH.11 - Required
-        String appointmentTiming = (schSegment.size() > 11) ? schSegment.get(11) : null;
-        if (appointmentTiming != null) {
+        String appointmentDate = (schSegment.size() > 11) ? schSegment.get(11) : null;
+        if (appointmentDate != null) {
             // Split the appointment timing into start and end times
-            String[] times = appointmentTiming.split("\\^");
+            String[] times = appointmentDate.split("\\^");
             if (times.length > 0) {
                 String startTime = times[0]; // Get the start time (20241018163000)
-
-                // Extract date and time from startTime
-                String appointmentDate = startTime.substring(0, 8);
-                String appointmentHour = startTime.substring(8, 10);
-                String appointmentMinute = startTime.substring(10, 12);
-                String appointmentSecond = startTime.substring(12, 14);
-                String formattedTime = String.format("%s:%s:%s", appointmentHour, appointmentMinute, appointmentSecond);
-                // Store in the map
-                schData.put("Appointment Date", appointmentDate); // Store date
-                schData.put("Appointment Time", formattedTime); // Store time
+//
+//                // Extract date and time from startTime
+//                String appointmentDate = startTime.substring(0, 8);
+//                String appointmentHour = startTime.substring(8, 10);
+//                String appointmentMinute = startTime.substring(10, 12);
+//                String appointmentSecond = startTime.substring(12, 14);
+//                String formattedTime = String.format("%s:%s:%s", appointmentHour, appointmentMinute, appointmentSecond);
+//                // Store in the map
+                schData.put("Appointment Date", startTime.substring(0)); // Store date
+//                schData.put("Appointment Time", formattedTime); // Store time
             }
-        }
+            }
+
         schData.put("Resource Name", (schSegment.size() > 20) ? schSegment.get(20) : null); // SCH.20 - Required
         schData.put("Encounter Notes", (schSegment.size() > 24) ? schSegment.get(24) : null); // SCH.24 - Optional
         schData.put("Visit Status Code", (schSegment.size() > 25) ? schSegment.get(25) : null); // SCH.25 - Optional
@@ -526,7 +527,7 @@ public class HL7UtilityService {
         // Extracting ID, Last Name, First Name, and Middle Name from providerField
         if (providerField != null) {
             String[] providerParts = providerField.split("\\^");
-            pv1Data.put("ID", (providerParts.length > 0) ? providerParts[0] : null);
+            pv1Data.put("providerId", (providerParts.length > 0) ? providerParts[0] : null);
             pv1Data.put("LastName", (providerParts.length > 1) ? providerParts[1] : null);
             pv1Data.put("FirstName", (providerParts.length > 2) ? providerParts[2] : null);
             pv1Data.put("MiddleName", (providerParts.length > 3) ? providerParts[3] : null);
@@ -537,6 +538,7 @@ public class HL7UtilityService {
             pv1Data.put("FirstName", null);
             pv1Data.put("MiddleName", null);
         }
+        pv1Data.put("providerName",providerField);
 
         pv1Data.put("externalVisitID", (pv1Segment.size() > 19) ? pv1Segment.get(19) : null);
         pv1Data.put("assignedLocation", (pv1Segment.size() > 3) ? pv1Segment.get(3) : null);

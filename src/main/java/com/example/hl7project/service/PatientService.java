@@ -16,7 +16,7 @@ public class PatientService {
         Patient patient = new Patient();
 
 //        patient.setId(patientData.get("Patient ID"));
-        patient.setExternalPatientId(patientData.get("External Patient ID"));
+        patient.setPatientId(patientData.get("External Patient ID"));
         patient.setExternalPatientMRN(patientData.get("External Patient MRN"));
         patient.setName(patientData.get("Patient Name"));
         patient.setDateOfBirth(patientData.get("Date of Birth"));
@@ -37,7 +37,7 @@ public class PatientService {
 
     public void updatePatientData(Map<String, String> patientData) {
         String patientId = patientData.get("External Patient ID");
-        Patient patient = patientRepository.findByExternalPatientId(patientId);
+        Patient patient = patientRepository.findByPatientId(patientId);
         if (patient == null) {
             System.out.println("Patient not found for update.");
             return;
