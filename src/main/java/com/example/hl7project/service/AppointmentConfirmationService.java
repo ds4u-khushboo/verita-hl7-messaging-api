@@ -26,13 +26,14 @@ public class AppointmentConfirmationService {
     @Autowired
     private TwillioService twilioService;
 
-    public String processMessage(String patientId, String phoneNumber) {
-        // Step 1: Get the last appointment for the patient
-        List<Integer> lastAppointments = appointmentRepository.findAppointmentsWithTimeDiff(patientId);
+    public String checkTimeDifferenceAndSendMessage(String patientId, String phoneNumber) {
+        // Fetch the time difference result (1 or 0) for the given patientId
+        List<Object[]> lastAppointments = appointmentRepository.findAppointmentsWithTimeDiff(patientId);
 
-        if (!lastAppointments.isEmpty() && lastAppointments.get(0) == 1) {
+        // Check if the result is not empty and time difference is greater than 3 hours (1)
+        if (!lastAppointments.isEmpty() && (int) lastAppointments.get(0)[lastAppointments.get(0).length - 1] == 1) {
             sendTextMessage(patientId, phoneNumber);  // Method to send the message
-            return  "sent";
+            return "Message sent successfully.";
         } else {
             return "No message sent. Time difference is less than 3 hours.";
         }

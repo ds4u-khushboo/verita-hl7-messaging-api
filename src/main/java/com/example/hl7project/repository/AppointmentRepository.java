@@ -24,7 +24,7 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
             "ORDER BY ap.appointmentDate")
     List<Object[]> findNoShowAppointmentsToSendTextMessages();
 
-    @Query(value = "SELECT *" +
+    @Query(value = "SELECT ap.*, " +
             "CASE " +
             "WHEN FLOOR(TIME_TO_SEC(TIMEDIFF(TIMESTAMP('2024-12-05 16:00:00.000000'), ap.appointment_date)) / 60) < 180 " +
             "THEN 1 " +
@@ -35,7 +35,8 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
             "AND ap.is_confirm_request_replied = 0 " +
             "AND FLOOR(TIME_TO_SEC(TIMEDIFF(TIMESTAMP('2024-12-05 16:00:00.000000'), ap.appointment_date)) / 60) < 180",
             nativeQuery = true)
-    List<Integer> findAppointmentsWithTimeDiff(@Param("patientId") String patientId);
+    List<Object[]> findAppointmentsWithTimeDiff(@Param("patientId") String patientId);
+
 
 
     Appointment findByVisitAppointmentId(Long appointmentId);
