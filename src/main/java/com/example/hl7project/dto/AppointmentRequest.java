@@ -2,7 +2,6 @@ package com.example.hl7project.dto;
 
 import java.time.LocalDateTime;
 
-// Root class representing the entire JSON structure
 public class AppointmentRequest {
     public String sendingApplication;
     public String sendingFacility;
@@ -391,8 +390,12 @@ public class AppointmentRequest {
         public String middleName;
         public String dob;
         public String sex;
+
+        public String race;
         public Address address;
         public String phone;
+
+        public String ssn;
 
         public String getMrnNo() {
             return mrnNo;
@@ -420,6 +423,22 @@ public class AppointmentRequest {
 
         public String getMiddleName() {
             return middleName;
+        }
+
+        public String getRace() {
+            return race;
+        }
+
+        public void setRace(String race) {
+            this.race = race;
+        }
+
+        public String getSsn() {
+            return ssn;
+        }
+
+        public void setSsn(String ssn) {
+            this.ssn = ssn;
         }
 
         public void setMiddleName(String middleName) {
@@ -457,6 +476,7 @@ public class AppointmentRequest {
         public void setPhone(String phone) {
             this.phone = phone;
         }
+
 // Getters and Setters
     }
 

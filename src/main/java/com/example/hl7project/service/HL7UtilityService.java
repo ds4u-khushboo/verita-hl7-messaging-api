@@ -116,6 +116,12 @@ public class HL7UtilityService {
 //        }
 //
 //    }
+    private String generateOutboundExternalMRN() {
+        String uniqueID = UUID.randomUUID().toString().replace("-", "").toUpperCase();
+        System.out.println("vendorMRn" + uniqueID);
+        return uniqueID;
+    }
+
     public String convertJsonToADTHL7(AppointmentRequest appointmentRequest) {
         try {
             // Build MSH Segment
@@ -143,11 +149,14 @@ public class HL7UtilityService {
             if (patient != null) {
                 hl7Message.append("PID|||")
                         .append(patient.getMrnNo() != null ? patient.getMrnNo() : "").append("||")
+                        .append(generateOutboundExternalMRN() != null ? patient.getMrnNo() : "").append("||")
                         .append(patient.getLastName() != null ? patient.getLastName() : "").append("^")
                         .append(patient.getFirstName() != null ? patient.getFirstName() : "").append("^")
                         .append(patient.getMiddleName() != null ? patient.getMiddleName() : "").append("||")
                         .append(patient.getDob() != null ? patient.getDob() : "").append("|")
-                        .append(patient.getSex() != null ? patient.getSex() : "").append("|||");
+                        .append(patient.getSex() != null ? patient.getSex() : "").append("|||")
+                        .append(patient.getRace() != null ? patient.getSex() : "").append("|||")
+                        .append(patient.getSsn() != null ? patient.getSsn() : "").append("|||");
 
                 AppointmentRequest.Address address = patient.getAddress();
                 if (address != null) {
@@ -157,6 +166,8 @@ public class HL7UtilityService {
                             .append(address.getZip() != null ? address.getZip() : "").append("|");
                 }
                 hl7Message.append(patient.getPhone() != null ? patient.getPhone() : "").append("\n");
+                hl7Message.append("" != null ? patient.getPhone() : "").append("\n");
+
             }
 
             // Build PV1 Segment
@@ -490,7 +501,7 @@ public class HL7UtilityService {
                 schData.put("Appointment Date", startTime.substring(0)); // Store date
 //                schData.put("Appointment Time", formattedTime); // Store time
             }
-            }
+        }
 
         schData.put("Resource Name", (schSegment.size() > 20) ? schSegment.get(20) : null); // SCH.20 - Required
         schData.put("Encounter Notes", (schSegment.size() > 24) ? schSegment.get(24) : null); // SCH.24 - Optional
@@ -538,7 +549,7 @@ public class HL7UtilityService {
             pv1Data.put("FirstName", null);
             pv1Data.put("MiddleName", null);
         }
-        pv1Data.put("providerName",providerField);
+        pv1Data.put("providerName", providerField);
 
         pv1Data.put("externalVisitID", (pv1Segment.size() > 19) ? pv1Segment.get(19) : null);
         pv1Data.put("assignedLocation", (pv1Segment.size() > 3) ? pv1Segment.get(3) : null);

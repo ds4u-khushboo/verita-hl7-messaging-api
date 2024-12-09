@@ -120,8 +120,8 @@ public class SIUInboundService {
                         appointmentService.checkAndUpdateSameSpecialtyNowShowAppointment(patientId, providerName);
                         String smsMessage = String.format(textMessageConfig.getAppCreation(),
                                 patientData.get("Patient Name"), schData.get("Appointment Date") + schData.get("Appointment Time"), appointmentId);
-                        notificationService.sendAppointmentNotification(patientPhone, smsMessage);
                         appointmentConfirmationService.checkTimeDifferenceAndSendMessage(patientData.get("External Patient ID"),patientPhone);
+                        notificationService.sendAppointmentNotification(patientPhone, smsMessage);
                         logger.info("Appointment scheduled and notification sent for Appointment ID: {}", appointmentId);
                         messageService.saveMessageEntity(messageType, hl7Message, smsMessage, patientPhone, String.valueOf(appointmentId), "");
                         updateFirstAppointmentIsConfirmRequestSent(String.valueOf(appointmentId));

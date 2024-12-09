@@ -33,7 +33,7 @@ public class OutboundService {
             String firstName = patientDetails.get("firstName");
             String lastName = patientDetails.get("lastName");
             String dateOfBirth = patientDetails.get("dob");
-
+            String ssn = patientDetails.get("ssn");
             System.out.println("Checking patient with details: firstName=" + firstName + ", lastName=" + lastName + ", dob=" + dateOfBirth);
 
             // Check if patient exists
@@ -65,8 +65,8 @@ public class OutboundService {
         patientData.put("Home Phone Number", appointmentRequest.patient.getPhone());
 //        patientData.put("Primary Language", appointmentRequest.patient.getLanguage());
 //        patientData.put("Marital Status", appointmentRequest.patient.getMaritalStatus());
-        patientData.put("firstName",firstName);
-        patientData.put("lastName",lastName);
+        patientData.put("firstName", firstName);
+        patientData.put("lastName", lastName);
 
         // Save patient data
         patientService.savePatientData(patientData);

@@ -26,18 +26,16 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
 
     @Query(value = "SELECT ap.*, " +
             "CASE " +
-            "WHEN FLOOR(TIME_TO_SEC(TIMEDIFF(TIMESTAMP('2024-12-05 16:00:00.000000'), ap.appointment_date)) / 60) < 180 " +
+            "WHEN FLOOR(TIME_TO_SEC(TIMEDIFF(TIMESTAMP(ap.appointmentDate), ap.appointment_date)) / 60) < 180 " +
             "THEN 1 " +
             "ELSE 0 " +
             "END AS timeDiffLessThan3Hours " +
             "FROM appointments ap " +
             "WHERE ap.patient_id = :patientId " +
-            "AND ap.is_confirm_request_replied = 0 " +
-            "AND FLOOR(TIME_TO_SEC(TIMEDIFF(TIMESTAMP('2024-12-05 16:00:00.000000'), ap.appointment_date)) / 60) < 180",
+            "AND ap.is_confirm_request_replied = 0 " +  "AND ap.visit_status_code = 'PEN' " +
+            "AND FLOOR(TIME_TO_SEC(TIMEDIFF(TIMESTAMP(ap.appointmentDate), ap.appointment_date)) / 60) < 180",
             nativeQuery = true)
     List<Object[]> findAppointmentsWithTimeDiff(@Param("patientId") String patientId);
-
-
 
     Appointment findByVisitAppointmentId(Long appointmentId);
 
@@ -48,9 +46,6 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
             "ORDER BY created_at ASC) = 'NEW' THEN 1 ELSE 0 END AS IsPreviousNew " +
             "FROM appointments WHERE cm_code IN ('NEW', 'CRS', 'CRR0', 'CRR1')", nativeQuery = true)
     List<Object[]> findAppointmentsWithConfirmationStatus();
-
-    @Query("SELECT a FROM Appointment a WHERE a.patientId = :patientId ORDER BY a.appointmentDate DESC")
-    List<Appointment> findLastAppointmentsByPatientId(@Param("patientId") Long patientId);
 
 
     @Query("SELECT a FROM Appointment a WHERE a.patientId = :patientId ORDER BY a.appointmentDate DESC")

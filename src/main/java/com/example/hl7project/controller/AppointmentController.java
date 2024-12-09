@@ -14,7 +14,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.*;
+import java.net.Socket;
+import java.net.SocketException;
 import java.net.URI;
+import java.net.UnknownHostException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -48,6 +52,9 @@ public class AppointmentController {
     private SchedulerService schedulerService;
 
     @Autowired
+    private AppointmentConfirmationService appointmentConfirmationService;
+
+    @Autowired
     private PatientRepository patientRepository;
 
     @Autowired
@@ -61,6 +68,7 @@ public class AppointmentController {
     public Message sendMessge(@RequestBody String hl7mesage) throws Exception {
         return siuInboundService.processMessage(hl7mesage);
     }
+
 
 //    @GetMapping("/process")
 //    public ResponseEntity<String> processMessages(@RequestParam Long patientId) {
@@ -91,22 +99,17 @@ public class AppointmentController {
 //    }
 
 
-//    @GetMapping("/multipleApp")
-//    public String getMultiple() {
-//        noShowService.checkAppointmentConfirmations();
-//        return "multiple appointment come";
-//    }
+    @GetMapping("/multipleApp")
+    public String getMultiple(@RequestParam String patientId) {
+        appointmentConfirmationService.checkTimeDifferenceAndSendMessage(patientId, "919521052782");
+        return "multiple appointment come";
+    }
 
     @RequestMapping("/listByName")
     public List<Patient> getListByName(@RequestParam String patientName) {
         return patientRepository.findByName(patientName);
     }
 
-//    @PostMapping("/trigger-scheduler")
-//    public ResponseEntity<String> triggerScheduler() {
-//        schedulerService.noshowScheudler();  // Trigger the scheduled method manually
-//        return ResponseEntity.ok("Scheduled task triggered.");
-//    }
 
     @RequestMapping("/listByPhNumber")
     public List<Patient> getListByPhNumber(@RequestParam String phNumber) {
@@ -240,45 +243,5 @@ public class AppointmentController {
         return appointmentService.getCountByMessageType();
     }
 
-    @PostMapping("/book-appointment")
-    public String conversion(@RequestBody AppointmentRequest appointmentRequest) {
-        return outboundService.processAppointmentRequest(appointmentRequest);
-    }
 
-    @PostMapping("/siubuild")
-    public String buildSIU(@RequestBody AppointmentRequest appointmentRequest) {
-        String hl7Message = hl7UtilityService.buildSIUHl7Message(appointmentRequest);
-        System.out.println("hl7Message::" + hl7Message);
-        return hl7Message.toString();
-    }
-
-    private String sendHl7ToMirth(String hl7Message) throws Exception {
-        String mirthEndpoint = "https://10.0.1.52:8443/api/channels/21ceec35-d53a-42cf-ab70-059353d21454?destinationMetaDataId=1";
-
-        HttpClient httpClient = HttpClient.newBuilder().build();
-
-        // Replace with your Mirth username and password
-        String username = "admin";
-        String password = "admin";
-        String authHeader = "Basic " + Base64.getEncoder().encodeToString((username + ":" + password).getBytes());
-
-        // Prepare HTTP POST request
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(mirthEndpoint))
-                .header("Content-Type", "text/plain")
-                .header("Authorization", authHeader)
-                .POST(HttpRequest.BodyPublishers.ofString(hl7Message))
-                .build();
-
-        // Send the request and receive the response
-        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-
-        if (response.statusCode() == 200) {
-            System.out.println("Mirth Response: " + response.body());
-            return "Successfully sent HL7 message to Mirth.";
-        } else {
-            System.err.println("Failed to send HL7 message. Status code: " + response.statusCode());
-            return "Failed to send HL7 message. Status code: " + response.statusCode();
-        }
-    }
 }

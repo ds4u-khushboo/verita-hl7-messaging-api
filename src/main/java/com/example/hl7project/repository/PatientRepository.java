@@ -25,6 +25,5 @@ public interface PatientRepository extends JpaRepository<Patient, Long> {
 
     List<Patient> findByHomePhone(String patientPhone);
 
-    boolean existsByName(String patientName);
 
 }
