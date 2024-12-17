@@ -1,15 +1,21 @@
 package com.example.hl7project.service;
 
 import com.example.hl7project.dto.AppointmentRequest;
+import com.example.hl7project.utility.Utility;
 import com.google.gson.JsonObject;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.security.SecureRandom;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
 public class HL7UtilityService {
+
+    @Autowired
+    private Utility utilities;
 
     public Map<String, List<String>> parseHl7Message(String hl7Message) {
         Map<String, List<String>> hl7Map = new HashMap<>();
@@ -40,7 +46,7 @@ public class HL7UtilityService {
 //    }
 
     // Method to build the MSH segment
-//    public String convertJsonToADTHL7(AppointmentRequest jsonString) {
+//    public String buildADTHL7Message(AppointmentRequest jsonString) {
 //        try {
 //            // Parse JSON
 //            ObjectMapper mapper = new ObjectMapper();
@@ -117,56 +123,76 @@ public class HL7UtilityService {
 //
 //    }
     private String generateOutboundExternalMRN() {
-        String uniqueID = UUID.randomUUID().toString().replace("-", "").toUpperCase();
-        System.out.println("vendorMRn" + uniqueID);
-        return uniqueID;
+        SecureRandom random = new SecureRandom();
+        long uniqueId = random.nextLong();
+
+        // Ensure that the ID is positive and numeric
+        uniqueId = Math.abs(uniqueId);
+
+        // Optionally, ensure the number is of a certain length (for example, 16 digits)
+        String numericID = String.format("%016d", uniqueId);
+
+        System.out.println("vendorMRN: " + numericID);
+        return numericID;
     }
 
-    public String convertJsonToADTHL7(AppointmentRequest appointmentRequest) {
+    public String buildADTHL7Message(AppointmentRequest appointmentRequest) {
         try {
             // Build MSH Segment
             StringBuilder hl7Message = new StringBuilder();
+            hl7Message.append("\u000B");
             hl7Message.append("MSH|^~\\&|")
                     .append(appointmentRequest.getSendingApplication() != null ? appointmentRequest.getSendingApplication() : "ECW").append("|")
                     .append(appointmentRequest.getSendingFacility() != null ? appointmentRequest.getSendingFacility() : "ECW").append("|")
                     .append(appointmentRequest.getReceivingApplication() != null ? appointmentRequest.getReceivingApplication() : "ECW").append("|")
-                    .append(appointmentRequest.getReceivingFacility() != null ? appointmentRequest.getReceivingFacility() : "ECW").append("|")
-                    .append(appointmentRequest.getDateTimeOfMessage() != null ? formatHL7Date(appointmentRequest.getDateTimeOfMessage()) : "").append("||")
-
+                    .append(appointmentRequest.getReceivingFacility() != null ? appointmentRequest.getReceivingFacility() : 303492).append("|")
+                    .append(appointmentRequest.getDateTimeOfMessage() != null ? appointmentRequest.getDateTimeOfMessage() : utilities.formatToHL7DateTime(LocalDateTime.now())).append("||")
                     .append(appointmentRequest.getMessageType() != null ? appointmentRequest.getMessageType() : "ADT^A28").append("|")
                     .append(appointmentRequest.getMessageControlId() != null ? appointmentRequest.getMessageControlId() : "").append("|")
-                    .append(appointmentRequest.getProcessingId() != null ? appointmentRequest.getProcessingId() : "P").append("|")
+                    .append(appointmentRequest.getProcessingId() != null ? appointmentRequest.getProcessingId() : "T").append("|")
                     .append(appointmentRequest.getVersionId() != null ? appointmentRequest.getVersionId() : "2.4").append("\n");
 
-            // Build EVN Segment
-//            hl7Message.append("EVN|")
-//                    .append(appointmentRequest.getEventTypeCode() != null ? appointmentRequest.getEventTypeCode() : "A28").append("|")
-//                    .append(appointmentRequest.getRecordedDateTime() != null ? appointmentRequest.getRecordedDateTime() : LocalDateTime.now()).append("|")
-//                    .append(appointmentRequest.getPlannedEventDateTime() != null ? appointmentRequest.getPlannedEventDateTime() : "").append("\n");
+//             Build EVN Segment
+            hl7Message.append("EVN|")
+                    .append("ADT^A28").append("|")
+                    .append(utilities.formatToHL7DateTime(LocalDateTime.now())).append("\n");
 
             // Build PID Segment
             AppointmentRequest.Patient patient = appointmentRequest.getPatient();
             if (patient != null) {
-                hl7Message.append("PID|||")
-                        .append(patient.getMrnNo() != null ? patient.getMrnNo() : "").append("||")
-                        .append(generateOutboundExternalMRN() != null ? patient.getMrnNo() : "").append("||")
+                hl7Message.append("PID|1|")
+                        .append("").append("|") //ECW PatientId
+                        .append(generateOutboundExternalMRN()).append("|")
+                        .append("").append("|")  //ECW PatientId
                         .append(patient.getLastName() != null ? patient.getLastName() : "").append("^")
                         .append(patient.getFirstName() != null ? patient.getFirstName() : "").append("^")
                         .append(patient.getMiddleName() != null ? patient.getMiddleName() : "").append("||")
                         .append(patient.getDob() != null ? patient.getDob() : "").append("|")
-                        .append(patient.getSex() != null ? patient.getSex() : "").append("|||")
-                        .append(patient.getRace() != null ? patient.getSex() : "").append("|||")
-                        .append(patient.getSsn() != null ? patient.getSsn() : "").append("|||");
+                        .append(patient.getSex() != null ? patient.getSex() : "").append("|||");
 
                 AppointmentRequest.Address address = patient.getAddress();
                 if (address != null) {
                     hl7Message.append(address.getStreet() != null ? address.getStreet() : "").append("^")
                             .append(address.getCity() != null ? address.getCity() : "").append("^")
                             .append(address.getState() != null ? address.getState() : "").append("^")
-                            .append(address.getZip() != null ? address.getZip() : "").append("|");
+                            .append(address.getZip() != null ? address.getZip() : "").append("||");
                 }
-                hl7Message.append(patient.getPhone() != null ? patient.getPhone() : "").append("\n");
-                hl7Message.append("" != null ? patient.getPhone() : "").append("\n");
+                hl7Message.append(patient.getPhone() != null ? patient.getPhone() : "").
+                        append(appointmentRequest.getPatient().getLanguage() != null ? patient.getLanguage() : "").append("|").
+                        append(appointmentRequest.getPatient().getMaritalStatus() != null ? patient.getMaritalStatus() : "").append("|").
+                        append(appointmentRequest.getPatient().getMaritalStatus() != null ? patient.getMaritalStatus() : "").append("|");
+                hl7Message.append(patient.getStatementFlag() != null ? patient.getStatementFlag() : ""); // PID.24 - Statement Flag
+                hl7Message.append("|");
+                hl7Message.append(patient.getStatementDate() != null ? patient.getStatementDate() : ""); // PID.25 - Statement Signature Date
+                hl7Message.append("|");
+
+                // Patient's Death Date and Indicator (if applicable)
+                hl7Message.append(patient.getDeathDate() != null ? patient.getDeathDate().replaceAll("-", "") : ""); // PID.29 - Patient Death Date
+                hl7Message.append("|");
+                hl7Message.append(patient.getDeathIndicator() != null ? patient.getDeathIndicator() : ""); // PID.30 - Patient Death Indicator
+
+                // End of PID segment
+                hl7Message.append("||||||||||||||||||||||||" + "\n");
 
             }
 
@@ -180,39 +206,55 @@ public class HL7UtilityService {
                 if (location != null) {
                     hl7Message.append(location.getPointOfCare() != null ? location.getPointOfCare() : "").append("^")
                             .append(location.getRoom() != null ? location.getRoom() : "").append("^")
-                            .append(location.getBed() != null ? location.getBed() : "").append("|");
+                            .append(location.getBed() != null ? location.getBed() : "").append("||||");
                 }
 
                 AppointmentRequest.Doctor doctor = visit.getAttendingDoctor();
                 if (doctor != null) {
                     hl7Message.append(doctor.getId() != null ? doctor.getId() : "").append("^")
                             .append(doctor.getLastName() != null ? doctor.getLastName() : "").append("^")
-                            .append(doctor.getFirstName() != null ? doctor.getFirstName() : "").append("|");
+                            .append(doctor.getFirstName() != null ? doctor.getFirstName() : "").append("|||").append("\n");
                 }
-                hl7Message.append("||||||||||||")
-                        .append(visit.getVisitNumber() != null ? visit.getVisitNumber() : "").append("|")
-                        .append("|||||||||||||||||")
-                        .append(visit.getAdmitDate() != null ? formatHL7Date(visit.getAdmitDate()) : "").append("\n");
+//                hl7Message.append("||||||||||||")
+//                        .append(visit.getVisitNumber() != null ? visit.getVisitNumber() : "").append("|")
+//                        .append("|||||||||||||||||")
+//                        .append(visit.getAdmitDate() != null ? formatHL7Date(visit.getAdmitDate()) : "").append("\n");
             }
 
             // Build IN1 Segment
-            AppointmentRequest.Insurance insurance = appointmentRequest.getInsurance();
-            if (insurance != null) {
-                hl7Message.append("IN1|1|")
-                        .append(insurance.getPlanId() != null ? insurance.getPlanId() : "").append("|")
-                        .append(insurance.getCompanyName() != null ? insurance.getCompanyName() : "").append("|");
+//            AppointmentRequest.Insurance insurance = appointmentRequest.getInsurance();
+//            if (insurance != null) {
+//                hl7Message.append("IN1|1|")
+//                        .append(insurance.getPlanId() != null ? insurance.getPlanId() : "").append("|")
+//                        .append(insurance.getCompanyName() != null ? insurance.getCompanyName() : "").append("|");
+//
+//                AppointmentRequest.Address insuranceAddress = insurance.getAddress();
+//                if (insuranceAddress != null) {
+//                    hl7Message.append(insuranceAddress.getStreet() != null ? insuranceAddress.getStreet() : "").append("^")
+//                            .append(insuranceAddress.getCity() != null ? insuranceAddress.getCity() : "").append("^")
+//                            .append(insuranceAddress.getState() != null ? insuranceAddress.getState() : "").append("^")
+//                            .append(insuranceAddress.getZip() != null ? insuranceAddress.getZip() : "");
+//                }
+//                hl7Message.append("|||")
+//                        .append(insurance.getPolicyNumber() != null ? insurance.getPolicyNumber() : "").append("\n");
+//            }
+            // Build GT1 Segment (Guarantor Information)
+            AppointmentRequest.Guarantor guarantor = appointmentRequest.getGuarantor();
+            if (guarantor != null) {
+                hl7Message.append("GT1|1|")
+                        .append(guarantor.getGuarantorId() != null ? guarantor.getGuarantorId() : "").append("|")
+                        .append(guarantor.getGuarantorName() != null ? guarantor.getGuarantorName() : "").append("|")
+                        .append(guarantor.getGuarantorAddress() != null ? guarantor.getGuarantorAddress() : "").append("|")
+                        .append(guarantor.getGuarantorPhone() != null ? guarantor.getGuarantorPhone() : "").append("|")
+                        .append(guarantor.getGuarantorDob() != null ? guarantor.getGuarantorDob() : "").append("|")
+                        .append(guarantor.getGuarantorSex() != null ? guarantor.getGuarantorSex() : "").append("|")
+                        .append(guarantor.getGuarantorType() != null ? guarantor.getGuarantorType() : "").append("|")
+                        .append(guarantor.getGuarantorRelationship() != null ? guarantor.getGuarantorRelationship() : "").append("|")
+                        .append(guarantor.getGuarantorSSN() != null ? guarantor.getGuarantorSSN() : "").append("|")
+                        .append(guarantor.getGuarantorEmploymentStatus() != null ? guarantor.getGuarantorEmploymentStatus() : "");
 
-                AppointmentRequest.Address insuranceAddress = insurance.getAddress();
-                if (insuranceAddress != null) {
-                    hl7Message.append(insuranceAddress.getStreet() != null ? insuranceAddress.getStreet() : "").append("^")
-                            .append(insuranceAddress.getCity() != null ? insuranceAddress.getCity() : "").append("^")
-                            .append(insuranceAddress.getState() != null ? insuranceAddress.getState() : "").append("^")
-                            .append(insuranceAddress.getZip() != null ? insuranceAddress.getZip() : "");
-                }
-                hl7Message.append("|||")
-                        .append(insurance.getPolicyNumber() != null ? insurance.getPolicyNumber() : "").append("\n");
             }
-
+            hl7Message.append("\u001C");
             return hl7Message.toString();
 
         } catch (Exception e) {
@@ -245,43 +287,47 @@ public class HL7UtilityService {
         return patientDetails;
     }
 
-    public String buildSIUHl7Message(AppointmentRequest appointmentRequest) {
+    public String buildSIUHl7Message(AppointmentRequest appointmentRequest) throws Exception {
         try {
             // Build MSH Segment
             StringBuilder hl7Message = new StringBuilder();
+            System.out.println("LocalDateTime.now()" + LocalDateTime.now());
+            hl7Message.append("\u000B");
             hl7Message.append("MSH|^~\\&|")
                     .append(appointmentRequest.getSendingApplication() != null ? appointmentRequest.getSendingApplication() : "ECW").append("|")
                     .append(appointmentRequest.getSendingFacility() != null ? appointmentRequest.getSendingFacility() : "ECW").append("|")
                     .append(appointmentRequest.getReceivingApplication() != null ? appointmentRequest.getReceivingApplication() : "ECW").append("|")
-                    .append(appointmentRequest.getReceivingFacility() != null ? appointmentRequest.getReceivingFacility() : "ECW").append("|")
-                    .append(appointmentRequest.getDateTimeOfMessage() != null ? formatHL7Date(appointmentRequest.getDateTimeOfMessage()) : formatHL7Date(String.valueOf(LocalDateTime.now()))).append("||")
+                    .append(appointmentRequest.getReceivingFacility() != null ? appointmentRequest.getReceivingFacility() : 303492).append("|")
+                    .append(appointmentRequest.getDateTimeOfMessage() != null ? appointmentRequest.getDateTimeOfMessage() : utilities.formatToHL7DateTime(LocalDateTime.now())).append("||")
                     .append(appointmentRequest.getMessageType() != null ? appointmentRequest.getMessageType() : "SIU^S12").append("|")
                     .append(appointmentRequest.getMessageControlId() != null ? appointmentRequest.getMessageControlId() : "").append("|")
-                    .append(appointmentRequest.getProcessingId() != null ? appointmentRequest.getProcessingId() : "P").append("|")
+                    .append(appointmentRequest.getProcessingId() != null ? appointmentRequest.getProcessingId() : "T").append("|")
                     .append(appointmentRequest.getVersionId() != null ? appointmentRequest.getVersionId() : "2.4").append("\n");
 
             // Build SCH Segment (Schedule)
             hl7Message.append("SCH|")
-                    .append(appointmentRequest.getVisitAppointmentIdVendor() != null ? appointmentRequest.getVisitAppointmentIdVendor() : "").append("|") // Placer Appointment ID
-                    .append(appointmentRequest.getVisitAppointmentIdECW() != null ? appointmentRequest.getVisitAppointmentIdECW() : "").append("|") // Filler Appointment ID
+                    .append(appointmentRequest.getVisitAppointmentIdECW() != null ? appointmentRequest.getVisitAppointmentIdECW() : "").append("|") // Placer Appointment ID
+                    .append(appointmentRequest.getVisitAppointmentIdECW() != null ? appointmentRequest.getVisitAppointmentIdECW() : "").append("|||||") // Filler Appointment ID
                     .append(appointmentRequest.getAppointmentReason() != null ? appointmentRequest.getAppointmentReason() : "").append("|") // Appointment Reason
-                    .append(appointmentRequest.getAppointmentVisitType() != null ? appointmentRequest.getAppointmentVisitType() : "").append("|") // Appointment Type
-                    .append(appointmentRequest.getStartDateTime() != null ? formatHL7Date(appointmentRequest.getStartDateTime()).toString() : "").append("|") // Start Date/Time
-                    .append(appointmentRequest.getEndDateTime() != null ? formatHL7Date(appointmentRequest.getEndDateTime().toString()) : "").append("|") // End Date/Time
-                    .append(appointmentRequest.getDuration() != null ? appointmentRequest.getDuration() : "").append("|") // Duration
-                    .append(appointmentRequest.getDurationUnits() != null ? appointmentRequest.getDurationUnits() : "").append("|") // Duration Units
-                    .append(appointmentRequest.getLocation() != null && appointmentRequest.getLocation().getLocationName() != null ? appointmentRequest.getLocation().getLocationName() : "").append("|") // Location
-                    .append(appointmentRequest.getProvider() != null && appointmentRequest.getProvider().getProviderId() != null ? appointmentRequest.getProvider().getProviderId() : "").append("|") // Provider ID
-                    .append(appointmentRequest.getResourceName() != null ? appointmentRequest.getResourceName() : "").append("|") // Resource Name
-                    .append(appointmentRequest.getEncounterNotes() != null ? appointmentRequest.getEncounterNotes() : "").append("\n"); // Notes
+                    .append(appointmentRequest.getAppointmentVisitType() != null ? appointmentRequest.getAppointmentVisitType() : "").append("|||") // Appointment Type
+                    .append("^^^" + appointmentRequest.getStartDateTime() != null ? "^^^" + formatHL7Date(appointmentRequest.getStartDateTime()) : "").append("^") // Start Date/Time
+                    .append(appointmentRequest.getEndDateTime() != null ? formatHL7Date(appointmentRequest.getEndDateTime()) : "").append("||||||||||||||"). // End Date/Time
+//                     .append(appointmentRequest.getLocation() != null && appointmentRequest.getLocation().getLocationName() != null ? appointmentRequest.getLocation().getLocationName() : "").append("|") // Location
+//                    .append(appointmentRequest.getProvider() != null && appointmentRequest.getProvider().getProviderId() != null ? appointmentRequest.getProvider().getProviderId() : "").append("|") // Provider ID
+//                    .append(appointmentRequest.getResourceName() != null ? appointmentRequest.getResourceName() : "").append("|") // Resource Name
+//                    .append(appointmentRequest.getEncounterNotes() != null ? appointmentRequest.getEncounterNotes() : "").append("|").
+        append(appointmentRequest.getVisitStatusCode() != null ? "PEN" : "PEN").append("|||" + "\n");
+            // Build PID Segment
             AppointmentRequest.Patient patient = appointmentRequest.getPatient();
             if (patient != null) {
-                hl7Message.append("PID|||")
-                        .append(patient.getMrnNo() != null ? patient.getMrnNo() : "").append("||")
+                hl7Message.append("PID|1|")
+                        .append("").append("|")  //ECW PatientId
+                        .append(generateOutboundExternalMRN()).append("|")
+                        .append("").append("|")   //ECW PatientId
                         .append(patient.getLastName() != null ? patient.getLastName() : "").append("^")
                         .append(patient.getFirstName() != null ? patient.getFirstName() : "").append("^")
                         .append(patient.getMiddleName() != null ? patient.getMiddleName() : "").append("||")
-                        .append(patient.getDob() != null ? patient.getDob() : "").append("|")
+                        .append(patient.getDob() != null ? patient.getDob().replace("-", "") : "").append("|")
                         .append(patient.getSex() != null ? patient.getSex() : "").append("|||");
 
                 AppointmentRequest.Address address = patient.getAddress();
@@ -289,17 +335,63 @@ public class HL7UtilityService {
                     hl7Message.append(address.getStreet() != null ? address.getStreet() : "").append("^")
                             .append(address.getCity() != null ? address.getCity() : "").append("^")
                             .append(address.getState() != null ? address.getState() : "").append("^")
-                            .append(address.getZip() != null ? address.getZip() : "").append("|");
+                            .append(address.getZip() != null ? address.getZip() : "").append("||");
                 }
-                hl7Message.append(patient.getPhone() != null ? patient.getPhone() : "").append("\n");
+                hl7Message.append(patient.getPhone() != null ? patient.getPhone() : "").append("||").
+                        append(appointmentRequest.getPatient().getLanguage() != null ? patient.getLanguage() : "").append("|").
+                        append(appointmentRequest.getPatient().getMaritalStatus() != null ? patient.getMaritalStatus() : "").append("|||").
+                        append(appointmentRequest.getPatient().getSsn() != null ? patient.getSsn() : "").append("||||||||||||||||||||" + "\n");
+                hl7Message.append(patient.getStatementFlag() != null ? patient.getStatementFlag() : ""); // PID.24 - Statement Flag
+//                hl7Message.append("|");
+//                hl7Message.append(patient.getStatementDate() != null ? patient.getStatementDate() : ""); // PID.25 - Statement Signature Date
+//                hl7Message.append("|");
+//
+//                // Patient's Death Date and Indicator (if applicable)
+//                hl7Message.append(patient.getDeathDate() != null ? patient.getDeathDate().replaceAll("-", "") : ""); // PID.29 - Patient Death Date
+//                hl7Message.append("|");
+//                hl7Message.append(patient.getDeathIndicator() != null ? patient.getDeathIndicator() : ""); // PID.30 - Patient Death Indicator
+//
+//                // End of PID segment
+//                hl7Message.append("||||||||||||||||||||||||" + "\n");
+
             }
 
+            // Build PV1 Segment
+            AppointmentRequest.Visit visit = appointmentRequest.getVisit();
+            if (visit != null) {
+                hl7Message.append("PV1|1|")
+                        .append(visit.getPatientClass() != null ? visit.getPatientClass() : "").append("|");
+
+                AppointmentRequest.AssignedLocation location = visit.getAssignedLocation();
+                if (location != null) {
+                    hl7Message.append(location.getPointOfCare() != null ? location.getPointOfCare() : "").append("^")
+                            .append(location.getRoom() != null ? location.getRoom() : "").append("^")
+                            .append(location.getBed() != null ? location.getBed() : "").append("||||");
+                }
+
+                AppointmentRequest.Doctor doctor = visit.getAttendingDoctor();
+                if (doctor != null) {
+                    hl7Message.append(doctor.getId() != null ? doctor.getId() : "").append("^")
+                            .append(doctor.getLastName() != null ? doctor.getLastName() : "").append("^")
+                            .append(doctor.getFirstName() != null ? doctor.getFirstName() : "").append("||||||||||||");
+
+                }
+                hl7Message.append(visit.getVisitNumber() != null ? visit.getVisitNumber() : "").append("|||||||||||||||||||||||||")
+                        .append(appointmentRequest.getStartDateTime() != null ? formatHL7Date(appointmentRequest.getStartDateTime()) : "")
+                        .append("||||||||").append("\n");
+            }
 //            AppointmentRequest appointment = new AppointmentRequest();
             if (appointmentRequest != null) {
-                hl7Message.append("AIG|")
-                        .append(appointmentRequest.getId() != null ? appointmentRequest.getId() : "").append("|")
-                        .append(appointmentRequest.getResourceId() != null ? appointmentRequest.getResourceId() : "").append("|")
-                        .append(appointmentRequest.getStartDateTime() != null ? formatHL7Date(appointmentRequest.getStartDateTime()) : "").append("|||")
+                hl7Message.append("AIG|1|")
+                        .append(appointmentRequest.getId() != null ? appointmentRequest.getId() : "").append("|");
+                AppointmentRequest.Doctor doctor = visit.getAttendingDoctor();
+                if (doctor != null) {
+                    hl7Message.append(doctor.getId() != null ? doctor.getId() : "").append("^")
+                            .append(doctor.getLastName() != null ? doctor.getLastName() : "").append("^")
+                            .append(doctor.getFirstName() != null ? doctor.getFirstName() : "").append("|||||");
+
+                }
+                        hl7Message.append(appointmentRequest.getStartDateTime() != null ? formatHL7Date(appointmentRequest.getStartDateTime()) : "").append("|||")
                         .append(appointmentRequest.getDuration() != null ? appointmentRequest.getDuration() : "").append("|")
                         .append(appointmentRequest.getDurationUnits() != null ? appointmentRequest.getDurationUnits() : "").append("\n");
             }
@@ -308,20 +400,23 @@ public class HL7UtilityService {
             AppointmentRequest.Location location = appointmentRequest.getLocation();
             if (location != null) {
                 hl7Message.append("AIL|")
-                        .append(location.getLocationId() != null ? location.getLocationId() : "").append("|")
+                        .append(location.getLocationId() != null ? location.getLocationId() : "").append("||")
 //                        .append(location.getLocationName() != null ? location.getLocationResourceId() : "").append("|")
-                        .append(location.getLocationName() != null ? location.getLocationName() : "").append("\n");
+                        .append(location.getLocationName() != null ? location.getLocationName() : "").append("|").append("\n");
             }
 
             // Build AIP Segment (Ordering Provider Information)
             AppointmentRequest.Provider provider = appointmentRequest.getProvider();
             if (provider != null) {
-                hl7Message.append("AIP|")
-                        .append(provider.getProviderId() != null ? provider.getProviderId() : "").append("|")
-                        .append(provider.getDuration() != null ? provider.getDuration() : "").append("|")
-                        .append(provider.getLastName() != null ? provider.getLastName() : "").append("^")
-                        .append(provider.getFirstName() != null ? provider.getFirstName() : "").append("\n");
+                hl7Message.append("AIP|1||");
+                AppointmentRequest.Doctor doctor = visit.getAttendingDoctor();
+                if (doctor != null) {
+                    hl7Message.append(doctor.getId() != null ? doctor.getId() : "").append("^")
+                            .append(doctor.getLastName() != null ? doctor.getLastName() : "").append("^")
+                            .append(doctor.getFirstName() != null ? doctor.getFirstName() : "").append("||");
+                }
             }
+            hl7Message.append("\u001C");
             return hl7Message.toString();
         } catch (Exception e) {
             throw new RuntimeException(e);

@@ -23,7 +23,7 @@ public class AppointmentRequest {
     private String durationUnits;
     private String appointmentTimingQuantity;
     private LocalDateTime startDateTime;
-    private LocalDateTime endDateTime;
+    private String endDateTime;
     private String resourceName;
     private String encounterNotes;
     private String visitStatusCode;
@@ -31,6 +31,16 @@ public class AppointmentRequest {
     public Patient patient;
     public Visit visit;
     public Insurance insurance;
+
+    public Guarantor guarantor;
+
+    public Guarantor getGuarantor() {
+        return guarantor;
+    }
+
+    public void setGuarantor(Guarantor guarantor) {
+        this.guarantor = guarantor;
+    }
 
     public String getSendingApplication() {
         return sendingApplication;
@@ -196,11 +206,11 @@ public class AppointmentRequest {
         this.startDateTime = startDateTime;
     }
 
-    public LocalDateTime getEndDateTime() {
+    public String getEndDateTime() {
         return endDateTime;
     }
 
-    public void setEndDateTime(LocalDateTime endDateTime) {
+    public void setEndDateTime(String endDateTime) {
         this.endDateTime = endDateTime;
     }
 
@@ -227,11 +237,13 @@ public class AppointmentRequest {
     public void setVisitStatusCode(String visitStatusCode) {
         this.visitStatusCode = visitStatusCode;
     }
+
+
 // Getters and Setters
     // (Generate these using your IDE or manually)
 
     // Resource class
-  public static   class Resource {
+    public static class Resource {
         public String resourceId;
         public String lastName;
         public String firstName;
@@ -292,7 +304,7 @@ public class AppointmentRequest {
     }
 
     // Location class
-  public static class Location {
+    public static class Location {
         public String locationId;
         public String locationName;
 
@@ -383,8 +395,7 @@ public class AppointmentRequest {
     }
 
     // Patient class
-   public static class Patient {
-        public String mrnNo;
+    public static class Patient {
         public String lastName;
         public String firstName;
         public String middleName;
@@ -393,16 +404,97 @@ public class AppointmentRequest {
 
         public String race;
         public Address address;
-        public String phone;
+        private String phone;         // PID.13 - Home Phone
+        private String businessPhone; // PID.14.0 - Business Phone
+        private String cellPhone;     // PID.14.1 - Cell Phone
+        private String language;      // PID.15 - Primary Language
+        private String maritalStatus; // PID.16 - Marital Status
+        private String ethnicity;     // PID.22 - Ethnicity
+        private String statementFlag; // PID.24 - Send Statement Flag
+        private String statementDate; // PID.25 - Statement Signature Date
+        private String deathDate;     // PID.29 - Patient Death Date
+        private String deathIndicator;
 
         public String ssn;
 
-        public String getMrnNo() {
-            return mrnNo;
+//        public String getMrnNo() {
+//            return mrnNo;
+//        }
+//
+//        public void setMrnNo(String mrnNo) {
+//            this.mrnNo = mrnNo;
+//        }
+
+        public String getBusinessPhone() {
+            return businessPhone;
         }
 
-        public void setMrnNo(String mrnNo) {
-            this.mrnNo = mrnNo;
+        public void setBusinessPhone(String businessPhone) {
+            this.businessPhone = businessPhone;
+        }
+
+        public String getCellPhone() {
+            return cellPhone;
+        }
+
+        public void setCellPhone(String cellPhone) {
+            this.cellPhone = cellPhone;
+        }
+
+        public String getLanguage() {
+            return language;
+        }
+
+        public void setLanguage(String language) {
+            this.language = language;
+        }
+
+        public String getMaritalStatus() {
+            return maritalStatus;
+        }
+
+        public void setMaritalStatus(String maritalStatus) {
+            this.maritalStatus = maritalStatus;
+        }
+
+        public String getEthnicity() {
+            return ethnicity;
+        }
+
+        public void setEthnicity(String ethnicity) {
+            this.ethnicity = ethnicity;
+        }
+
+        public String getStatementFlag() {
+            return statementFlag;
+        }
+
+        public void setStatementFlag(String statementFlag) {
+            this.statementFlag = statementFlag;
+        }
+
+        public String getStatementDate() {
+            return statementDate;
+        }
+
+        public void setStatementDate(String statementDate) {
+            this.statementDate = statementDate;
+        }
+
+        public String getDeathDate() {
+            return deathDate;
+        }
+
+        public void setDeathDate(String deathDate) {
+            this.deathDate = deathDate;
+        }
+
+        public String getDeathIndicator() {
+            return deathIndicator;
+        }
+
+        public void setDeathIndicator(String deathIndicator) {
+            this.deathIndicator = deathIndicator;
         }
 
         public String getLastName() {
@@ -572,7 +664,7 @@ public class AppointmentRequest {
     }
 
     // AssignedLocation class (nested in Visit)
-  public static class AssignedLocation {
+    public static class AssignedLocation {
         public String pointOfCare;
         public String room;
         public String bed;
@@ -604,7 +696,7 @@ public class AppointmentRequest {
     }
 
     // Doctor class (nested in Visit)
- public static  class Doctor {
+    public static class Doctor {
         public String id;
         public String lastName;
         public String firstName;
@@ -636,7 +728,7 @@ public class AppointmentRequest {
     }
 
     // Insurance class
-   public static class Insurance {
+    public static class Insurance {
         public String planId;
         public String companyName;
         public Address address;
@@ -836,4 +928,101 @@ public class AppointmentRequest {
     public void setParticipantContact(String participantContact) {
         this.participantContact = participantContact;
     }
+
+    public class Guarantor {
+        private String guarantorId;
+        private String guarantorName;
+        private String guarantorRelationship;
+        private String guarantorAddress;
+        private String guarantorPhone;
+        private String guarantorDob;
+        private String guarantorSex;
+        private String guarantorType;
+        private String guarantorSSN;
+
+        private String guarantorEmploymentStatus;
+
+
+        public String getGuarantorId() {
+            return guarantorId;
+        }
+
+        public void setGuarantorId(String guarantorId) {
+            this.guarantorId = guarantorId;
+        }
+
+        public String getGuarantorName() {
+            return guarantorName;
+        }
+
+        public void setGuarantorName(String guarantorName) {
+            this.guarantorName = guarantorName;
+        }
+
+        public String getGuarantorRelationship() {
+            return guarantorRelationship;
+        }
+
+        public void setGuarantorRelationship(String guarantorRelationship) {
+            this.guarantorRelationship = guarantorRelationship;
+        }
+
+        public String getGuarantorAddress() {
+            return guarantorAddress;
+        }
+
+        public void setGuarantorAddress(String guarantorAddress) {
+            this.guarantorAddress = guarantorAddress;
+        }
+
+        public String getGuarantorPhone() {
+            return guarantorPhone;
+        }
+
+        public void setGuarantorPhone(String guarantorPhone) {
+            this.guarantorPhone = guarantorPhone;
+        }
+
+        public String getGuarantorDob() {
+            return guarantorDob;
+        }
+
+        public void setGuarantorDob(String guarantorDob) {
+            this.guarantorDob = guarantorDob;
+        }
+
+        public String getGuarantorSex() {
+            return guarantorSex;
+        }
+
+        public void setGuarantorSex(String guarantorSex) {
+            this.guarantorSex = guarantorSex;
+        }
+
+        public String getGuarantorType() {
+            return guarantorType;
+        }
+
+        public void setGuarantorType(String guarantorType) {
+            this.guarantorType = guarantorType;
+        }
+
+        public String getGuarantorSSN() {
+            return guarantorSSN;
+        }
+
+        public void setGuarantorSSN(String guarantorSSN) {
+            this.guarantorSSN = guarantorSSN;
+        }
+
+        public String getGuarantorEmploymentStatus() {
+            return guarantorEmploymentStatus;
+        }
+
+        public void setGuarantorEmploymentStatus(String guarantorEmploymentStatus) {
+            this.guarantorEmploymentStatus = guarantorEmploymentStatus;
+        }
+    }
+
+
 }

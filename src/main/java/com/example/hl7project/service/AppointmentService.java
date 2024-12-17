@@ -137,7 +137,7 @@ public class AppointmentService {
     }
 
 
-    public void checkAndUpdateSameSpecialtyNowShowAppointment(String patientId, String providerName) {
+    public void checkAndUpdateSameSpecialtyNoShowAppointment(String patientId, String providerName) {
 //        Provider provider=providerRepository.findByProviderId(providerId);
         Provider provider = providerRepository.findByProviderName(providerName);
         List<Object[]> appointmentDTOList = appointmentRepository.findAppointmentsByPatientAndSpecialty(patientId, provider.getSpecialty());
@@ -149,13 +149,10 @@ public class AppointmentService {
                 appointmentRepository.save(appointment);
             }
         }
-
-
     }
 
     public String sendNoShowAppointmentMessages() {
         List<AppointmentTextMessageDTO> list = getAppointmentTextMessageDTO();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
         for (AppointmentTextMessageDTO appointment : list) {
             Patient patient = patientRepository.findByPatientId(appointment.getPatientId());
             ReminderMessageStatus status = appointment.getReminderMessageStatus();

@@ -30,8 +30,6 @@ import java.util.*;
 @RequestMapping("/hl7")
 public class AppointmentController {
 
-    @Autowired
-    private HL7MessageBuilderService hl7MessageBuilderService;
 
     @Autowired
     private SIUInboundService appointmentService;
@@ -40,13 +38,8 @@ public class AppointmentController {
     private InboundSIUMessageRepo inboundSIUMessageRepo;
 
     @Autowired
-    private OutboundService outboundService;
-
-    @Autowired
     private SIUInboundService siuInboundService;
 
-    @Autowired
-    private HL7UtilityService hl7UtilityService;
 
     @Autowired
     private SchedulerService schedulerService;
@@ -58,11 +51,7 @@ public class AppointmentController {
     private PatientRepository patientRepository;
 
     @Autowired
-    private SchedulerService appointmentScheduler;
-
-    @Autowired
     private NoShowService noShowService;
-    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @PostMapping("/SIU")
     public Message sendMessge(@RequestBody String hl7mesage) throws Exception {

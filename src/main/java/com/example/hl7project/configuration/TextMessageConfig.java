@@ -46,6 +46,14 @@ public class TextMessageConfig {
 
     @Value("${time_difference_multiple_appointment}")
     private String timeDifference;
+
+
+    @Value("${MIRTH.OUTBOUND.ADT_ENDPOINT}")
+    private String mirthOutboundADTEndpoint;
+
+    @Value("${MIRTH.OUTBOUND.SIU_ENDPOINT}")
+    private String mirthOutboundSIUEndpoint;
+
     @Bean
     public TwillioService twilioService() {
         return new TwillioService();
@@ -154,6 +162,30 @@ public class TextMessageConfig {
 
     public void setAppointment4WeeksReminder(String appointment4WeeksReminder) {
         this.appointment4WeeksReminder = appointment4WeeksReminder;
+    }
+
+    public void setNoShowReminderTwoWeekDays(Integer noShowReminderTwoWeekDays) {
+        NoShowReminderTwoWeekDays = noShowReminderTwoWeekDays;
+    }
+
+    public void setNoShowReminderFourWeekDays(Integer noShowReminderFourWeekDays) {
+        NoShowReminderFourWeekDays = noShowReminderFourWeekDays;
+    }
+
+    public String getMirthOutboundADTEndpoint() {
+        return mirthOutboundADTEndpoint;
+    }
+
+    public void setMirthOutboundADTEndpoint(String mirthOutboundADTEndpoint) {
+        this.mirthOutboundADTEndpoint = mirthOutboundADTEndpoint;
+    }
+
+    public String getMirthOutboundSIUEndpoint() {
+        return mirthOutboundSIUEndpoint;
+    }
+
+    public void setMirthOutboundSIUEndpoint(String mirthOutboundSIUEndpoint) {
+        this.mirthOutboundSIUEndpoint = mirthOutboundSIUEndpoint;
     }
 }
 

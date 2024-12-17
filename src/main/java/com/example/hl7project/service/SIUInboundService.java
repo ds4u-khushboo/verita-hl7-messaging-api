@@ -117,9 +117,9 @@ public class SIUInboundService {
                     System.out.println("appointmentOptional::::" + appointmentOptional);
                     if (appointmentOptional == false) {
                         appointmentService.saveAppointmentData(schData, pv1Data, mshData, patientData);
-                        appointmentService.checkAndUpdateSameSpecialtyNowShowAppointment(patientId, providerName);
+                        appointmentService.checkAndUpdateSameSpecialtyNoShowAppointment(patientId, providerName);
                         String smsMessage = String.format(textMessageConfig.getAppCreation(),
-                                patientData.get("Patient Name"), schData.get("Appointment Date") + schData.get("Appointment Time"), appointmentId);
+                                patientData.get("Patient Name"), utility.hl7DateToDateTime(schData.get("Appointment Date")), appointmentId);
                         appointmentConfirmationService.checkTimeDifferenceAndSendMessage(patientData.get("External Patient ID"),patientPhone);
                         notificationService.sendAppointmentNotification(patientPhone, smsMessage);
                         logger.info("Appointment scheduled and notification sent for Appointment ID: {}", appointmentId);
@@ -146,13 +146,14 @@ public class SIUInboundService {
                             appointmentRepository.save(appointment);
                         }
 
+
                         updateFirstAppointmentIsConfirmRequestSent(String.valueOf(appointmentId));
 
                         logger.info("Appointment ID: {} marked as No-Show.", appointmentId);
 
                         messageService.saveMessageEntity(messageType, hl7Message, noshowMessage, patientPhone, String.valueOf(appointmentId), "");
 
-                        schedulerService.scheduleNoShowAppointmentsReminders();
+                        appointmentService.sendNoShowAppointmentMessages();
 
                     } else {
                         logger.warn("No appointment found with Appointment ID: {}", appointmentId);
