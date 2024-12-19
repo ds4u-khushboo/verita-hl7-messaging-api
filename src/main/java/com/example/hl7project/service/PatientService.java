@@ -30,7 +30,6 @@ public class PatientService {
         patient.setFirstName(patientData.get("First Name"));
         patient.setLastName(patientData.get("Last Name"));
 
-//        patient.setAppointments(appointmentList);
         System.out.println("patient data saved!!!");
         patientRepository.save(patient);
     }

@@ -13,11 +13,6 @@ import java.util.Map;
 @Component
 public class HL7MessageBuilderService {
 
-
-    @Autowired
-    private PatientRepository patientRepository;
-    private final ObjectMapper objectMapper = new ObjectMapper();
-
     public String buildAdtMessage(String messageType, Map<String, Object> patientData) {
         StringBuilder hl7Message = new StringBuilder();
 

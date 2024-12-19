@@ -27,29 +27,29 @@ public class ADTController {
         return adtService.processMessage(adtMessage);
     }
 
-    @PostMapping("/ADTA31")
-    public ResponseEntity<Patient> updatePatient(  @RequestParam String mrn,
-                                                   @RequestParam String firstName,
-                                                   @RequestParam String lastName,
-                                                   @RequestParam String dob,
-                                                   @RequestBody Patient patientDetails) {
-            Optional<Patient> patient = patientRepository.findByExternalPatientMRNAndfAndFirstNameAndlAndLastNameAndDateOfBirth(mrn,firstName,lastName,dob);
-
-
-        if (patientOptional.isPresent()) {
-            Patient patient = patientOptional.get();
-            patient.setFirstName(patientDetails.getFirstName());
-            patient.setLastName(patientDetails.getLastName());
-            patient.setDob(patientDetails.getDob());
-            patient.setEmail(patientDetails.getEmail());
-            patient.setPhone(patientDetails.getPhone());
-
-            return patientRepository.save(patient);
-        } else {
-            throw new RuntimeException("Patient not found with provided details");
-        }
-    }
-    }
+//    @PostMapping("/ADTA31")
+//    public ResponseEntity<Patient> updatePatient(  @RequestParam String mrn,
+//                                                   @RequestParam String firstName,
+//                                                   @RequestParam String lastName,
+//                                                   @RequestParam String dob,
+//                                                   @RequestBody Patient patientDetails) {
+//            Optional<Patient> patient = patientRepository.findByExternalPatientMRNAndfAndFirstNameAndlAndLastNameAndDateOfBirth(mrn,firstName,lastName,dob);
+//
+//
+//        if (patientOptional.isPresent()) {
+//            Patient patient = patientOptional.get();
+//            patient.setFirstName(patientDetails.getFirstName());
+//            patient.setLastName(patientDetails.getLastName());
+//            patient.setDob(patientDetails.getDob());
+//            patient.setEmail(patientDetails.getEmail());
+//            patient.setPhone(patientDetails.getPhone());
+//
+//            return patientRepository.save(patient);
+//        } else {
+//            throw new RuntimeException("Patient not found with provided details");
+//        }
+//    }
+//    }
     @PostMapping("/adtmsg")
     public void createADTmessage() {
 

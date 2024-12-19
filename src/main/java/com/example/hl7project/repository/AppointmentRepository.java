@@ -57,6 +57,7 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     Appointment findByVisitAppointmentId(Long appointmentId);
 
     List<Appointment> deleteByVisitAppointmentId(Long visitAppId);
+
     @Query(value = "SELECT visit_appointment_id, patient_id, cm_code, created_at, " +
             "TIMESTAMPDIFF(MINUTE, created_at, NOW()) AS minutes_elapsed, " +
             "CASE WHEN LAG(cm_code) OVER (PARTITION BY patient_id, DATE(created_at) " +
@@ -100,6 +101,13 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
             @Param("patientId") String patientId,
             @Param("specialty") String specialty
     );
+
+    @Query("SELECT a FROM Appointment a WHERE a.resourceId = :resourceId AND FUNCTION('DATE', a.appointmentDate) = FUNCTION('DATE', :localDate)")
+    List<Appointment> findByResourceIdAndLocalDate(@Param("resourceId") String resourceId, @Param("localDate") LocalDate localDate);
+
+    @Query("SELECT DISTINCT a.appointmentType FROM Appointment a WHERE a.resourceId = :resourceId")
+    List<String> findDistinctAppointmentTypesByResourceId(@Param("resourceId") String resourceId);
+
 }
 
 

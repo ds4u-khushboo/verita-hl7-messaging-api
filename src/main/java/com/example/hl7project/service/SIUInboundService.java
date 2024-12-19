@@ -41,9 +41,6 @@ public class SIUInboundService {
     private AppointmentConfirmationService appointmentConfirmationService;
 
     @Autowired
-    private SchedulerService schedulerService;
-
-    @Autowired
     private Utility utility;
 
     @Autowired
@@ -51,9 +48,6 @@ public class SIUInboundService {
 
     @Autowired
     private NotificationService notificationService;
-
-    @Autowired
-    private NoShowServiceImpl noShowServiceImpl;
 
     private static final Logger logger = LoggerFactory.getLogger(SIUInboundService.class);
 
@@ -82,9 +76,15 @@ public class SIUInboundService {
             }
 
             List<String> pv1Segment = hl7Map.get("PV1");
-            if (pidSegment == null) {
+            if (pv1Segment == null) {
                 logger.error("PV1 not found in message: {}", hl7Message);
                 throw new Exception("PV1 segment not found.");
+            }
+
+            List<String> aigSegment = hl7Map.get("AIG");
+            if (aigSegment == null) {
+                logger.error("AIG not found in message: {}", hl7Message);
+                throw new Exception("AIG segment not found.");
             }
 
             logger.debug("Extracting patient data from PID segment");
@@ -92,6 +92,7 @@ public class SIUInboundService {
             Map<String, String> schData = messageProcessingService.extractDataFromSchSegment(schSegment);
             Map<String, String> mshData = messageProcessingService.extractDataFromMshSegment(mshSegment);
             Map<String, String> pv1Data = messageProcessingService.extractDataFromPV1Segment(pv1Segment);
+            Map<String, String> aigData = messageProcessingService.extractDataFromAIGSegment(aigSegment);
 
             String messageType = mshData.get("messageType");
             Long appointmentId = Long.valueOf(schData.get("Visit/Appointment ID"));
@@ -116,11 +117,12 @@ public class SIUInboundService {
                     boolean appointmentOptional = appointmentRepository.existsByVisitAppointmentId(appointmentId);
                     System.out.println("appointmentOptional::::" + appointmentOptional);
                     if (appointmentOptional == false) {
-                        appointmentService.saveAppointmentData(schData, pv1Data, mshData, patientData);
+                        appointmentService.saveAppointmentData(schData, pv1Data, aigData, mshData, patientData);
+                        appointmentService.saveResourceFromAIGSegment(aigSegment);
                         appointmentService.checkAndUpdateSameSpecialtyNoShowAppointment(patientId, providerName);
                         String smsMessage = String.format(textMessageConfig.getAppCreation(),
                                 patientData.get("Patient Name"), utility.hl7DateToDateTime(schData.get("Appointment Date")), appointmentId);
-                        appointmentConfirmationService.checkTimeDifferenceAndSendMessage(patientData.get("External Patient ID"),patientPhone);
+                        appointmentConfirmationService.checkTimeDifferenceAndSendMessage(patientData.get("External Patient ID"), patientPhone);
                         notificationService.sendAppointmentNotification(patientPhone, smsMessage);
                         logger.info("Appointment scheduled and notification sent for Appointment ID: {}", appointmentId);
                         messageService.saveMessageEntity(messageType, hl7Message, smsMessage, patientPhone, String.valueOf(appointmentId), "");
@@ -145,7 +147,6 @@ public class SIUInboundService {
                             appointment.setAppointmentDateStr(schData.get("Appointment Date"));
                             appointmentRepository.save(appointment);
                         }
-
 
                         updateFirstAppointmentIsConfirmRequestSent(String.valueOf(appointmentId));
 

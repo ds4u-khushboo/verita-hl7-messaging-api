@@ -1,24 +1,22 @@
 package com.example.hl7project.controller;
 
 import com.example.hl7project.dto.AppointmentRequest;
+import com.example.hl7project.dto.BookingInfoDTO;
 import com.example.hl7project.model.InboundHL7Message;
 import com.example.hl7project.model.Patient;
+import com.example.hl7project.model.Resource;
 import com.example.hl7project.repository.InboundSIUMessageRepo;
 import com.example.hl7project.repository.PatientRepository;
 import com.example.hl7project.response.MessageResponse;
 import com.example.hl7project.service.*;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.twilio.rest.api.v2010.account.Message;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.*;
-import java.net.Socket;
-import java.net.SocketException;
+import java.io.IOException;
 import java.net.URI;
-import java.net.UnknownHostException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -32,14 +30,13 @@ public class AppointmentController {
 
 
     @Autowired
-    private SIUInboundService appointmentService;
+    private HL7UtilityService hl7UtilityService;
 
     @Autowired
     private InboundSIUMessageRepo inboundSIUMessageRepo;
 
     @Autowired
     private SIUInboundService siuInboundService;
-
 
     @Autowired
     private SchedulerService schedulerService;
@@ -106,72 +103,40 @@ public class AppointmentController {
         return messages;
     }
 
-//    @PostMapping("/trigger-multiple-appointments-scheduler")
-//    public ResponseEntity<String> triggerMultipleAppointmentsScheduler() {
-//        schedulerService.multipleppoinmentsScheudler();  // Manually trigger the scheduled method
-//        return ResponseEntity.ok("Multiple appointments scheduler triggered.");
-//    }
-
     @RequestMapping("/listByTimeRange")
     public List<InboundHL7Message> getMessagesSentInRange(String startTime) {
         return inboundSIUMessageRepo.findInboundHL7MessageByCreatedAt(LocalDate.parse(startTime));
     }
-//    @GetMapping("/trigger-no-show-check")
-//    public String triggerNoShowCheck() {
-//        noShowService.checkNoShowAppointments();
-//
-//        return "No-show appointment check triggered manually.";
-//    }
-//    @RequestMapping("/no-show")
-//    public void getNoShow() {
-//         noShowService.checkNoShowAppointments();
-//    }
 
     @DeleteMapping("/deleteByDate")
     public List<InboundHL7Message> getDeleteMessageByDate(@RequestParam("date") String dateString) {
-//        if (dateString == null) {
-//            return ResponseEntity.badRequest().body("Date parameter is required and cannot be null.");
-//        }
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-        // Parse the string to LocalDateTime
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         LocalDate localDate = LocalDate.parse(dateString, formatter);
 
-        // Convert to Timestamp
-        //Timestamp timestamp = Timestamp.valueOf(String.valueOf(localDate));
-
-        // Delete the messages
-        return appointmentService.deleteMessage(localDate);
+        return siuInboundService.deleteMessage(localDate);
     }
 
 
     @DeleteMapping("/deleteByDays")
     public List<InboundHL7Message> getDeleteMessageByDate(@RequestParam int days) {
-        return appointmentService.deleteMessagesOlderThanDays(days);
+        return siuInboundService.deleteMessagesOlderThanDays(days);
     }
 
     @RequestMapping("/getMessageByRange")
     public MessageResponse getMessageByTimRange(@RequestParam String startDate, @RequestParam String endDate) {
-        return appointmentService.getMessagesInRange(startDate, endDate);
+        return siuInboundService.getMessagesInRange(startDate, endDate);
     }
 
     @GetMapping("/count")
     public ResponseEntity<Long> countMessagesByType(@RequestParam String type) {
-        return appointmentService.noOfMessage(type);
+        return siuInboundService.noOfMessage(type);
     }
 
-    //    @GetMapping("/scheduler")
-//    public ResponseEntity<Long> getScheduler() {
-//        return appointmentScheduler.getScheduler();
-//    }
-//    @GetMapping("/schedulerr")
-//    public void getSchedulerr() {
-//         appointmentScheduler.checkAndSendMessage();
-//    }
     @GetMapping("/noshow-rate")
     public ResponseEntity<Map<String, Object>> getNoShowRate() {
         try {
-            long totalAppointments = appointmentService.getTotalAppointmentsCount();
+            long totalAppointments = siuInboundService.getTotalAppointmentsCount();
 //            NoShowReportDTO noShowCount = appointmentService.getNoShowReport();
 //            HashMap<String, String> appointments = appointmentService.getAppointmentDetails();
 //            String messageEntities = appointmentService.getAllPatient("SIU_S26");
@@ -229,8 +194,54 @@ public class AppointmentController {
 
     @GetMapping("/count-by-type")
     public List<Object[]> getCountByMessageType() {
-        return appointmentService.getCountByMessageType();
+        return siuInboundService.getCountByMessageType();
     }
 
 
+    @PostMapping("/book")
+    public ResponseEntity<String> bookAppointment(@RequestBody AppointmentRequest appointmentRequest) {
+        try {
+            // Generate the HL7 SIU message from the request
+            String hl7Message = hl7UtilityService.buildSIUHl7Message(appointmentRequest);
+            if (hl7Message == null || hl7Message.isEmpty()) {
+                throw new IllegalArgumentException("HL7 message cannot be null or empty");
+            }
+
+            System.out.println("Sending HL7 message: " + hl7Message);  // Log the received message
+
+            HttpClient httpClient = HttpClient.newBuilder()
+                    .followRedirects(HttpClient.Redirect.ALWAYS)
+                    .build();
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create("http://localhost:8089/send-message/"))
+                    .header("Content-Type", "text/plain")
+                    .POST(HttpRequest.BodyPublishers.ofString(hl7Message))
+                    .build();
+
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+            if (response.statusCode() == 302) {
+                response.headers().firstValue("Location").ifPresent(redirectUrl ->
+                        System.out.println("Redirecting to: " + redirectUrl));
+            } else if (response.statusCode() == 200) {
+                System.out.println("Request successful!");
+            } else {
+                System.out.println("Failed with status code: " + response.statusCode());
+            }
+
+            System.out.println("Response body: " + response.body());
+        } catch (IOException ex) {
+            throw new RuntimeException(ex);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error processing appointment: " + e.getMessage());
+        }
+        return ResponseEntity.status(200).body("processed");
+
+    }
+//    @GetMapping("/slots-type")
+//    public List<Resource> getSlots(@RequestParam String startTime, @RequestParam String resourceType) {
+//        List<Resource> resource1 = appointmentService.calculateAvailableTimeSlots(startTime,resourceType);
+//        return resource1;
+//    }
 }

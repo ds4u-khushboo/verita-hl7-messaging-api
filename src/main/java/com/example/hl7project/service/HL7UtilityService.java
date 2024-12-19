@@ -1,6 +1,11 @@
 package com.example.hl7project.service;
 
 import com.example.hl7project.dto.AppointmentRequest;
+import com.example.hl7project.dto.BookingInfoDTO;
+import com.example.hl7project.model.Provider;
+import com.example.hl7project.model.Resource;
+import com.example.hl7project.repository.ProviderRepository;
+import com.example.hl7project.repository.ResourceRepository;
 import com.example.hl7project.utility.Utility;
 import com.google.gson.JsonObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +22,12 @@ public class HL7UtilityService {
     @Autowired
     private Utility utilities;
 
+    @Autowired
+    private ResourceRepository resourceRepository;
+
+    @Autowired
+    private ProviderRepository providerRepository;
+
     public Map<String, List<String>> parseHl7Message(String hl7Message) {
         Map<String, List<String>> hl7Map = new HashMap<>();
         String[] segments = hl7Message.split("\r");
@@ -30,98 +41,6 @@ public class HL7UtilityService {
         return hl7Map;
     }
 
-//    public String convertJsonToHl7(String messageType, Map<String, Object> patientData) {
-//        // Use the patientData map to build the HL7 message.
-//        StringBuilder hl7Message = new StringBuilder();
-//
-//        // Build the MSH segment
-//        hl7Message.append(builSegments(messageType));
-//
-//        // Build the PID segment with patient data
-//       // hl7Message.append(buildPIDSegment(patientData));
-//
-//        System.out.println("hl7Message:::" + hl7Message);
-//        // Return the constructed HL7 message
-//        return hl7Message.toString();
-//    }
-
-    // Method to build the MSH segment
-//    public String buildADTHL7Message(AppointmentRequest jsonString) {
-//        try {
-//            // Parse JSON
-//            ObjectMapper mapper = new ObjectMapper();
-//            JsonNode rootNode = mapper.readTree(String.valueOf(appointmentRequest));
-//
-//            // Build MSH Segment
-//            StringBuilder hl7Message = new StringBuilder();
-//            System.out.println("hl7Message}}}" + hl7Message);
-//            hl7Message.append("MSH|^~\\&|")
-//                    .append(rootNode.path("sendingApplication").asText("ECW")).append("|")
-//                    .append(rootNode.path("sendingFacility").asText("ECW")).append("|")
-//                    .append(rootNode.path("receivingApplication").asText("ECW")).append("|")
-//                    .append(rootNode.path("receivingFacility").asText("ECW")).append("|")
-//                    .append(rootNode.path("dateTimeOfMessage").asText(String.valueOf(LocalDateTime.now()))).append("||")
-//                    .append(rootNode.path("messageType").asText("ADT^A28")).append("|")
-//                    .append(rootNode.path("messageControlId").asText("")).append("|")
-//                    .append(rootNode.path("processingId").asText("P")).append("|")
-//                    .append(rootNode.path("versionId").asText("2.4")).append("\n");
-//
-//            hl7Message.append("EVN|")
-//                    .append(rootNode.path("eventTypeCode").asText("A28")).append("|")
-//                    .append(rootNode.path("recordedDateTime").asText(String.valueOf(LocalDateTime.now()))).append("|")
-//                    .append(rootNode.path("plannedEventDateTime").asText("")).append("|\n");
-//
-//            // Build PID Segment
-//            JsonNode patient = rootNode.path("patient");
-//            hl7Message.append("PID|||")
-//                    .append(patient.path("id").asText(appointmentRequest.getPatient().getMrnNo())).append("||")
-//                    .append(patient.path("lastName").asText(appointmentRequest.getPatient().getFirstName())).append("^")
-//                    .append(patient.path("firstName").asText(appointmentRequest.getPatient().getLastName())).append("^")
-//                    .append(patient.path("middleName").asText(appointmentRequest.getPatient().getMiddleName())).append("||")
-//                    .append(patient.path("dob").asText(appointmentRequest.getPatient().getDob())).append("|")
-//                    .append(patient.path("sex").asText(appointmentRequest.getPatient().getSex())).append("|||")
-//                    .append(patient.path("address").path("street").asText(appointmentRequest.getPatient().getAddress().getStreet())).append("^")
-//                    .append(patient.path("address").path("city").asText(appointmentRequest.getPatient().getAddress().getCity())).append("^")
-//                    .append(patient.path("address").path("state").asText(appointmentRequest.getPatient().getAddress().getState())).append("^")
-//                    .append(patient.path("address").path("zip").asText(appointmentRequest.getPatient().getAddress().getZip())).append("||")
-//                    .append(patient.path("phone").asText(appointmentRequest.getPatient().getPhone())).append("\n");
-//
-//
-//            // Build PV1 Segment
-//            JsonNode visit = rootNode.path("visit");
-//            hl7Message.append("PV1||")
-//                    .append(visit.path("patientClass").asText(appointmentRequest.getVisit().getPatientClass())).append("|")
-//                    .append(visit.path("assignedLocation").path("pointOfCare").asText(appointmentRequest.getVisit().getAssignedLocation().getPointOfCare())).append("^")
-//                    .append(visit.path("assignedLocation").path("room").asText(appointmentRequest.getVisit().getAssignedLocation().getRoom())).append("^")
-//                    .append(visit.path("assignedLocation").path("bed").asText(appointmentRequest.getVisit().getAssignedLocation().getBed())).append("|||")
-//                    .append(visit.path("attendingDoctor").path("id").asText(appointmentRequest.getVisit().getAttendingDoctor().getId())).append("^")
-//                    .append(visit.path("attendingDoctor").path("lastName").asText(appointmentRequest.getVisit().getAttendingDoctor().getLastName())).append("^")
-//                    .append(visit.path("attendingDoctor").path("firstName").asText(appointmentRequest.getVisit().getAttendingDoctor().getFirstName())).append("|")
-//                    .append("||||||||||||")
-//                    .append(visit.path("visitNumber").asText(appointmentRequest.getVisit().getVisitNumber())).append("|")
-//                    .append("|||||||||||||||||")
-//                    .append(visit.path("admitDate").asText(appointmentRequest.getVisit().getAdmitDate())).append("\n");
-//
-//            JsonNode insurance = rootNode.path("insurance");
-//            if (!insurance.isMissingNode()) {
-//                hl7Message.append("IN1|1|")
-//                        .append(insurance.path("planId").asText("")).append("|")
-//                        .append(insurance.path("companyName").asText("")).append("|")
-//                        .append(insurance.path("address").path("street").asText("")).append("^")
-//                        .append(insurance.path("address").path("city").asText("")).append("^")
-//                        .append(insurance.path("address").path("state").asText("")).append("^")
-//                        .append(insurance.path("address").path("zip").asText("")).append("|||")
-//                        .append(insurance.path("policyNumber").asText("")).append("\n");
-//            }
-//
-//            return hl7Message.toString();
-//
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//            return null;
-//        }
-//
-//    }
     private String generateOutboundExternalMRN() {
         SecureRandom random = new SecureRandom();
         long uniqueId = random.nextLong();
@@ -152,12 +71,10 @@ public class HL7UtilityService {
                     .append(appointmentRequest.getProcessingId() != null ? appointmentRequest.getProcessingId() : "T").append("|")
                     .append(appointmentRequest.getVersionId() != null ? appointmentRequest.getVersionId() : "2.4").append("\n");
 
-//             Build EVN Segment
             hl7Message.append("EVN|")
                     .append("ADT^A28").append("|")
                     .append(utilities.formatToHL7DateTime(LocalDateTime.now())).append("\n");
 
-            // Build PID Segment
             AppointmentRequest.Patient patient = appointmentRequest.getPatient();
             if (patient != null) {
                 hl7Message.append("PID|1|")
@@ -195,8 +112,6 @@ public class HL7UtilityService {
                 hl7Message.append("||||||||||||||||||||||||" + "\n");
 
             }
-
-            // Build PV1 Segment
             AppointmentRequest.Visit visit = appointmentRequest.getVisit();
             if (visit != null) {
                 hl7Message.append("PV1||")
@@ -287,7 +202,7 @@ public class HL7UtilityService {
         return patientDetails;
     }
 
-    public String buildSIUHl7Message(AppointmentRequest appointmentRequest) throws Exception {
+    public String buildSIUHl7Message(AppointmentRequest appointmentRequest) {
         try {
             // Build MSH Segment
             StringBuilder hl7Message = new StringBuilder();
@@ -306,18 +221,17 @@ public class HL7UtilityService {
 
             // Build SCH Segment (Schedule)
             hl7Message.append("SCH|")
-                    .append(appointmentRequest.getVisitAppointmentIdECW() != null ? appointmentRequest.getVisitAppointmentIdECW() : "").append("|") // Placer Appointment ID
-                    .append(appointmentRequest.getVisitAppointmentIdECW() != null ? appointmentRequest.getVisitAppointmentIdECW() : "").append("|||||") // Filler Appointment ID
-                    .append(appointmentRequest.getAppointmentReason() != null ? appointmentRequest.getAppointmentReason() : "").append("|") // Appointment Reason
-                    .append(appointmentRequest.getAppointmentVisitType() != null ? appointmentRequest.getAppointmentVisitType() : "").append("|||") // Appointment Type
-                    .append("^^^" + appointmentRequest.getStartDateTime() != null ? "^^^" + formatHL7Date(appointmentRequest.getStartDateTime()) : "").append("^") // Start Date/Time
-                    .append(appointmentRequest.getEndDateTime() != null ? formatHL7Date(appointmentRequest.getEndDateTime()) : "").append("||||||||||||||"). // End Date/Time
+                    .append(appointmentRequest.getVisitAppointmentIdECW() != null ? appointmentRequest.getVisitAppointmentIdECW() : "").append("|")
+                    .append(appointmentRequest.getVisitAppointmentIdECW() != null ? appointmentRequest.getVisitAppointmentIdECW() : "").append("|||||")
+                    .append(appointmentRequest.getAppointmentReason() != null ? appointmentRequest.getAppointmentReason() : "").append("|")
+                    .append(appointmentRequest.getAppointmentVisitType() != null ? appointmentRequest.getAppointmentVisitType() : "").append("|||")
+                    .append("^^^" + appointmentRequest.getStartDateTime() != null ? "^^^" + formatHL7Date(appointmentRequest.getStartDateTime()) : "").append("^")
+                    .append(appointmentRequest.getEndDateTime() != null ? formatHL7Date(appointmentRequest.getEndDateTime()) : "").append("||||||||||||||").
 //                     .append(appointmentRequest.getLocation() != null && appointmentRequest.getLocation().getLocationName() != null ? appointmentRequest.getLocation().getLocationName() : "").append("|") // Location
 //                    .append(appointmentRequest.getProvider() != null && appointmentRequest.getProvider().getProviderId() != null ? appointmentRequest.getProvider().getProviderId() : "").append("|") // Provider ID
 //                    .append(appointmentRequest.getResourceName() != null ? appointmentRequest.getResourceName() : "").append("|") // Resource Name
 //                    .append(appointmentRequest.getEncounterNotes() != null ? appointmentRequest.getEncounterNotes() : "").append("|").
         append(appointmentRequest.getVisitStatusCode() != null ? "PEN" : "PEN").append("|||" + "\n");
-            // Build PID Segment
             AppointmentRequest.Patient patient = appointmentRequest.getPatient();
             if (patient != null) {
                 hl7Message.append("PID|1|")
@@ -356,7 +270,6 @@ public class HL7UtilityService {
 
             }
 
-            // Build PV1 Segment
             AppointmentRequest.Visit visit = appointmentRequest.getVisit();
             if (visit != null) {
                 hl7Message.append("PV1|1|")
@@ -377,35 +290,56 @@ public class HL7UtilityService {
 
                 }
                 hl7Message.append(visit.getVisitNumber() != null ? visit.getVisitNumber() : "").append("|||||||||||||||||||||||||")
-                        .append(appointmentRequest.getStartDateTime() != null ? formatHL7Date(appointmentRequest.getStartDateTime()) : "")
+                        .append(appointmentRequest.getStartDateTime() != null ? formatHL7Date(String.valueOf(appointmentRequest.getStartDateTime())) : "")
                         .append("||||||||").append("\n");
             }
-//            AppointmentRequest appointment = new AppointmentRequest();
-            if (appointmentRequest != null) {
-                hl7Message.append("AIG|1|")
-                        .append(appointmentRequest.getId() != null ? appointmentRequest.getId() : "").append("|");
-                AppointmentRequest.Doctor doctor = visit.getAttendingDoctor();
-                if (doctor != null) {
-                    hl7Message.append(doctor.getId() != null ? doctor.getId() : "").append("^")
-                            .append(doctor.getLastName() != null ? doctor.getLastName() : "").append("^")
-                            .append(doctor.getFirstName() != null ? doctor.getFirstName() : "").append("|||||");
+            hl7Message.append("AIG|||");
+            if (isResourceExist(appointmentRequest.getResource().getResourceType())) {
 
+                Resource resource = resourceRepository.findByResourceType(appointmentRequest.getResource().getResourceType());
+                if (resource == null) {
+                    throw new Exception("Resource type does not exist in database");
                 }
-                        hl7Message.append(appointmentRequest.getStartDateTime() != null ? formatHL7Date(appointmentRequest.getStartDateTime()) : "").append("|||")
-                        .append(appointmentRequest.getDuration() != null ? appointmentRequest.getDuration() : "").append("|")
-                        .append(appointmentRequest.getDurationUnits() != null ? appointmentRequest.getDurationUnits() : "").append("\n");
+                hl7Message.append(resource.getResourceId() != null ? resource.getResourceId() : "").append("^")
+                        .append(appointmentRequest.getResource().getResourceType() != null ? appointmentRequest.getResource().getResourceType() : "").append("^")
+                        .append("").append("|").append("|||||");
+            } else {
+                AppointmentRequest.Provider provider = appointmentRequest.getProvider();
+                Provider providerInDb = providerRepository.findByProviderName(provider.getProviderName());
+                if (providerInDb == null) {
+                    throw new Exception("Provider does not exist in database");
+                }
+                String providerId = providerInDb.getProviderId() != null ? providerInDb.getProviderId() : "";
+                String providerFirstName = provider.getFirstName() != null ? provider.getFirstName() : "";
+                String providerLastName = provider.getLastName() != null ? provider.getLastName() : "";
+
+                hl7Message.append(providerId).append("^")
+                        .append(providerFirstName).append("^")
+                        .append(providerLastName).append("^")
+                        .append("").append("|");
             }
 
-            // Build AIL Segment (Location Information)
+
+//             else {
+//                // No resource required, use provider info
+//                AppointmentRequest.Provider provider = appointmentRequest.getProvider();
+//                if (provider != null) {
+//                    hl7Message.append(provider.getProviderId() != null ? provider.getProviderId() : "").append("^")
+//                            .append(provider.getProviderName() != null ? provider.getProviderName() : "").append("|");
+
+            hl7Message.append(appointmentRequest.getStartDateTime() != null ? formatHL7Date(appointmentRequest.getStartDateTime()) : "").append("|||")
+                    .append(appointmentRequest.getDuration() != null ? appointmentRequest.getDuration() : "").append("|")
+                    .append(appointmentRequest.getDurationUnits() != null ? appointmentRequest.getDurationUnits() : "").append("\n");
+
+            // AIL Segment (Location Information)
             AppointmentRequest.Location location = appointmentRequest.getLocation();
             if (location != null) {
                 hl7Message.append("AIL|")
                         .append(location.getLocationId() != null ? location.getLocationId() : "").append("||")
-//                        .append(location.getLocationName() != null ? location.getLocationResourceId() : "").append("|")
                         .append(location.getLocationName() != null ? location.getLocationName() : "").append("|").append("\n");
             }
 
-            // Build AIP Segment (Ordering Provider Information)
+            // AIP Segment (Provider Information)
             AppointmentRequest.Provider provider = appointmentRequest.getProvider();
             if (provider != null) {
                 hl7Message.append("AIP|1||");
@@ -416,13 +350,50 @@ public class HL7UtilityService {
                             .append(doctor.getFirstName() != null ? doctor.getFirstName() : "").append("||");
                 }
             }
+
             hl7Message.append("\u001C");
             return hl7Message.toString();
-        } catch (Exception e) {
+        } catch (
+                Exception e) {
             throw new RuntimeException(e);
         }
+
     }
 
+
+//    AppointmentRequest.Location location = appointmentRequest.getLocation();
+//            if (location != null) {
+//                hl7Message.append("AIL|")
+//                        .append(location.getLocationId() != null ? location.getLocationId() : "").append("||")
+////                        .append(location.getLocationName() != null ? location.getLocationResourceId() : "").append("|")
+//                        .append(location.getLocationName() != null ? location.getLocationName() : "").append("|").append("\n");
+//            }
+//
+//            AppointmentRequest.Provider provider = appointmentRequest.getProvider();
+//            if (provider != null) {
+//                hl7Message.append("AIP|1||");
+//                AppointmentRequest.Doctor doctor = visit.getAttendingDoctor();
+//                if (doctor != null) {
+//                    hl7Message.append(doctor.getId() != null ? doctor.getId() : "").append("^")
+//                            .append(doctor.getLastName() != null ? doctor.getLastName() : "").append("^")
+//                            .append(doctor.getFirstName() != null ? doctor.getFirstName() : "").append("||");
+//                }
+//            }
+//            hl7Message.append("\u001C");
+//            return hl7Message.toString();
+//        } catch (Exception e) {
+//            throw new RuntimeException(e);
+//        }
+//    }
+
+    public void buildAppointmentByHl7Message(AppointmentRequest appointmentRequest) {
+        buildSIUHl7Message(appointmentRequest);
+    }
+
+    private boolean isResourceExist(String resourceName) {
+        // Add logic to check if the resource exists in the database
+        return resourceRepository.existsByResourceType(resourceName);
+    }
 //        StringBuilder hl7Message = new StringBuilder();
 //
 //        try {
@@ -526,7 +497,6 @@ public class HL7UtilityService {
 //    }
 
     private String generateExternalMRN(String vendorPrefix) {
-        // Use UUID for uniqueness or implement your logic here for unique generation
         String uniqueID = UUID.randomUUID().toString().replace("-", "").toUpperCase();  // Example
         return vendorPrefix + "-" + uniqueID;
     }
@@ -535,9 +505,7 @@ public class HL7UtilityService {
     public Map<String, String> extractPatientData(List<String> pidSegment) {
 
         Map<String, String> patientData = new HashMap<>();
-
-        // Generate a unique External MRN (Vendor MRN)
-        String vendorPrefix = "VENDOR123";  // Customize this as needed
+        String vendorPrefix = "VENDOR123";
         String externalMRN = generateExternalMRN(vendorPrefix);
         if (pidSegment.size() > 3 && pidSegment.get(3) == null) {
             pidSegment.set(3, externalMRN);
@@ -567,40 +535,30 @@ public class HL7UtilityService {
     public Map<String, String> extractDataFromSchSegment(List<String> schSegment) {
         Map<String, String> schData = new HashMap<>();
         System.out.println("SCH Segment: " + schSegment);
-        schData.put("Segment Type ID", (schSegment.size() > 0) ? schSegment.get(0) : null); // SCH.00 - Required
-        schData.put("Temp Visit/Appointment ID", (schSegment.size() > 1) ? schSegment.get(1) : null); // SCH.01 - Optional
-        schData.put("Visit/Appointment ID", (schSegment.size() > 2) ? schSegment.get(2) : null); // SCH.02 - Optional
-        schData.put("Occurrence Number", (schSegment.size() > 3) ? schSegment.get(3) : null); // SCH.03 - Not supported
-        schData.put("Placer Group Number", (schSegment.size() > 4) ? schSegment.get(4) : null); // SCH.04 - Not supported
-        schData.put("Schedule ID", (schSegment.size() > 5) ? schSegment.get(5) : null); // SCH.05 - Not supported
-        schData.put("Event Reason", (schSegment.size() > 6) ? schSegment.get(6) : null); // SCH.06 - Not supported
-        schData.put("Appointment Reason", (schSegment.size() > 7) ? schSegment.get(7) : null); // SCH.07 - Optional
-        schData.put("Appointment Type", (schSegment.size() > 8) ? schSegment.get(8) : null); // SCH.08 - Required
-        schData.put("Appointment Duration", (schSegment.size() > 9) ? schSegment.get(9) : null); // SCH.09 - Required
-        schData.put("Appointment Duration Units", (schSegment.size() > 10) ? schSegment.get(10) : null); // SCH.10 - Not supported
-        schData.put("Appointment Timing Quantity", (schSegment.size() > 11) ? schSegment.get(11) : null); // SCH.11 - Required
+        schData.put("Segment Type ID", (schSegment.size() > 0) ? schSegment.get(0) : null);
+        schData.put("Temp Visit/Appointment ID", (schSegment.size() > 1) ? schSegment.get(1) : null);
+        schData.put("Visit/Appointment ID", (schSegment.size() > 2) ? schSegment.get(2) : null);
+        schData.put("Occurrence Number", (schSegment.size() > 3) ? schSegment.get(3) : null);
+        schData.put("Placer Group Number", (schSegment.size() > 4) ? schSegment.get(4) : null);
+        schData.put("Schedule ID", (schSegment.size() > 5) ? schSegment.get(5) : null);
+        schData.put("Event Reason", (schSegment.size() > 6) ? schSegment.get(6) : null);
+        schData.put("Appointment Reason", (schSegment.size() > 7) ? schSegment.get(7) : null);
+        schData.put("Appointment Type", (schSegment.size() > 8) ? schSegment.get(8) : null);
+        schData.put("Appointment Duration", (schSegment.size() > 9) ? schSegment.get(9) : null);
+        schData.put("Appointment Duration Units", (schSegment.size() > 10) ? schSegment.get(10) : null);
+        schData.put("Appointment Timing Quantity", (schSegment.size() > 11) ? schSegment.get(11) : null);
         String appointmentDate = (schSegment.size() > 11) ? schSegment.get(11) : null;
         if (appointmentDate != null) {
-            // Split the appointment timing into start and end times
             String[] times = appointmentDate.split("\\^");
             if (times.length > 0) {
-                String startTime = times[0]; // Get the start time (20241018163000)
-//
-//                // Extract date and time from startTime
-//                String appointmentDate = startTime.substring(0, 8);
-//                String appointmentHour = startTime.substring(8, 10);
-//                String appointmentMinute = startTime.substring(10, 12);
-//                String appointmentSecond = startTime.substring(12, 14);
-//                String formattedTime = String.format("%s:%s:%s", appointmentHour, appointmentMinute, appointmentSecond);
-//                // Store in the map
-                schData.put("Appointment Date", startTime.substring(0)); // Store date
-//                schData.put("Appointment Time", formattedTime); // Store time
+                String startTime = times[0];
+                schData.put("Appointment Date", startTime.substring(0));
             }
         }
 
-        schData.put("Resource Name", (schSegment.size() > 20) ? schSegment.get(20) : null); // SCH.20 - Required
-        schData.put("Encounter Notes", (schSegment.size() > 24) ? schSegment.get(24) : null); // SCH.24 - Optional
-        schData.put("Visit Status Code", (schSegment.size() > 25) ? schSegment.get(25) : null); // SCH.25 - Optional
+        schData.put("Resource Name", (schSegment.size() > 20) ? schSegment.get(20) : null);
+        schData.put("Encounter Notes", (schSegment.size() > 24) ? schSegment.get(24) : null);
+        schData.put("Visit Status Code", (schSegment.size() > 25) ? schSegment.get(25) : null);
 
         System.out.println("Extracted SCH Data:");
         for (Map.Entry<String, String> entry : schData.entrySet()) {
@@ -614,7 +572,6 @@ public class HL7UtilityService {
     public Map<String, String> extractDataFromMshSegment(List<String> mshSegment) {
         Map<String, String> mshData = new HashMap<>();
         System.out.println("MSH Segment: " + mshSegment);
-        // Accessing relevant indices based on the SCH segment structure
         mshData.put("Segment Type ID", (mshSegment.size() > 0) ? mshSegment.get(0) : null); // SCH.00 - Required
         mshData.put("messageType", (mshSegment.size() > 8) ? mshSegment.get(8) : null); // SCH.08 - Required
         mshData.put("messageDateTime", (mshSegment.size() > 6) ? mshSegment.get(6) : null); // SCH.08 - Required
@@ -627,10 +584,8 @@ public class HL7UtilityService {
         Map<String, String> pv1Data = new HashMap<>();
         System.out.println("PV1 Segment: " + pv1Segment);
 
-        // Accessing relevant indices based on the PV1 segment structure
         String providerField = (pv1Segment.size() > 7) ? pv1Segment.get(7) : null;
 
-        // Extracting ID, Last Name, First Name, and Middle Name from providerField
         if (providerField != null) {
             String[] providerParts = providerField.split("\\^");
             pv1Data.put("providerId", (providerParts.length > 0) ? providerParts[0] : null);
@@ -638,7 +593,6 @@ public class HL7UtilityService {
             pv1Data.put("FirstName", (providerParts.length > 2) ? providerParts[2] : null);
             pv1Data.put("MiddleName", (providerParts.length > 3) ? providerParts[3] : null);
         } else {
-            // Assigning null values if providerField is null
             pv1Data.put("ID", null);
             pv1Data.put("LastName", null);
             pv1Data.put("FirstName", null);
@@ -653,4 +607,30 @@ public class HL7UtilityService {
         return pv1Data;
     }
 
+    public Map<String, String> extractDataFromAIGSegment(List<String> aigSegment) {
+        Map<String, String> aigData = new HashMap<>();
+        System.out.println("AIG Segment: " + aigSegment);
+        aigData.put("Set ID", (aigSegment.size() > 1) ? aigSegment.get(1) : null);
+
+        if (aigSegment.size() > 3) {
+            String resourceDetails = aigSegment.get(3);
+            String[] resourceParts = resourceDetails.split("\\^");
+            if (resourceParts.length > 0) {
+                aigData.put("HL7 ID", resourceParts[0]);
+            }
+            if (resourceParts.length > 1) {
+                aigData.put("Resource Last Name", resourceParts[1]);
+            }
+            if (resourceParts.length > 2) {
+                aigData.put("Resource First Name", resourceParts[2]);
+            }
+        }
+
+        aigData.put("Start Date/Time", (aigSegment.size() > 8) ? aigSegment.get(8) : null);
+        aigData.put("Duration", (aigSegment.size() > 11) ? aigSegment.get(11) : null);
+        aigData.put("Duration Units", (aigSegment.size() > 12) ? aigSegment.get(12) : null);
+        System.out.println("Extracted AIG Data: " + aigData);
+
+        return aigData;
+    }
 }

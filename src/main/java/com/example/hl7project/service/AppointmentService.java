@@ -5,9 +5,11 @@ import com.example.hl7project.dto.AppointmentTextMessageDTO;
 import com.example.hl7project.model.Appointment;
 import com.example.hl7project.model.Patient;
 import com.example.hl7project.model.Provider;
+import com.example.hl7project.model.Resource;
 import com.example.hl7project.repository.AppointmentRepository;
 import com.example.hl7project.repository.PatientRepository;
 import com.example.hl7project.repository.ProviderRepository;
+import com.example.hl7project.repository.ResourceRepository;
 import com.example.hl7project.utility.ConfirmationMessageStatus;
 import com.example.hl7project.utility.ReminderMessageStatus;
 import com.example.hl7project.utility.Utility;
@@ -28,6 +30,9 @@ public class AppointmentService {
     private PatientRepository patientRepository;
 
     @Autowired
+    private ResourceRepository resourceRepository;
+
+    @Autowired
     private TextMessageConfig textMessageConfig;
 
     @Autowired
@@ -38,13 +43,17 @@ public class AppointmentService {
 
     @Autowired
     private Utility utility;
+
+    @Autowired
+    private HL7UtilityService hl7UtilityService;
+
     @Autowired
     private ProviderRepository providerRepository;
 
     @Autowired
     private NoShowServiceImpl noShowServiceImpl;
 
-    public Appointment saveAppointmentData(Map<String, String> schData, Map<String, String> pv1Data, Map<String, String> mshData, Map<String, String> patientData) {
+    public Appointment saveAppointmentData(Map<String, String> schData, Map<String, String> pv1Data, Map<String, String> aigData, Map<String, String> mshData, Map<String, String> patientData) {
 
         Patient patient = patientRepository.findByPatientId(patientData.get("External Patient ID"));
         if (patient == null) {
@@ -55,7 +64,6 @@ public class AppointmentService {
         appointment.setAppointmentDate(utility.hl7DateToDateTime(schData.get("Appointment Date")));
         appointment.setAppointmentReason(schData.get("Appointment Reason"));
         appointment.setVisitStatusCode(schData.get("Visit Status Code"));
-//        appointment.setResourceName(schData.get("Resource Name"));
         appointment.setAppointmentDateStr(schData.get("Appointment Date"));
         appointment.setVisitAppointmentId(Long.valueOf(schData.get("Visit/Appointment ID")));
         appointment.setDuration(schData.get("Appointment Duration"));
@@ -69,7 +77,9 @@ public class AppointmentService {
 //        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddhhmmss");
 //        appointment.setAppointmentDateUtc(LocalDate.parse(schData.get("Appointment Date")));
         String providerCode = pv1Data.get("Provider");
+        String resourceId=aigData.get("HL7 ID");
         Provider provider = providerRepository.findByProviderId(providerCode);
+        appointment.setResourceId(resourceId);
 //        if (provider != null) {
 //            appointment.getProvider().setProviderName(String.valueOf(provider));
 //        } else {
@@ -79,8 +89,6 @@ public class AppointmentService {
         String messageDateTime = mshData.get("messageDateTime");
         if (messageDateTime != null) {
             try {
-                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
-//                LocalDateTime createdAt = LocalDateTime.parse(messageDateTime, formatter);
                 appointment.setCreatedAt(LocalDateTime.now());
             } catch (DateTimeParseException e) {
                 System.err.println("Error parsing messageDateTime: " + messageDateTime);
@@ -93,17 +101,14 @@ public class AppointmentService {
     }
 
     public Appointment updateAppointmentData(Map<String, String> schData, Map<String, String> mshData) {
-        // Retrieve the existing appointment using the appointment ID from schData
         Long appointmentId = Long.valueOf(schData.get("Visit/Appointment ID"));
         Appointment existingAppointment = appointmentRepository.findByVisitAppointmentId(appointmentId);
 
         if (existingAppointment == null) {
-            // If the appointment is not found, you can handle the error or throw an exception
             System.err.println("Appointment with ID " + appointmentId + " not found.");
-            return null;  // Or throw an exception
+            return null;
         }
 
-        // Update the visit status code and any other relevant fields from the provided data
         if (schData.containsKey("Visit Status Code")) {
             String newVisitStatusCode = schData.get("Visit Status Code");
             existingAppointment.setVisitStatusCode(newVisitStatusCode);  // Update the visit status
@@ -119,8 +124,7 @@ public class AppointmentService {
                 e.printStackTrace();
             }
         }
-//Appointment appointment=existingAppointment.
-        // Save the updated appointment
+
         appointmentRepository.save(existingAppointment);
         System.out.println("Appointment data updated successfully!");
 
@@ -138,7 +142,6 @@ public class AppointmentService {
 
 
     public void checkAndUpdateSameSpecialtyNoShowAppointment(String patientId, String providerName) {
-//        Provider provider=providerRepository.findByProviderId(providerId);
         Provider provider = providerRepository.findByProviderName(providerName);
         List<Object[]> appointmentDTOList = appointmentRepository.findAppointmentsByPatientAndSpecialty(patientId, provider.getSpecialty());
         if (!appointmentDTOList.isEmpty()) {
@@ -198,4 +201,33 @@ public class AppointmentService {
         return reminders;
     }
 
+    public Resource saveResourceFromAIGSegment(List<String> aigSegment) {
+        Map<String, String> aigData = hl7UtilityService.extractDataFromAIGSegment(aigSegment);
+
+        Resource resource = new Resource();
+        String resourceId = aigData.get("HL7 ID");
+        String resourceLastName = aigData.get("Resource Last Name");
+        resource.setResourceId(resourceId);
+        resource.setResourceType(resourceLastName);
+        resource.setStartTime("11:00");
+        resource.setEndTime("14:00");
+        resource.setSlotInterval(15);
+        return resourceRepository.save(resource);
+    }
+
+
+//    public List<Resource> calculateAvailableTimeSlots(String startTime, String resourceType) {
+//        List<Resource> availableSlots = new ArrayList<>();
+//        Resource resource = resourceRepository.findByStartTimeAndResourceType(LocalDateTime.parse(startTime), resourceType);
+//        LocalDateTime currentTime =  resource.getStartTime();
+//        while (currentTime.plusMinutes(resource.getSlotInterval()).isBefore(resource.getEndTime())) {
+//            Resource resource1 = new Resource();
+//            //  resource1.setResourceId(resource);
+//            resource1.setStartTime(currentTime);
+//            resource1.setEndTime(currentTime.plusMinutes(resource.getSlotInterval()));
+//            availableSlots.add(resource1);
+//            currentTime = currentTime.plusMinutes(resource.getSlotInterval());
+//        }
+//        return availableSlots;
+//    }
 }

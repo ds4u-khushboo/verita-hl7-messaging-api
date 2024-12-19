@@ -1,9 +1,11 @@
 package com.example.hl7project.model;
+
 import com.example.hl7project.utility.ConfirmationMessageStatus;
 import com.example.hl7project.utility.ReminderMessageStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+
 import java.time.LocalDateTime;
 
 @Entity
@@ -19,6 +21,8 @@ public class Appointment {
 
     @Column(name = "visit_appointment_id")
     private Long visitAppointmentId;
+
+
 
     @Column(name = "appointment_date")
     private LocalDateTime appointmentDate;
@@ -59,19 +63,23 @@ public class Appointment {
     @Column(name = "is_confirmed")
     private Boolean isConfirmed;
 
-   @Column(name = "patient_id")
+    @Column(name = "patient_id")
     private String patientId;
 
     @Column(name = "providerId")
     private String provider;
 
+    @Column(name = "resource_id")
+    private String resourceId;
+
     @Enumerated(EnumType.STRING)
-    @Column(name = "reminder_message_status",columnDefinition = "ENUM('NONE') DEFAULT 'NONE'")
+    @Column(name = "reminder_message_status", columnDefinition = "ENUM('NONE') DEFAULT 'NONE'")
     private ReminderMessageStatus reminderMessageStatus;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "confirmation_message_status")
     private ConfirmationMessageStatus confirmationMessageStatus;
+
     public Appointment() {
 
     }
