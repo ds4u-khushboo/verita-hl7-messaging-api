@@ -3,8 +3,8 @@ package com.example.hl7project.dto;
 import java.util.Map;
 
 public class HL7Request {
-    private String messageType; // e.g., "ADT^A04"
-    private Map<String, Object> jsonPayload; // JSON payload should map to this
+    private String messageType;
+    private Map<String, Object> jsonPayload;
 
     public String getMessageType() {
         return messageType;

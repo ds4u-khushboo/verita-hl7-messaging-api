@@ -77,7 +77,7 @@ public class AppointmentService {
 //        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddhhmmss");
 //        appointment.setAppointmentDateUtc(LocalDate.parse(schData.get("Appointment Date")));
         String providerCode = pv1Data.get("Provider");
-        String resourceId=aigData.get("HL7 ID");
+        String resourceId = aigData.get("HL7 ID");
         Provider provider = providerRepository.findByProviderId(providerCode);
         appointment.setResourceId(resourceId);
 //        if (provider != null) {
@@ -203,15 +203,16 @@ public class AppointmentService {
 
     public Resource saveResourceFromAIGSegment(List<String> aigSegment) {
         Map<String, String> aigData = hl7UtilityService.extractDataFromAIGSegment(aigSegment);
-
-        Resource resource = new Resource();
-        String resourceId = aigData.get("HL7 ID");
-        String resourceLastName = aigData.get("Resource Last Name");
-        resource.setResourceId(resourceId);
-        resource.setResourceType(resourceLastName);
-        resource.setStartTime("11:00");
-        resource.setEndTime("14:00");
-        resource.setSlotInterval(15);
+        Resource resource = resourceRepository.findByResourceId(aigData.get("HL7 ID"));
+        if (resource == null) {
+            String resourceId = aigData.get("HL7 ID");
+            String resourceLastName = aigData.get("Resource Last Name");
+            resource.setResourceId(resourceId);
+            resource.setResourceType(resourceLastName);
+            resource.setStartTime("11:00");
+            resource.setEndTime("14:00");
+            resource.setSlotInterval(15);
+        }
         return resourceRepository.save(resource);
     }
 
