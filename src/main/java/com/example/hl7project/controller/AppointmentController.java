@@ -43,6 +43,10 @@ public class AppointmentController {
     private SchedulerService schedulerService;
 
     @Autowired
+    private OutboundService outboundService;
+
+
+    @Autowired
     private AppointmentConfirmationService appointmentConfirmationService;
 
     @Autowired
@@ -205,41 +209,42 @@ public class AppointmentController {
     public ResponseEntity<String> bookAppointment(@RequestBody AppointmentRequest appointmentRequest) {
         try {
             // Generate the HL7 SIU message from the request
-            String hl7Message = hl7UtilityService.buildSIUHl7Message(appointmentRequest);
+            String hl7Message = outboundService.processAppointmentRequest(appointmentRequest);
+            //  String hl7Message = hl7UtilityService.buildSIUHl7Message(appointmentRequest);
             if (hl7Message == null || hl7Message.isEmpty()) {
                 throw new IllegalArgumentException("HL7 message cannot be null or empty");
             }
 
-            System.out.println("Sending HL7 message: " + hl7Message);
-
-            HttpClient httpClient = HttpClient.newBuilder()
-                    .followRedirects(HttpClient.Redirect.ALWAYS)
-                    .build();
-
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(textMessageConfig.getMirthOutboundSIUEndpoint()))
-                    .header("Content-Type", "text/plain")
-                    .POST(HttpRequest.BodyPublishers.ofString(hl7Message))
-                    .build();
-
-            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-
-            if (response.statusCode() == 302) {
-                response.headers().firstValue("Location").ifPresent(redirectUrl ->
-                        System.out.println("Redirecting to: " + redirectUrl));
-            } else if (response.statusCode() == 200) {
-                System.out.println("Request successful!");
-            } else {
-                System.out.println("Failed with status code: " + response.statusCode());
-            }
-
-            System.out.println("Response body: " + response.body());
-        } catch (IOException ex) {
-            throw new RuntimeException(ex);
+//            System.out.println("Sending HL7 message: " + hl7Message);
+//
+//            HttpClient httpClient = HttpClient.newBuilder()
+//                    .followRedirects(HttpClient.Redirect.ALWAYS)
+//                    .build();
+//
+//            HttpRequest request = HttpRequest.newBuilder()
+//                    .uri(URI.create(textMessageConfig.getMirthOutboundSIUEndpoint()))
+//                    .header("Content-Type", "text/plain")
+//                    .POST(HttpRequest.BodyPublishers.ofString(hl7Message))
+//                    .build();
+//
+//            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+//
+//            if (response.statusCode() == 302) {
+//                response.headers().firstValue("Location").ifPresent(redirectUrl ->
+//                        System.out.println("Redirecting to: " + redirectUrl));
+//            } else if (response.statusCode() == 200) {
+//                System.out.println("Request successful!");
+//            } else {
+//                System.out.println("Failed with status code: " + response.statusCode());
+//            }
+//
+//            System.out.println("Response body: " + response.body());
+//        } catch (IOException ex) {
+//            throw new RuntimeException(ex);
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Error processing appointment: " + e.getMessage());
         }
-        return ResponseEntity.status(200).body("processed");
+            return ResponseEntity.status(200).body("processed");
 
     }
 //    @GetMapping("/slots-type")

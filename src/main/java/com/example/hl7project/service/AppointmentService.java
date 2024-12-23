@@ -210,7 +210,7 @@ public class AppointmentService {
             resource.setResourceId(resourceId);
             resource.setResourceType(resourceLastName);
             resource.setStartTime("11:00");
-            resource.setEndTime("14:00");
+            resource.setEndTime("17:00");
             resource.setSlotInterval(15);
         }
         return resourceRepository.save(resource);

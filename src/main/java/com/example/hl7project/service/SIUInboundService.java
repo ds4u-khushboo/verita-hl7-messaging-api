@@ -118,7 +118,10 @@ public class SIUInboundService {
                     System.out.println("appointmentOptional::::" + appointmentOptional);
                     if (appointmentOptional == false) {
                         appointmentService.saveAppointmentData(schData, pv1Data, aigData, mshData, patientData);
-                        appointmentService.saveResourceFromAIGSegment(aigSegment);
+                        System.out.println("aigData.get(\"HL7 ID\")"+aigData.get("HL7 ID"));
+                        if(aigData.get("HL7 ID")==null) {
+                            appointmentService.saveResourceFromAIGSegment(aigSegment);
+                        }
                         appointmentService.checkAndUpdateSameSpecialtyNoShowAppointment(patientId, providerName);
                         String smsMessage = String.format(textMessageConfig.getAppCreation(),
                                 patientData.get("Patient Name"), utility.hl7DateToDateTime(schData.get("Appointment Date")), appointmentId);
