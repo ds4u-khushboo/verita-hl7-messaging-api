@@ -105,37 +105,37 @@ public class OutboundController {
         }
     }
 
-    @PostMapping("/sendHttp")
-    private void sendHL7MessageToMirth(@RequestBody String hl7Message) throws Exception {
-        if (hl7Message == null || hl7Message.isEmpty()) {
-            throw new IllegalArgumentException("HL7 message cannot be null or empty");
-        }
-
-        System.out.println("Sending HL7 message: " + hl7Message);  // Log the received message
-
-        HttpClient httpClient = HttpClient.newBuilder()
-                .followRedirects(HttpClient.Redirect.ALWAYS)
-                .build();
-
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create("http://localhost:8089/send-message/"))
-                .header("Content-Type", "text/plain")
-                .POST(HttpRequest.BodyPublishers.ofString(hl7Message))
-                .build();
-
-        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-
-        if (response.statusCode() == 302) {
-            response.headers().firstValue("Location").ifPresent(redirectUrl ->
-                    System.out.println("Redirecting to: " + redirectUrl));
-        } else if (response.statusCode() == 200) {
-            System.out.println("Request successful!");
-        } else {
-            System.out.println("Failed with status code: " + response.statusCode());
-        }
-
-        System.out.println("Response body: " + response.body());
-    }
+//    @PostMapping("/sendHttp")
+//    private void sendHL7MessageToMirth(@RequestBody String hl7Message) throws Exception {
+//        if (hl7Message == null || hl7Message.isEmpty()) {
+//            throw new IllegalArgumentException("HL7 message cannot be null or empty");
+//        }
+//
+//        System.out.println("Sending HL7 message: " + hl7Message);  // Log the received message
+//
+//        HttpClient httpClient = HttpClient.newBuilder()
+//                .followRedirects(HttpClient.Redirect.ALWAYS)
+//                .build();
+//
+//        HttpRequest request = HttpRequest.newBuilder()
+//                .uri(URI.create("http://localhost:8089/send-message/"))
+//                .header("Content-Type", "text/plain")
+//                .POST(HttpRequest.BodyPublishers.ofString(hl7Message))
+//                .build();
+//
+//        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+//
+//        if (response.statusCode() == 302) {
+//            response.headers().firstValue("Location").ifPresent(redirectUrl ->
+//                    System.out.println("Redirecting to: " + redirectUrl));
+//        } else if (response.statusCode() == 200) {
+//            System.out.println("Request successful!");
+//        } else {
+//            System.out.println("Failed with status code: " + response.statusCode());
+//        }
+//
+//        System.out.println("Response body: " + response.body());
+//    }
 
 
     private String sendHl7ToMirth(String hl7Message) throws Exception {

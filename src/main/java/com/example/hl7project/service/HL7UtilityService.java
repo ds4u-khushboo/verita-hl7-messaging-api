@@ -294,18 +294,19 @@ public class HL7UtilityService {
                         .append("||||||||").append("\n");
             }
             hl7Message.append("AIG|||");
-            if (isResourceExist(appointmentRequest.getResource().getResourceType())) {
-
+            if (appointmentRequest.getResource() != null) {
                 Resource resource = resourceRepository.findByResourceType(appointmentRequest.getResource().getResourceType());
                 if (resource == null) {
                     throw new Exception("Resource type does not exist in database");
                 }
+
                 hl7Message.append(resource.getResourceId() != null ? resource.getResourceId() : "").append("^")
                         .append(appointmentRequest.getResource().getResourceType() != null ? appointmentRequest.getResource().getResourceType() : "").append("^")
                         .append("").append("|").append("|||||");
             } else {
                 AppointmentRequest.Provider provider = appointmentRequest.getProvider();
-                Provider providerInDb = providerRepository.findByProviderName(provider.getProviderName());
+                String providerName = provider.getLastName() + "," + provider.getFirstName();
+                Provider providerInDb = providerRepository.findByProviderName(providerName);
                 if (providerInDb == null) {
                     throw new Exception("Provider does not exist in database");
                 }
@@ -390,10 +391,7 @@ public class HL7UtilityService {
         buildSIUHl7Message(appointmentRequest);
     }
 
-    private boolean isResourceExist(String resourceName) {
-        // Add logic to check if the resource exists in the database
-        return resourceRepository.existsByResourceType(resourceName);
-    }
+
 //        StringBuilder hl7Message = new StringBuilder();
 //
 //        try {

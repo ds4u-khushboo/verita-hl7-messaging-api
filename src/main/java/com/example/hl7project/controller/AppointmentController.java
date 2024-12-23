@@ -1,5 +1,6 @@
 package com.example.hl7project.controller;
 
+import com.example.hl7project.configuration.TextMessageConfig;
 import com.example.hl7project.dto.AppointmentRequest;
 import com.example.hl7project.dto.BookingInfoDTO;
 import com.example.hl7project.model.InboundHL7Message;
@@ -50,6 +51,8 @@ public class AppointmentController {
     @Autowired
     private NoShowService noShowService;
 
+    @Autowired
+    private TextMessageConfig textMessageConfig;
     @PostMapping("/SIU")
     public Message sendMessge(@RequestBody String hl7mesage) throws Exception {
         return siuInboundService.processMessage(hl7mesage);
@@ -207,14 +210,14 @@ public class AppointmentController {
                 throw new IllegalArgumentException("HL7 message cannot be null or empty");
             }
 
-            System.out.println("Sending HL7 message: " + hl7Message);  // Log the received message
+            System.out.println("Sending HL7 message: " + hl7Message);
 
             HttpClient httpClient = HttpClient.newBuilder()
                     .followRedirects(HttpClient.Redirect.ALWAYS)
                     .build();
 
             HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create("http://localhost:8089/send-message/"))
+                    .uri(URI.create(textMessageConfig.getMirthOutboundSIUEndpoint()))
                     .header("Content-Type", "text/plain")
                     .POST(HttpRequest.BodyPublishers.ofString(hl7Message))
                     .build();
