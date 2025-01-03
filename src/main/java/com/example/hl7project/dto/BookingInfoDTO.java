@@ -1,5 +1,6 @@
 package com.example.hl7project.dto;
 
+import com.example.hl7project.model.Appointment;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -83,5 +84,7 @@ public class BookingInfoDTO {
         private String endTime;    // Appointment end time (YYYYMMDDHHMMSS)
 
 
+        public AppointmentDTO(Appointment appointment) {
+        }
     }
 }

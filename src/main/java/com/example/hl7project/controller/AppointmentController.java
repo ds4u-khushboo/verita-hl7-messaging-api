@@ -1,26 +1,22 @@
 package com.example.hl7project.controller;
 
-import com.example.hl7project.configuration.TextMessageConfig;
+import com.example.hl7project.dto.AppointmentPatientDTO;
 import com.example.hl7project.dto.AppointmentRequest;
-import com.example.hl7project.dto.BookingInfoDTO;
 import com.example.hl7project.model.InboundHL7Message;
 import com.example.hl7project.model.Patient;
-import com.example.hl7project.model.Resource;
 import com.example.hl7project.repository.InboundSIUMessageRepo;
 import com.example.hl7project.repository.PatientRepository;
 import com.example.hl7project.response.MessageResponse;
 import com.example.hl7project.service.*;
+import com.example.hl7project.utility.Utility;
 import com.twilio.rest.api.v2010.account.Message;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.IOException;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
+import java.lang.reflect.Field;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -31,7 +27,10 @@ public class AppointmentController {
 
 
     @Autowired
-    private HL7UtilityService hl7UtilityService;
+    private AppointmentService appointmentService;
+
+    @Autowired
+    private ReportService reportService;
 
     @Autowired
     private InboundSIUMessageRepo inboundSIUMessageRepo;
@@ -45,7 +44,6 @@ public class AppointmentController {
     @Autowired
     private OutboundService outboundService;
 
-
     @Autowired
     private AppointmentConfirmationService appointmentConfirmationService;
 
@@ -55,8 +53,6 @@ public class AppointmentController {
     @Autowired
     private NoShowService noShowService;
 
-    @Autowired
-    private TextMessageConfig textMessageConfig;
     @PostMapping("/SIU")
     public Message sendMessge(@RequestBody String hl7mesage) throws Exception {
         return siuInboundService.processMessage(hl7mesage);
@@ -144,17 +140,9 @@ public class AppointmentController {
     public ResponseEntity<Map<String, Object>> getNoShowRate() {
         try {
             long totalAppointments = siuInboundService.getTotalAppointmentsCount();
-//            NoShowReportDTO noShowCount = appointmentService.getNoShowReport();
-//            HashMap<String, String> appointments = appointmentService.getAppointmentDetails();
-//            String messageEntities = appointmentService.getAllPatient("SIU_S26");
-//            double noShowRate = (double) noShowCount / totalAppointments * 100;
+
             Map<String, Object> response = new HashMap<>();
             response.put("totalAppointments", totalAppointments);
-            //      response.put("noShowCount", noShowCount);
-//            response.put("noShowRate", noShowRate);
-//            response.put("appointment", appointments);
-//            response.put("Patient", messageEntities);
-
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
@@ -167,37 +155,12 @@ public class AppointmentController {
         return "Scheduled task result: " + appointments;
     }
 
-    //    @GetMapping("/reminder")
-//    public String getReminder() {
-//        String appointments = messageService.sendNoShowReminderMessage();
-//        return appointments;
-//    }
-//    @GetMapping("/no-shows")
-//    public NoShowReportDTO getNoShowReport() {
-//        return appointmentService.getNoShowReport();
-//    }
-//    @GetMapping("messgaeByStatus")
-//    public void getMessages() {
-//        try {
-//            schedulerService.multipleppoinmentsScheudlerWithStatus();
-//            System.out.println("multiple appointment come");
-//        }
-//        catch (Exception e){
-//            e.printStackTrace();
-//        }
-//    }
-
     @GetMapping("/providerName")
     private void getAppByProvider(@RequestParam Long patientId) {
         noShowService.handleNoShowAndRebook(patientId);
         System.out.println("Rescheduled by another provider");
     }
 
-    @GetMapping("/appointmetnCheck")
-    private void checkStatau() {
-        schedulerService.checkAppointmentsAndSendMessages();
-        System.out.println("checked appointment status");
-    }
 
     @GetMapping("/count-by-type")
     public List<Object[]> getCountByMessageType() {
@@ -244,12 +207,204 @@ public class AppointmentController {
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Error processing appointment: " + e.getMessage());
         }
-            return ResponseEntity.status(200).body("processed");
+        return ResponseEntity.status(200).body("processed");
 
     }
-//    @GetMapping("/slots-type")
-//    public List<Resource> getSlots(@RequestParam String startTime, @RequestParam String resourceType) {
-//        List<Resource> resource1 = appointmentService.calculateAvailableTimeSlots(startTime,resourceType);
-//        return resource1;
-//    }
+
+    @GetMapping("/createdAppointmentCount")
+    public ResponseEntity<Long> getAppointmentsCount(
+            @RequestParam(name = "patientId", required = false) String patientId,
+            @RequestParam(name = "startDate", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate startDate,
+            @RequestParam(name = "endDate", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate endDate) {
+        long count = appointmentService.getAppointmentsCount(patientId, startDate, endDate);
+        return ResponseEntity.ok(count);
+
+    }
+
+    @GetMapping("/noShowAppointmentCount")
+    public long getNoShowAppointmentCount(@RequestParam(name = "patientId", required = false) String patientId,
+                                          @RequestParam(name = "startDate", required = false)
+                                          @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate startDate,
+                                          @RequestParam(name = "endDate", required = false)
+                                          @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate endDate) {
+        return appointmentService.getNoShowAppointmentsCount(patientId, startDate, endDate);
+    }
+
+    @GetMapping("/findNoShowAppointmentsWithPatients")
+    public List<AppointmentPatientDTO> findAppointmentsWithPatients(@RequestParam(name = "startDate", required = false)
+                                                                    @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate startDate,
+                                                                    @RequestParam(name = "endDate", required = false)
+                                                                    @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate endDate,
+                                                                    @RequestParam(name = "patientId", required = false) String patientId) {
+
+
+        List<Object[]> appointments = appointmentService.getNoShowAppointmentDetailsWithPatient(startDate, endDate, patientId);
+
+
+        List<AppointmentPatientDTO> list = new ArrayList<>();
+        Field[] fields = AppointmentPatientDTO.class.getDeclaredFields();
+
+        for (Object[] dataFields : appointments) {
+            Map<String, Object> fieldMap = new HashMap<>();
+            for (int i = 0; i < dataFields.length; i++) {
+                if (i < fields.length) {
+                    fieldMap.put(fields[i].getName(), dataFields[i]);
+                }
+            }
+            list.add(new AppointmentPatientDTO());
+        }
+        return list;
+    }
+
+    @GetMapping("/findNewAppointmentsWithPatients")
+    public List<AppointmentPatientDTO> findNewAppointmentsWithPatients(@RequestParam(name = "startDate", required = false)
+                                                                       @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate startDate,
+                                                                       @RequestParam(name = "endDate", required = false)
+                                                                       @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate endDate,
+                                                                       @RequestParam(name = "patientId", required = false) String patientId) {
+
+        List<Object[]> appointments = appointmentService.getNewAppointmentDetailsWithPatient(startDate, endDate, patientId);
+
+        List<AppointmentPatientDTO> list = new ArrayList<>();
+        Field[] fields = AppointmentPatientDTO.class.getDeclaredFields();
+
+        for (Object[] dataFields : appointments) {
+            Map<String, Object> fieldMap = new HashMap<>();
+            for (int i = 0; i < dataFields.length; i++) {
+                if (i < fields.length) {
+                    fieldMap.put(fields[i].getName(), dataFields[i]);
+                }
+            }
+            list.add(new AppointmentPatientDTO());
+        }
+        return list;
+    }
+
+    @GetMapping("/findNewAppointmentsWithProviders")
+    public List<AppointmentPatientDTO> getNewAppointmentsWithProviders(
+            @RequestParam(required = false) Long providerId,
+            @RequestParam(required = false) String specialityName,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+
+        if (startDate == null) {
+            startDate = LocalDate.now().minusMonths(1);
+        }
+        if (endDate == null) {
+            endDate = LocalDate.now();
+        }
+
+        List<Object[]> appointments = reportService.getBookedAppointmentsBySpecialty(providerId, specialityName, startDate, endDate);
+        return Utility.mapToDto(appointments, AppointmentPatientDTO.class);
+    }
+
+    @GetMapping("/findNoShowAppointmentsWithProviders")
+    public List<AppointmentPatientDTO> getNoShowAppointmentsWithProviders(
+            @RequestParam(required = false) Long providerId,
+            @RequestParam(required = false) String specialityName,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+
+        // Set default start and end dates if not provided
+        if (startDate == null) {
+            startDate = LocalDate.now().minusMonths(1);
+        }
+        if (endDate == null) {
+            endDate = LocalDate.now();
+        }
+
+        // Fetch raw results from the service layer
+        List<Object[]> appointments = reportService.getNoShowAppointmentsBySpecialty(providerId, specialityName, startDate, endDate);
+
+        // Map raw results to DTOs
+        List<AppointmentPatientDTO> dtos = Utility.mapToDto(appointments, AppointmentPatientDTO.class);
+
+        // Log or print the DTOs for debugging (optional)
+        dtos.forEach(dto -> System.out.println(dto));
+
+        return dtos;
+    }
+
+    @GetMapping("/findBookedAppointmentWithLocation")
+    public List<AppointmentPatientDTO> getBookedAppointmentWithLocation(
+            @RequestParam(required = false) String location,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+
+        List<Object[]> appointments = reportService.getBookedAppointmentsByLocation(location, startDate, endDate);
+        return Utility.mapToDto(appointments, AppointmentPatientDTO.class);
+    }
+
+    @GetMapping("/findNoShowAppointmentWithLocation")
+    public List<AppointmentPatientDTO> getNoShowAppointmentWithLocation(
+            @RequestParam(required = false) String location,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+
+        List<Object[]> appointments = reportService.getNoShowAppointmentsByLocation(location, startDate, endDate);
+        return Utility.mapToDto(appointments, AppointmentPatientDTO.class);
+    }
+
+    @GetMapping("/findBookedAppointmentByPatientDemographics")
+    public List<Map<String, Object>> getBookedAppointmentByPatientDemographics(
+            @RequestParam(required = false) String gender,
+            @RequestParam(required = false) String patientName,
+            @RequestParam(required = false) String address,
+            @RequestParam(required = false) Integer minAge,
+            @RequestParam(required = false) Integer maxAge,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam(required = false) String status) {
+
+        List<Object[]> appointments = reportService.getBookedAppointmentsByDemographics(gender, patientName,
+                minAge, maxAge, address, startDate, endDate);
+        List<Map<String, Object>> mappedResults = new ArrayList<>();
+        List<String> fieldNames = Arrays.asList(
+                "patientId", "name", "address", "dateOfBirth", "gender", "visitStatusCode", "appointmentDate",
+                "visitAppointmentId", "appointmentReason", "appointmentCount", "messagesTriggered", "age"
+        );
+        for (Object[] row : appointments) {
+            Map<String, Object> map = new HashMap<>();
+
+            for (int i = 0; i < row.length; i++) {
+                map.put(fieldNames.get(i), row[i]);
+            }
+
+            mappedResults.add(map);
+        }
+
+        return mappedResults;
+    }
+
+    @GetMapping("/findNoShowAppointmentByPatientDemographics")
+    public List<Map<String, Object>> getNoShowAppointmentByPatientDemographics(
+            @RequestParam(required = false) String gender,
+            @RequestParam(required = false) String patientName,
+            @RequestParam(required = false) String address,
+            @RequestParam(required = false) Integer minAge,
+            @RequestParam(required = false) Integer maxAge,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+
+        List<Object[]> appointments = reportService.getNoShowAppointmentsByDemographics(gender, patientName,
+                minAge, maxAge, address, startDate, endDate);
+        List<Map<String, Object>> mappedResults = new ArrayList<>();
+        List<String> fieldNames = Arrays.asList(
+                "patientId", "name", "address", "dateOfBirth", "gender", "visitStatusCode", "appointmentDate",
+                "visitAppointmentId", "appointmentReason", "appointmentCount", "messagesTriggered", "age"
+        );
+        for (Object[] row : appointments) {
+            Map<String, Object> map = new HashMap<>();
+
+            for (int i = 0; i < row.length; i++) {
+                map.put(fieldNames.get(i), row[i]);
+            }
+
+            mappedResults.add(map);
+        }
+
+        return mappedResults;
+    }
 }
+
+

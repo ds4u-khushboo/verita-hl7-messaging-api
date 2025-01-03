@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -41,9 +42,9 @@ public class Resource {
     private int slotInterval;
 
     @Column(name = "created_at")
-    private int createdAt;
+    private LocalDate createdAt;
 
     @Column(name = "updated_at")
-    private int updatedAt;
+    private LocalDate updatedAt;
 
 }

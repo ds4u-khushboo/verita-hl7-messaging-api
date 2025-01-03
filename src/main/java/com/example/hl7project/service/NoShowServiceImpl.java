@@ -14,9 +14,6 @@ import org.springframework.stereotype.Service;
 public class NoShowServiceImpl {
 
     @Autowired
-    private TextMessageRepository textMessageRepository;
-
-    @Autowired
     private TextMessageConfig twilioConfig;
 
     @Autowired
@@ -25,8 +22,6 @@ public class NoShowServiceImpl {
     @Autowired
     private AppointmentRepository appointmentRepository;
 
-
-    //send no show reminder 1
     public void sendNoShowReminderMessage(String patientName, String patientPhone, String appointmentId) {
 
         Appointment appointment = appointmentRepository.findByVisitAppointmentId(Long.valueOf(appointmentId));
@@ -34,15 +29,15 @@ public class NoShowServiceImpl {
             String messageBody = "";
             if (appointment.getReminderMessageStatus().equals(ReminderMessageStatus.NONE)) {
                 messageBody = String.format(twilioConfig.getAppNoShow(), patientName, appointmentId);
-                twillioService.getTwilioService(messageBody, "91" + patientPhone);
+                twillioService.getTwilioService(messageBody,patientPhone);
                 appointment.setReminderMessageStatus(ReminderMessageStatus.NO_SHOW);
             } else if (appointment.getReminderMessageStatus().equals(ReminderMessageStatus.NO_SHOW)) {
                 messageBody = String.format(twilioConfig.getAppointment2WeeksReminder(), patientName, appointmentId);
-                twillioService.getTwilioService(messageBody, "91" + patientPhone);
+                twillioService.getTwilioService(messageBody,patientPhone);
                 appointment.setReminderMessageStatus(ReminderMessageStatus.NO_SHOW_2_WEEK);
             } else if (appointment.getReminderMessageStatus().equals(ReminderMessageStatus.NO_SHOW_2_WEEK)) {
                 messageBody = String.format(twilioConfig.getAppointment4WeeksReminder(), patientName, appointmentId);
-                twillioService.getTwilioService(messageBody, "91" + patientPhone);
+                twillioService.getTwilioService(messageBody,patientPhone);
                 appointment.setReminderMessageStatus(ReminderMessageStatus.NO_SHOW_4_WEEK);
             }
             appointmentRepository.save(appointment);

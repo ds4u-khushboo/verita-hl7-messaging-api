@@ -29,7 +29,7 @@ public class AppointmentRequest {
     private String durationUnits;
     private String appointmentTimingQuantity;
     private String startDateTime;
-    private String endDateTime;  // Use LocalDateTime for consistency
+    private String endDateTime;
     private String resourceName;
     private String encounterNotes;
     private String visitStatusCode;
@@ -46,7 +46,7 @@ public class AppointmentRequest {
         private String lastName;
         private String resourceType;
         private String firstName;
-        private LocalDateTime startDateTime; // Change to LocalDateTime
+        private LocalDateTime startDateTime;
         private String duration;
         private String durationUnits;
     }

@@ -17,7 +17,7 @@ public class TwillioService {
         Twilio.init(twilioConfig.getAccountSid(), twilioConfig.getAuthToken());
         //String smsBody = "Your appointment has been rescheduled to " + startDate.toString() + " at " + location + ". Reason: " + changeReason;
 
-        return Message.creator(new com.twilio.type.PhoneNumber("+" + number),
+        return Message.creator(new com.twilio.type.PhoneNumber("+91" + number),
                 new PhoneNumber(twilioConfig.getFromNumber()), body).create();
     }
 
@@ -57,6 +57,25 @@ public class TwillioService {
             System.err.println("Error sending message to " + phoneNumber + ": " + e.getMessage());
             return false;
         }
+    }
+
+
+    public static final String ACCOUNT_SID = "AC64ad1edb3565dbee68e47c623b7c545d";
+    public static final String AUTH_TOKEN = "3506244185b3e28c5777066f8c3649f5";
+
+    public void sendWhatsappMessage(String messageText, String recipientPhoneNumber) {
+        Twilio.init(ACCOUNT_SID, AUTH_TOKEN);
+
+        String formattedRecipientPhoneNumber = "whatsapp:" + recipientPhoneNumber;
+
+        Message message = Message.creator(
+                        new PhoneNumber(formattedRecipientPhoneNumber),
+                        new PhoneNumber("whatsapp:+14155238886"),
+                        messageText) // message content
+                .create();
+
+        // Print the SID of the sent message for logging purposes
+        System.out.println("Message SID: " + message.getSid());
     }
 }
 

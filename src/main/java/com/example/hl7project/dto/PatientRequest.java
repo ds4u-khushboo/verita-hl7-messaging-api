@@ -9,7 +9,6 @@ public class PatientRequest {
     private String phoneNumber;
     private String address;
 
-
     public String getMrn() {
         return mrn;
     }

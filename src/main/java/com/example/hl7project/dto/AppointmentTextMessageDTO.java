@@ -3,7 +3,6 @@ package com.example.hl7project.dto;
 import com.example.hl7project.utility.ConfirmationMessageStatus;
 import com.example.hl7project.utility.ReminderMessageStatus;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 

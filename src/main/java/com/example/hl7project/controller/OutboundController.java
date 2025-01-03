@@ -31,11 +31,6 @@ public class OutboundController {
     @PostMapping("/book-appointment")
     public String conversion(@RequestBody AppointmentRequest appointmentRequest) {
         return outboundService.processAppointmentRequest(appointmentRequest);
-
-        //1 findExistingPatient - patient service  (first name,  last name, dob ,
-        //if false : send adt message - outbound service
-        //send siu message  - outbound service
-//create patient or create appointment context path
     }
 
     @PostMapping("/siubuild")
@@ -47,32 +42,25 @@ public class OutboundController {
 
     @PostMapping("/sendTcp")
     public ResponseEntity<String> sendHL7MessageTcp(@RequestBody String hl7Message) {
-        String mirthTcpHost = "localhost"; // Mirth TCP listener host
-        int mirthTcpPort = 6661;  // Mirth TCP listener port
+        String mirthTcpHost = "localhost";
+        int mirthTcpPort = 6661;
 
-        // Add the Start of Message (VT) character (ASCII 11)
-        String startOfMessage = "\u000b";  // Vertical Tab (ASCII 11)
+        String startOfMessage = "\u000b";
 
-        // Add the End of Message (FS + CR) (ASCII 28 + 13)
-        String endOfMessage = "\u001c" + "\r";  // FS (File Separator) + CR (Carriage Return)
-
-        // Prepend VT and append EOM (FS + CR) to the HL7 message
+        String endOfMessage = "\u001c" + "\r";
         String hl7MessageWithFrame = startOfMessage + hl7Message + endOfMessage;
 
         try (Socket socket = new Socket(mirthTcpHost, mirthTcpPort)) {
-            socket.setSoTimeout(10000); // Timeout after 10 seconds
-
-            // Send the HL7 message with the VT framing and EOM delimiter to Mirth Connect
+            socket.setSoTimeout(10000);
             try (OutputStream outStream = socket.getOutputStream();
                  BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outStream))) {
-                writer.write(hl7MessageWithFrame);  // Send framed HL7 message to Mirth Connect
-                writer.flush();  // Ensure message is sent
+                writer.write(hl7MessageWithFrame);
+                writer.flush();
             } catch (IOException e) {
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                         .body("Failed to send message via TCP: " + e.getMessage());
             }
 
-            // Now attempt to read the response from Mirth Connect (if any)
             String response = null;
             try (InputStream inStream = socket.getInputStream();
                  BufferedReader reader = new BufferedReader(new InputStreamReader(inStream))) {
@@ -83,12 +71,10 @@ public class OutboundController {
                 }
                 response = responseBuilder.toString();
             } catch (IOException e) {
-                // Handle case where Mirth closes the socket without sending a response
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                         .body("Failed to read response from Mirth: " + e.getMessage());
             }
 
-            // Check if Mirth sent a response
             if (response != null && !response.isEmpty()) {
                 return ResponseEntity.ok("Message sent to Mirth TCP Listener. Response: " + response);
             } else {
@@ -96,7 +82,6 @@ public class OutboundController {
             }
 
         } catch (SocketException e) {
-            // Catch specific socket errors like connection closure
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Connection aborted: " + e.getMessage());
         } catch (IOException e) {

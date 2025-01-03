@@ -631,4 +631,23 @@ public class HL7UtilityService {
 
         return aigData;
     }
+
+    public Map<String, String> extractDataFromAILSegment(List<String> ailSegment) {
+        Map<String, String> ailData = new HashMap<>();
+        System.out.println("AIL Segment: " + ailSegment);
+        ailData.put("Set ID", (ailSegment.size() > 1) ? ailSegment.get(1) : null);
+
+        if (ailSegment.size() > 3) {
+            String resourceDetails = ailSegment.get(3);
+            String[] resourceParts = resourceDetails.split("\\^");
+            if (resourceParts.length > 0) {
+                ailData.put("Location HL7Id", resourceParts[0]);
+            }
+            if (resourceParts.length > 1) {
+                ailData.put("Location Name", resourceParts[1]);
+            }
+
+        }
+        return ailData;
+    }
 }

@@ -27,6 +27,10 @@ public class Provider {
     @Column(name = "npi_number", length = 50)
     private String npiNumber;
 
+//    @ManyToOne
+    @Column(name = "locationId")
+    private String location;
+
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 

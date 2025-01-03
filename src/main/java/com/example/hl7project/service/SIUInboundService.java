@@ -86,6 +86,11 @@ public class SIUInboundService {
                 logger.error("AIG not found in message: {}", hl7Message);
                 throw new Exception("AIG segment not found.");
             }
+            List<String> ailSegment = hl7Map.get("AIL");
+            if (ailSegment == null) {
+                logger.error("AIL not found in message: {}", hl7Message);
+                throw new Exception("AIL segment not found.");
+            }
 
             logger.debug("Extracting patient data from PID segment");
             Map<String, String> patientData = messageProcessingService.extractPatientData(pidSegment);
@@ -93,6 +98,7 @@ public class SIUInboundService {
             Map<String, String> mshData = messageProcessingService.extractDataFromMshSegment(mshSegment);
             Map<String, String> pv1Data = messageProcessingService.extractDataFromPV1Segment(pv1Segment);
             Map<String, String> aigData = messageProcessingService.extractDataFromAIGSegment(aigSegment);
+            Map<String, String> ailData = messageProcessingService.extractDataFromAILSegment(ailSegment);
 
             String messageType = mshData.get("messageType");
             Long appointmentId = Long.valueOf(schData.get("Visit/Appointment ID"));
@@ -118,15 +124,20 @@ public class SIUInboundService {
                     System.out.println("appointmentOptional::::" + appointmentOptional);
                     if (appointmentOptional == false) {
                         appointmentService.saveAppointmentData(schData, pv1Data, aigData, mshData, patientData);
-                        System.out.println("aigData.get(\"HL7 ID\")"+aigData.get("HL7 ID"));
-                        if(aigData.get("HL7 ID")==null) {
+                        System.out.println("aigData.get(HL7 ID):::" + aigData.get("HL7 ID"));
+                        if (aigData.get("HL7 ID") != null) {
                             appointmentService.saveResourceFromAIGSegment(aigSegment);
+                        }
+                        System.out.println("ailData.get(Location HL7Id):::" + ailData.get("Location HL7Id"));
+
+                        if (ailData.get("Location HL7Id") != null) {
+                            appointmentService.saveLocationFromAILSegment(ailSegment);
                         }
                         appointmentService.checkAndUpdateSameSpecialtyNoShowAppointment(patientId, providerName);
                         String smsMessage = String.format(textMessageConfig.getAppCreation(),
                                 patientData.get("Patient Name"), utility.hl7DateToDateTime(schData.get("Appointment Date")), appointmentId);
                         appointmentConfirmationService.checkTimeDifferenceAndSendMessage(patientData.get("External Patient ID"), patientPhone);
-                        notificationService.sendAppointmentNotification(patientPhone, smsMessage);
+                        notificationService.sendAppointmentNotification(smsMessage, patientPhone);
                         logger.info("Appointment scheduled and notification sent for Appointment ID: {}", appointmentId);
                         messageService.saveMessageEntity(messageType, hl7Message, smsMessage, patientPhone, String.valueOf(appointmentId), "");
                         updateFirstAppointmentIsConfirmRequestSent(String.valueOf(appointmentId));
@@ -164,9 +175,10 @@ public class SIUInboundService {
                     }
                     break;
                 case "SIU^S22":
-                    List<Appointment> appointment1 = appointmentRepository.deleteByVisitAppointmentId(appointmentId);
+                    appointmentService.deleteAppointment(appointmentId);
                     logger.info("Appointment ID: {} is deleted.", appointmentId);
                     System.out.println("the appointment is deleted");
+                    break;
                 default:
                     logger.error("Unknown message type: {}", messageType);
                     throw new Exception("Unknown message type: " + messageType);

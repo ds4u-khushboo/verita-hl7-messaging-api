@@ -9,9 +9,6 @@ public interface ResourceRepository extends JpaRepository<Resource, Long> {
 
     Resource findByResourceId(String resourceId);
 
-    Boolean existsByResourceType(String resourceType);
-
     Resource findByResourceType(String resourceType);
-
 
 }

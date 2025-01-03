@@ -14,9 +14,9 @@ import java.util.List;
 @Repository
 public interface InboundSIUMessageRepo extends JpaRepository<InboundHL7Message, Long> {
 
-    public List<InboundHL7Message> findInboundHL7MessageByCreatedAt(LocalDate start);
+     List<InboundHL7Message> findInboundHL7MessageByCreatedAt(LocalDate start);
 
-    public List<InboundHL7Message> deleteAllByCreatedAt(LocalDateTime date);
+     List<InboundHL7Message> deleteAllByCreatedAt(LocalDateTime date);
 
 
     List<InboundHL7Message> findByCreatedAtBetween(Timestamp startTimestamp, Timestamp endTimestamp);

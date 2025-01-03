@@ -2,20 +2,16 @@ package com.example.hl7project.service;
 
 import com.example.hl7project.configuration.TextMessageConfig;
 import com.example.hl7project.dto.AppointmentTextMessageDTO;
-import com.example.hl7project.model.Appointment;
-import com.example.hl7project.model.Patient;
-import com.example.hl7project.model.Provider;
-import com.example.hl7project.model.Resource;
-import com.example.hl7project.repository.AppointmentRepository;
-import com.example.hl7project.repository.PatientRepository;
-import com.example.hl7project.repository.ProviderRepository;
-import com.example.hl7project.repository.ResourceRepository;
+import com.example.hl7project.model.*;
+import com.example.hl7project.repository.*;
 import com.example.hl7project.utility.ConfirmationMessageStatus;
 import com.example.hl7project.utility.ReminderMessageStatus;
 import com.example.hl7project.utility.Utility;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -40,6 +36,9 @@ public class AppointmentService {
 
     @Autowired
     private PatientService patientService;
+
+    @Autowired
+    private LocationRepository locationRepository;
 
     @Autowired
     private Utility utility;
@@ -131,10 +130,10 @@ public class AppointmentService {
         return existingAppointment;
     }
 
+    @Transactional
     public void deleteAppointment(Long appointmentId) {
         appointmentRepository.deleteByVisitAppointmentId(appointmentId);
     }
-
 
     public boolean appointmentExists(Long appointmentId) {
         return appointmentRepository.existsByVisitAppointmentId(appointmentId);
@@ -184,10 +183,8 @@ public class AppointmentService {
             if (value instanceof Long) {
                 dto.setVisitAppointmentId((Long) value);
             } else if (value instanceof String) {
-                // If it's a String, convert it to Long
                 dto.setVisitAppointmentId(Long.valueOf((String) value));
             } else {
-                // Handle the case where the value is neither Long nor String
                 throw new IllegalArgumentException("Expected Long or String, but got: " + value.getClass());
             }
             dto.setPatientId((String) row[1]);
@@ -195,7 +192,6 @@ public class AppointmentService {
             dto.setVisitStatusCode((String) row[3]);
             dto.setReminderMessageStatus((ReminderMessageStatus) row[4]);
             dto.setDays((Integer) row[5]);
-            // Add the DTO to the list
             reminders.add(dto);
         }
         return reminders;
@@ -205,6 +201,7 @@ public class AppointmentService {
         Map<String, String> aigData = hl7UtilityService.extractDataFromAIGSegment(aigSegment);
         Resource resource = resourceRepository.findByResourceId(aigData.get("HL7 ID"));
         if (resource == null) {
+            resource = new Resource();
             String resourceId = aigData.get("HL7 ID");
             String resourceLastName = aigData.get("Resource Last Name");
             resource.setResourceId(resourceId);
@@ -216,6 +213,16 @@ public class AppointmentService {
         return resourceRepository.save(resource);
     }
 
+    public Location saveLocationFromAILSegment(List<String> ailSegment) {
+        Map<String, String> ailData = hl7UtilityService.extractDataFromAILSegment(ailSegment);
+        Location location = locationRepository.findByLocationId(ailData.get("Location HL7Id"));
+        if (location == null) {
+            location=new Location();
+            location.setLocationId(ailData.get("Location HL7Id"));
+            location.setLocationName(ailData.get("Location Name"));
+        }
+       return locationRepository.save(location);
+    }
 
 //    public List<Resource> calculateAvailableTimeSlots(String startTime, String resourceType) {
 //        List<Resource> availableSlots = new ArrayList<>();
@@ -231,4 +238,34 @@ public class AppointmentService {
 //        }
 //        return availableSlots;
 //    }
+
+    public long getAppointmentsCount(String patientId, LocalDate startDate, LocalDate endDate) {
+//        LocalDateTime startDateTime = startDate.atStartOfDay();
+//        LocalDateTime endDateTime = endDate.atStartOfDay();
+        long count = appointmentRepository.countBookedAppointments(patientId, startDate, endDate);
+        return count;
+    }
+
+    public long getNoShowAppointmentsCount(String patientId, LocalDate startDate, LocalDate endDate) {
+//        LocalDate startDateTime = startDate.atStartOfDay();
+//        LocalDate endDateTime = endDate.atTime(23,59,00);
+        return appointmentRepository.countNoShowAppointments(patientId, startDate, endDate);
+    }
+
+    public List<Object[]> getNewAppointmentDetailsWithPatient(LocalDate startDate, LocalDate endDate, String patientId) {
+        return appointmentRepository.findBookedAppointmentsWithPatientDetails(startDate, endDate, patientId);
+    }
+
+    public List<Object[]> getNoShowAppointmentDetailsWithPatient(LocalDate startDate, LocalDate endDate, String patientId) {
+        return appointmentRepository.findNoShowAppointmentsWithPatientDetails(startDate, endDate, patientId);
+    }
+
+    public long getAppointmentsCount(LocalDateTime startDate, LocalDateTime endDate) {
+        return appointmentRepository.countAppointmentsInDateRange(startDate, endDate);
+    }
+
+    public long getNoShowCount(LocalDateTime startDate, LocalDateTime endDate) {
+        return appointmentRepository.countNoShowsInDateRange(startDate, endDate);
+    }
+
 }
