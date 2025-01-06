@@ -139,7 +139,7 @@ public class AppointmentRequest {
     private String scheduleId;
     private String eventReasonCode;
     private String appointmentType;
-    private LocalDateTime dateTimeOfTheEvent;  // Use LocalDateTime
+    private LocalDateTime dateTimeOfTheEvent;
 
     private String locationId;
     private String locationName;

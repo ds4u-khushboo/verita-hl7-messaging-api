@@ -31,8 +31,6 @@ public class PatientSummaryDTO {
                 .collect(Collectors.toList());
     }
 
-    // Getters and setters
-
     public Long getPatientId() {
         return patientId;
     }

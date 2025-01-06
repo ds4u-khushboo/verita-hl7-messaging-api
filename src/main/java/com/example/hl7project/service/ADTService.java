@@ -1,11 +1,8 @@
 package com.example.hl7project.service;
 
 import com.twilio.rest.api.v2010.account.Message;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -23,8 +20,6 @@ public class ADTService {
     @Autowired
     private MessageService messageService;
 
-    private static final Logger logger = LoggerFactory.getLogger(SIUInboundService.class);
-
     private Map<String, List<String>> receiveHl7Message(String hl7Message) {
         Map<String, List<String>> hl7Map = new HashMap<>();
         String[] segments = hl7Message.split("\r");
@@ -39,23 +34,17 @@ public class ADTService {
         return hl7Map;
     }
 
-
     public Message processMessage(String hl7Message) {
         Map<String, List<String>> hl7Map = receiveHl7Message(hl7Message);
 
 
         Map<String, String> mshData = messageProcessingService.extractDataFromMshSegment(hl7Map.get("MSH"));
         Map<String, String> patientData = messageProcessingService.extractPatientData(hl7Map.get("PID"));
-//        Map<String, String> schData = messageProcessingService.extractDataFromSchSegment(hl7Map.get("SCH"));
-
-//        List<Appointment> appointments= (List<Appointment>) schData;
         String patientId = patientData.get("Patient ID");
         String patientName = patientData.get("Patient Name");
         String patientPhone = patientData.get("Home Phone Number");
 
         String messageType = mshData.get("messageType");
-
-        // Determine action based on message type
         switch (messageType) {
 
             case "ADT^A04":
@@ -64,8 +53,6 @@ public class ADTService {
                 patientService.savePatientData(patientData);
                 messageService.saveMessageEntity(messageType,hl7Message,smsMessage, patientPhone,"",patientId);
                 messageService.saveTextMessage(messageType,patientData);
-               // messageService.saveMessageEntity(messageType,smsMessage,hl7Message,patientPhone);
-              //  notificationService.sendPatientCreateNotification(patientPhone, smsMessage);
                 break;
 
             case "ADT^A08":

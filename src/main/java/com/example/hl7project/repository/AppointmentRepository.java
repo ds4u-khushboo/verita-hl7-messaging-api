@@ -5,7 +5,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -22,19 +21,6 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
             "AND ap.reminderMessageStatus <> 'NO_SHOW_4_WEEK' " +
             "ORDER BY ap.appointmentDate")
     List<Object[]> findNoShowAppointmentsToSendTextMessages();
-
-//    @Query(value = "SELECT ap.*, " +
-//            "CASE " +
-//            "WHEN FLOOR(TIME_TO_SEC(TIMEDIFF(TIMESTAMP(CURRENT_TIMESTAMP), ap.appointment_date)) / 60) < 180 " +
-//            "THEN 1 " +
-//            "ELSE 0 " +
-//            "END AS timeDiffLessThan3Hours " +
-//            "FROM appointments ap " +
-//            "WHERE ap.patient_id = :patientId " +
-//            "AND ap.is_confirm_request_replied = 0 " + "AND ap.visit_status_code = 'PEN' " +
-//            "AND FLOOR(TIME_TO_SEC(TIMEDIFF(TIMESTAMP(CURRENT_TIMESTAMP), ap.appointment_date)) / 60) < 180",
-//            nativeQuery = true)
-//    List<Object[]> findAppointmentsWithTimeDiff(@Param("patientId") String patientId);
 
     @Query(value = "SELECT ap.*, \n" +
             "       TIMESTAMPDIFF(MINUTE, prev.appointment_date, ap.appointment_date) AS time_diff_in_minutes\n" +
@@ -63,10 +49,6 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
             "ORDER BY created_at ASC) = 'NEW' THEN 1 ELSE 0 END AS IsPreviousNew " +
             "FROM appointments WHERE cm_code IN ('NEW', 'CRS', 'CRR0', 'CRR1')", nativeQuery = true)
     List<Object[]> findAppointmentsWithConfirmationStatus();
-
-
-    @Query("SELECT a FROM Appointment a WHERE a.patientId = :patientId ORDER BY a.appointmentDate DESC")
-    List<Appointment> findLastNoShowAppointmentByPatientId(@Param("patientId") Long patientId);
 
     @Query(value = "SELECT visit_appointment_id AS visitAppointmentId, " +
             "patient_id AS patientId, " +
@@ -115,13 +97,15 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
                                  @Param("startDate") LocalDate startDate,
                                  @Param("endDate") LocalDate endDate);
 
-    @Query("SELECT COUNT(*) FROM Appointment a " +
-            "WHERE  a.visitStatusCode = 'N/S' " +
-            "AND ( a.patientId = :patientId OR :patientId is null ) " +
-            "AND (DATE(a.appointmentDate) BETWEEN :startDate AND :endDate OR :startDate is null or :endDate is null)")
-    long countNoShowAppointments(@Param("patientId") String patientId,
+    @Query("SELECT COUNT(a) FROM Appointment a " +
+            "WHERE a.visitStatusCode = 'N/S' " +
+            "AND (:patientId IS NULL OR a.patientId = :patientId) " +
+            "AND (:startDate IS NULL OR :endDate IS NULL OR DATE(a.appointmentDate) BETWEEN :startDate AND :endDate)")
+    Long countNoShowAppointments(@Param("patientId") String patientId,
                                  @Param("startDate") LocalDate startDate,
                                  @Param("endDate") LocalDate endDate);
+
+
 
 
     @Query("SELECT p.patientId, p.name, p.address, p.dateOfBirth, p.sex, a.visitStatusCode, a.appointmentDate, a.visitAppointmentId, a.appointmentReason, a.isConfirmRequestSent ," +
@@ -190,17 +174,6 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
             @Param("endDate") LocalDate endDate
     );
 
-
-    //    @Query("SELECT COUNT(*) FROM Appointment a " +
-//            "WHERE  a.visitStatusCode = 'PEN' " +
-//            "AND ( a.patientId = :patientId OR :patientId is null ) " +
-//            "AND (DATE(a.createdAt) BETWEEN :startDate AND :endDate OR :startDate is null or :endDate is null)")
-//    long countBookedAppointments(@Param("patientId") String patientId,
-//                                 @Param("startDate") LocalDate  startDate,
-//                                 @Param("endDate") LocalDate  endDate);
-//count booked appointments by created date
-    //join patient table
-    //patient summary - booked appointment no show appointments and message sent
     @Query("SELECT COUNT(a) FROM Appointment a WHERE a.appointmentDate BETWEEN :startDate AND :endDate")
     long countAppointmentsInDateRange(@Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
 
@@ -213,19 +186,6 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     List<Appointment> findAppointmentsByDateRangeBetween(@Param("startDate") LocalDateTime startDate,
                                                          @Param("endDate") LocalDateTime endDate);
 
-    //    @Query(value = "SELECT p.patientId, p.name, p.address, p.dateOfBirth, p.sex, a.visitStatusCode, " +
-//            "a.appointmentDate, a.visitAppointmentId, a.appointmentReason, " +
-//            "TIMESTAMPDIFF(YEAR, p.dateOfBirth, CURRENT_DATE) - " +
-//            "(DATE_FORMAT(CURRENT_DATE, '%m%d') < DATE_FORMAT(p.dateOfBirth, '%m%d')) AS age " +
-//            "FROM Appointment a " +
-//            "JOIN Patient p ON a.patientId = p.patientId " +
-//            "WHERE a.visitStatusCode = 'PEN' " +
-//            "AND (:gender IS NULL OR p.sex = :gender) " +
-//            "AND (:address IS NULL OR p.address LIKE :address) " +
-//            "AND (:patientName IS NULL OR p.name LIKE :patientName) " +
-//            "AND (:minAge IS NULL OR :maxAge IS NULL OR TIMESTAMPDIFF(YEAR, p.dateOfBirth, CURRENT_DATE) BETWEEN :minAge AND :maxAge) " +
-//            "AND a.appointmentDate BETWEEN :startDate AND :endDate",
-//            nativeQuery = true)
     @Query("SELECT p.patientId, p.name, p.address, DATE_FORMAT(p.dateOfBirth, '%Y-%m-%d') AS dateOfBirth, " +
             "p.sex, a.visitStatusCode, DATE_FORMAT(a.appointmentDate, '%Y-%m-%d %H:%i:%s') AS appointmentDate, " +
             "a.visitAppointmentId, a.appointmentReason, " +

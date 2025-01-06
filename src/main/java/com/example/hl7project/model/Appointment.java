@@ -5,7 +5,6 @@ import com.example.hl7project.utility.ReminderMessageStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-
 import java.time.LocalDateTime;
 
 @Entity
@@ -69,14 +68,6 @@ public class Appointment {
 
     @Column(name = "location_id")
     private String location;
-
-//    @ManyToOne(fetch = FetchType.LAZY) // This represents the relationship with Patient
-//    @JoinColumn(name = "patient_id") // foreign key for the Patient
-//    private Patient patient;
-
-//    @ManyToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "provider_id")
-//    private Provider providers;
 
     @Column(name = "resource_id")
     private String resourceId;

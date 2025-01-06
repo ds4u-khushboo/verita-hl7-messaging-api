@@ -34,7 +34,7 @@ public class AppointmentConfirmationService {
 
             long timeDiffInMinutes = (Long) appointmentData[appointmentData.length - 1];
 
-            System.out.println("timeDiffInMinutes"+timeDiffInMinutes);
+            System.out.println("timeDiffInMinutes" + timeDiffInMinutes);
             if (timeDiffInMinutes > 180) {
                 sendTextMessage(patientId, phoneNumber);
                 return "Message sent successfully.";
@@ -46,7 +46,7 @@ public class AppointmentConfirmationService {
         }
     }
 
-    private void sendTextMessage(String patientId,String phoneNumber) {
+    private void sendTextMessage(String patientId, String phoneNumber) {
         twilioService.sendMessage(phoneNumber, textMessageConfig.getAppCreation());
 
         InboundHL7Message newMessage = new InboundHL7Message();

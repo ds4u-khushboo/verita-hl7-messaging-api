@@ -3,7 +3,6 @@ package com.example.hl7project.dto;
 import com.example.hl7project.model.Appointment;
 import lombok.Getter;
 import lombok.Setter;
-
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
@@ -62,7 +61,7 @@ public class BookingInfoDTO {
 
         @NotNull(message = "Date of Birth is required")
         @Pattern(regexp = "^\\d{8}$", message = "Date of Birth must be in the format YYYYMMDD")
-        private String dob;  // Date of Birth in YYYYMMDD format
+        private String dob;
 
         private String gender;
         private String race;
@@ -77,11 +76,11 @@ public class BookingInfoDTO {
 
         @NotNull(message = "Appointment start time is required")
         @Pattern(regexp = "^\\d{14}$", message = "Appointment start time must be in the format YYYYMMDDHHMMSS")
-        private String startTime;  // Appointment start time (YYYYMMDDHHMMSS)
+        private String startTime;
 
         @NotNull(message = "Appointment end time is required")
         @Pattern(regexp = "^\\d{14}$", message = "Appointment end time must be in the format YYYYMMDDHHMMSS")
-        private String endTime;    // Appointment end time (YYYYMMDDHHMMSS)
+        private String endTime;
 
 
         public AppointmentDTO(Appointment appointment) {

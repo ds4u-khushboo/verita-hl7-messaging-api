@@ -3,7 +3,6 @@ package com.example.hl7project.utility;
 import org.springframework.stereotype.Service;
 
 import java.lang.reflect.Field;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -41,15 +40,25 @@ public class Utility {
                     Field field = fields[i];
                     field.setAccessible(true);
                     Object value = row[i];
+
                     if (value != null) {
-                        if (field.getType().equals(String.class) && value instanceof LocalDateTime) {
-                            field.set(dto, ((LocalDateTime) value).toString());
-                        } else if (field.getType().equals(String.class) && value instanceof java.sql.Date) {
+                        Class<?> fieldType = field.getType();
+
+                        if (fieldType.equals(String.class) && !(value instanceof String)) {
                             field.set(dto, value.toString());
-                        } else if (field.getType().equals(LocalDate.class) && value instanceof java.sql.Date) {
-                            field.set(dto, ((java.sql.Date) value).toLocalDate());
-                        } else if (field.getType().equals(LocalDateTime.class) && value instanceof java.sql.Timestamp) {
-                            field.set(dto, ((java.sql.Timestamp) value).toLocalDateTime());
+                        } else if (fieldType.equals(Long.class)) {
+                            if (value instanceof String) {
+                                String stringValue = (String) value;
+                                if (stringValue.matches("\\d+")) {
+                                    field.set(dto, Long.valueOf(stringValue));
+                                } else {
+                                    System.err.println("Cannot convert non-numeric string to Long: " + stringValue);
+                                }
+                            } else if (value instanceof Number) {
+                                field.set(dto, ((Number) value).longValue());
+                            }
+                        } else if (fieldType.equals(Integer.class) && value instanceof Number) {
+                            field.set(dto, ((Number) value).intValue());
                         } else {
                             field.set(dto, value);
                         }
@@ -64,6 +73,8 @@ public class Utility {
 
         return dtoList;
     }
+
+
     public static Map<String, Object> createFieldMap(Object[] row, Class<?> dtoClass) {
         Map<String, Object> fieldMap = new HashMap<>();
         Field[] fields = dtoClass.getDeclaredFields();

@@ -15,8 +15,6 @@ public class PatientService {
 
     public void savePatientData(Map<String, String> patientData) {
         Patient patient = new Patient();
-
-//        patient.setId(patientData.get("Patient ID"));
         patient.setPatientId(patientData.get("External Patient ID"));
         patient.setExternalPatientMRN(patientData.get("External Patient MRN"));
         patient.setName(patientData.get("Patient Name"));
@@ -40,7 +38,6 @@ public class PatientService {
         if (patient == null) {
             patient = patientRepository.findByExternalPatientMRN(patientData.get("External Patient MRN"));
             if (patient == null) {
-                // if found id update
                 System.out.println("Patient not found for update.");
                 return;
             }
@@ -58,6 +55,4 @@ public class PatientService {
         patientRepository.save(patient);
 
     }
-
-    // check duplicate patient   MRN  firstName  LastNAme  DateOfBirth
 }

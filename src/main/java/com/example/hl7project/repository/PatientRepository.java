@@ -18,8 +18,6 @@ public interface PatientRepository extends JpaRepository<Patient, Long> {
             @Param("lastName") String lastName,
             @Param("dateOfBirth") String dateOfBirth
     );
-    Optional<Patient> findByExternalPatientMRNAndFirstNameAndLastNameAndDateOfBirth(String mrn, String firstName, String lastName, String dob);
-
     Patient findByPatientId(String patientId);
 
     Patient findByExternalPatientMRN(String patientMRN);

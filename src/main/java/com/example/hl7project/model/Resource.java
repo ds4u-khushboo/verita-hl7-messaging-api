@@ -29,9 +29,6 @@ public class Resource {
     @Column(name = "resource_type")
     private String resourceType;
 
-//    @OneToMany(mappedBy = "resource", fetch = FetchType.LAZY)
-//    private List<Appointment> appointments;
-
     @Column(name = "start_time")
     private String startTime;
 

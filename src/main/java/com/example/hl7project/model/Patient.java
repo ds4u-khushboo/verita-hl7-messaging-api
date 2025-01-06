@@ -8,12 +8,6 @@ import java.util.List;
 @Entity
 @Table(name = "patients")
 public class Patient {
-
-//    @Id
-//    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "patient_seq")
-//    @SequenceGenerator(name = "patient_seq", sequenceName = "patients_seq", allocationSize = 1)
-//    private Long id;
-
     @Id
     @Column(name = "patient_id", unique = true, nullable = false)
     private String patientId;
@@ -69,17 +63,6 @@ public class Patient {
 
     @Column(name = "updated_at")
     private java.time.LocalDateTime updatedAt;
-
-//    @OneToMany(mappedBy = "patient",  fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
-//    private List<Appointment> appointments;
-
-//    public Long getId() {
-//        return id;
-//    }
-//
-//    public void setId(Long id) {
-//        this.id = id;
-//    }
 
     public String getName() {
         return name;
@@ -233,5 +216,4 @@ public class Patient {
     public void setLastName(String lastName) {
         this.lastName = lastName;
     }
-// Getters and Setters
 }

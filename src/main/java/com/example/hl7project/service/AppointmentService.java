@@ -7,6 +7,8 @@ import com.example.hl7project.repository.*;
 import com.example.hl7project.utility.ConfirmationMessageStatus;
 import com.example.hl7project.utility.ReminderMessageStatus;
 import com.example.hl7project.utility.Utility;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -52,93 +54,98 @@ public class AppointmentService {
     @Autowired
     private NoShowServiceImpl noShowServiceImpl;
 
+    private static final Logger logger = LoggerFactory.getLogger(AppointmentService.class);
+
     public Appointment saveAppointmentData(Map<String, String> schData, Map<String, String> pv1Data, Map<String, String> aigData, Map<String, String> mshData, Map<String, String> patientData) {
+        logger.info("Saving appointment data...");
+        logger.debug("SCH Data: {}, PV1 Data: {}, AIG Data: {}, MSH Data: {}, Patient Data: {}", schData, pv1Data, aigData, mshData, patientData);
 
         Patient patient = patientRepository.findByPatientId(patientData.get("External Patient ID"));
         if (patient == null) {
-            patientService.savePatientData(patientData); // Save the patient data
+            logger.info("Patient not found. Saving new patient data.");
+            patientService.savePatientData(patientData);
         }
         Appointment appointment = new Appointment();
-        appointment.setId(1L);
-        appointment.setAppointmentDate(utility.hl7DateToDateTime(schData.get("Appointment Date")));
-        appointment.setAppointmentReason(schData.get("Appointment Reason"));
-        appointment.setVisitStatusCode(schData.get("Visit Status Code"));
-        appointment.setAppointmentDateStr(schData.get("Appointment Date"));
-        appointment.setVisitAppointmentId(Long.valueOf(schData.get("Visit/Appointment ID")));
-        appointment.setDuration(schData.get("Appointment Duration"));
-        appointment.setDurationUnits(schData.get("Appointment Duration Units"));
-        appointment.setAppointmentType(schData.get("Appointment Type"));
-        appointment.setNotes(schData.get("Encounter Notes"));
-        appointment.setPatientId(patientData.get("External Patient ID"));
-        appointment.setConfirmationMessageStatus(ConfirmationMessageStatus.NONE);
-        appointment.setReminderMessageStatus(ReminderMessageStatus.NONE);
-        appointment.setProvider(pv1Data.get("providerId"));
-//        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddhhmmss");
-//        appointment.setAppointmentDateUtc(LocalDate.parse(schData.get("Appointment Date")));
-        String providerCode = pv1Data.get("Provider");
-        String resourceId = aigData.get("HL7 ID");
-        Provider provider = providerRepository.findByProviderId(providerCode);
-        appointment.setResourceId(resourceId);
-//        if (provider != null) {
-//            appointment.getProvider().setProviderName(String.valueOf(provider));
-//        } else {
-//            System.err.println("Provider not found with code: " + providerCode);
-//            // You may want to handle this case by throwing an exception or setting a default provider
-//        }
-        String messageDateTime = mshData.get("messageDateTime");
-        if (messageDateTime != null) {
-            try {
-                appointment.setCreatedAt(LocalDateTime.now());
-            } catch (DateTimeParseException e) {
-                System.err.println("Error parsing messageDateTime: " + messageDateTime);
-                e.printStackTrace();
+        try {
+            appointment.setId(1L);
+            appointment.setAppointmentDate(utility.hl7DateToDateTime(schData.get("Appointment Date")));
+            appointment.setAppointmentReason(schData.get("Appointment Reason"));
+            appointment.setVisitStatusCode(schData.get("Visit Status Code"));
+            appointment.setAppointmentDateStr(schData.get("Appointment Date"));
+            appointment.setVisitAppointmentId(Long.valueOf(schData.get("Visit/Appointment ID")));
+            appointment.setDuration(schData.get("Appointment Duration"));
+            appointment.setDurationUnits(schData.get("Appointment Duration Units"));
+            appointment.setAppointmentType(schData.get("Appointment Type"));
+            appointment.setNotes(schData.get("Encounter Notes"));
+            appointment.setPatientId(patientData.get("External Patient ID"));
+            appointment.setConfirmationMessageStatus(ConfirmationMessageStatus.NONE);
+            appointment.setReminderMessageStatus(ReminderMessageStatus.NONE);
+            appointment.setProvider(pv1Data.get("providerId"));
+            String resourceId = aigData.get("HL7 ID");
+            appointment.setResourceId(resourceId);
+
+            String messageDateTime = mshData.get("messageDateTime");
+            if (messageDateTime != null) {
+                try {
+                    appointment.setCreatedAt(LocalDateTime.now());
+                } catch (DateTimeParseException e) {
+                    logger.error("Error parsing messageDateTime: {}", messageDateTime, e);
+                }
             }
+            appointmentRepository.save(appointment);
+            logger.info("Appointment data saved successfully.");
+        } catch (Exception e) {
+            logger.error("Error saving appointment data", e);
         }
-        appointmentRepository.save(appointment);
-        System.out.println("appointment data saved!!!");
         return appointment;
     }
 
     public Appointment updateAppointmentData(Map<String, String> schData, Map<String, String> mshData) {
+        logger.info("Updating appointment data...");
         Long appointmentId = Long.valueOf(schData.get("Visit/Appointment ID"));
+        logger.debug("Updating appointment with ID: {}", appointmentId);
+
         Appointment existingAppointment = appointmentRepository.findByVisitAppointmentId(appointmentId);
 
         if (existingAppointment == null) {
-            System.err.println("Appointment with ID " + appointmentId + " not found.");
+            logger.warn("Appointment with ID {} not found.", appointmentId);
             return null;
         }
 
-        if (schData.containsKey("Visit Status Code")) {
-            String newVisitStatusCode = schData.get("Visit Status Code");
-            existingAppointment.setVisitStatusCode(newVisitStatusCode);  // Update the visit status
-        }
-        String messageDateTime = mshData.get("messageDateTime");
-        if (messageDateTime != null) {
-            try {
-                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
-                LocalDateTime createdAt = LocalDateTime.parse(messageDateTime, formatter);
-                existingAppointment.setCreatedAt(createdAt);
-            } catch (DateTimeParseException e) {
-                System.err.println("Error parsing messageDateTime: " + messageDateTime);
-                e.printStackTrace();
+        try {
+            if (schData.containsKey("Visit Status Code")) {
+                String newVisitStatusCode = schData.get("Visit Status Code");
+                existingAppointment.setVisitStatusCode(newVisitStatusCode);  // Update the visit status
             }
+            String messageDateTime = mshData.get("messageDateTime");
+            if (messageDateTime != null) {
+                try {
+                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+                    LocalDateTime createdAt = LocalDateTime.parse(messageDateTime, formatter);
+                    existingAppointment.setCreatedAt(createdAt);
+                } catch (DateTimeParseException e) {
+                    logger.error("Error parsing messageDateTime: {}", messageDateTime, e);
+                }
+            }
+
+            appointmentRepository.save(existingAppointment);
+            logger.info("Appointment data updated successfully for ID: {}", appointmentId);
+        } catch (Exception e) {
+            logger.error("Error updating appointment data for ID: {}", appointmentId, e);
         }
-
-        appointmentRepository.save(existingAppointment);
-        System.out.println("Appointment data updated successfully!");
-
         return existingAppointment;
     }
 
     @Transactional
     public void deleteAppointment(Long appointmentId) {
-        appointmentRepository.deleteByVisitAppointmentId(appointmentId);
+        logger.info("Deleting appointment with ID: {}", appointmentId);
+        try {
+            appointmentRepository.deleteByVisitAppointmentId(appointmentId);
+            logger.info("Appointment with ID {} deleted successfully.", appointmentId);
+        } catch (Exception e) {
+            logger.error("Error deleting appointment with ID: {}", appointmentId, e);
+        }
     }
-
-    public boolean appointmentExists(Long appointmentId) {
-        return appointmentRepository.existsByVisitAppointmentId(appointmentId);
-    }
-
 
     public void checkAndUpdateSameSpecialtyNoShowAppointment(String patientId, String providerName) {
         Provider provider = providerRepository.findByProviderName(providerName);
@@ -154,8 +161,12 @@ public class AppointmentService {
     }
 
     public String sendNoShowAppointmentMessages() {
+        logger.info("Sending no-show appointment messages...");
         List<AppointmentTextMessageDTO> list = getAppointmentTextMessageDTO();
+
         for (AppointmentTextMessageDTO appointment : list) {
+            logger.debug("Processing no-show reminder for appointment: {}", appointment);
+
             Patient patient = patientRepository.findByPatientId(appointment.getPatientId());
             ReminderMessageStatus status = appointment.getReminderMessageStatus();
             Integer days = appointment.getDays();
@@ -164,11 +175,16 @@ public class AppointmentService {
                     (status.equals(ReminderMessageStatus.NO_SHOW) && days > textMessageConfig.getNoShowReminderTwoWeekDays()) ||
                     (status.equals(ReminderMessageStatus.NO_SHOW_2_WEEK) && days > textMessageConfig.getNoShowReminderFourWeekDays())) {
 
-                noShowServiceImpl.sendNoShowReminderMessage(
-                        patient.getName(),
-                        patient.getHomePhone(),
-                        String.valueOf(appointment.getVisitAppointmentId())
-                );
+                try {
+                    noShowServiceImpl.sendNoShowReminderMessage(
+                            patient.getName(),
+                            patient.getHomePhone(),
+                            String.valueOf(appointment.getVisitAppointmentId())
+                    );
+                    logger.info("Reminder sent successfully for appointment ID: {}", appointment.getVisitAppointmentId());
+                } catch (Exception e) {
+                    logger.error("Error sending reminder for appointment ID: {}", appointment.getVisitAppointmentId(), e);
+                }
             }
         }
         return "success";
@@ -217,39 +233,24 @@ public class AppointmentService {
         Map<String, String> ailData = hl7UtilityService.extractDataFromAILSegment(ailSegment);
         Location location = locationRepository.findByLocationId(ailData.get("Location HL7Id"));
         if (location == null) {
-            location=new Location();
+            location = new Location();
             location.setLocationId(ailData.get("Location HL7Id"));
             location.setLocationName(ailData.get("Location Name"));
         }
-       return locationRepository.save(location);
+        return locationRepository.save(location);
     }
 
-//    public List<Resource> calculateAvailableTimeSlots(String startTime, String resourceType) {
-//        List<Resource> availableSlots = new ArrayList<>();
-//        Resource resource = resourceRepository.findByStartTimeAndResourceType(LocalDateTime.parse(startTime), resourceType);
-//        LocalDateTime currentTime =  resource.getStartTime();
-//        while (currentTime.plusMinutes(resource.getSlotInterval()).isBefore(resource.getEndTime())) {
-//            Resource resource1 = new Resource();
-//            //  resource1.setResourceId(resource);
-//            resource1.setStartTime(currentTime);
-//            resource1.setEndTime(currentTime.plusMinutes(resource.getSlotInterval()));
-//            availableSlots.add(resource1);
-//            currentTime = currentTime.plusMinutes(resource.getSlotInterval());
-//        }
-//        return availableSlots;
-//    }
-
     public long getAppointmentsCount(String patientId, LocalDate startDate, LocalDate endDate) {
-//        LocalDateTime startDateTime = startDate.atStartOfDay();
-//        LocalDateTime endDateTime = endDate.atStartOfDay();
+
         long count = appointmentRepository.countBookedAppointments(patientId, startDate, endDate);
         return count;
     }
 
     public long getNoShowAppointmentsCount(String patientId, LocalDate startDate, LocalDate endDate) {
-//        LocalDate startDateTime = startDate.atStartOfDay();
-//        LocalDate endDateTime = endDate.atTime(23,59,00);
-        return appointmentRepository.countNoShowAppointments(patientId, startDate, endDate);
+        logger.info("Fetching no-show appointments count for patientId: {}, startDate: {}, endDate: {}", patientId, startDate, endDate);
+        long count = appointmentRepository.countNoShowAppointments(patientId, startDate, endDate);
+        logger.info("No-show appointments count: {}", count);
+        return count;
     }
 
     public List<Object[]> getNewAppointmentDetailsWithPatient(LocalDate startDate, LocalDate endDate, String patientId) {
@@ -258,14 +259,6 @@ public class AppointmentService {
 
     public List<Object[]> getNoShowAppointmentDetailsWithPatient(LocalDate startDate, LocalDate endDate, String patientId) {
         return appointmentRepository.findNoShowAppointmentsWithPatientDetails(startDate, endDate, patientId);
-    }
-
-    public long getAppointmentsCount(LocalDateTime startDate, LocalDateTime endDate) {
-        return appointmentRepository.countAppointmentsInDateRange(startDate, endDate);
-    }
-
-    public long getNoShowCount(LocalDateTime startDate, LocalDateTime endDate) {
-        return appointmentRepository.countNoShowsInDateRange(startDate, endDate);
     }
 
 }

@@ -2,7 +2,6 @@ package com.example.hl7project.response;
 
 import com.example.hl7project.model.InboundHL7Message;
 import lombok.Data;
-
 import java.util.List;
 
 @Data

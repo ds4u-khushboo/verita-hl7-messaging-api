@@ -4,7 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
 import java.util.Map;
 
 @Getter
@@ -26,6 +25,4 @@ public class AppointmentDemographicDTO {
     private Long messagesTriggered;
     private Integer age;
 
-    public AppointmentDemographicDTO(Map<String, Object> fieldMap) {
-    }
 }

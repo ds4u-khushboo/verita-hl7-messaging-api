@@ -5,9 +5,7 @@ import com.example.hl7project.dto.AppointmentRequest;
 import com.example.hl7project.model.Patient;
 import com.example.hl7project.repository.PatientRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -57,7 +55,6 @@ public class OutboundService {
     private void handleNewPatient(AppointmentRequest appointmentRequest, String firstName, String lastName, String dateOfBirth) throws Exception {
         Map<String, String> patientData = new HashMap<>();
         patientData.put("External Patient ID", "");
-       // patientData.put("External Patient MRN", appointmentRequest.patient.getMrnNo());
         patientData.put("Patient Name", firstName + " " + lastName);
         patientData.put("Date of Birth", dateOfBirth);
         patientData.put("Sex", appointmentRequest.getPatient().getSex());

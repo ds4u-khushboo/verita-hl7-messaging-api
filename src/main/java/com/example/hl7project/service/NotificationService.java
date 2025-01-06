@@ -13,9 +13,6 @@ public class NotificationService {
         twillioService.getTwilioService(message,number);
     }
 
-    public void sendPatientCreateNotification(String phoneNumber, String message) {
-        twillioService.getTwilioService(message, "91" + phoneNumber);
-    }
     public void sendNoShowNotification(String phoneNumber, String message) {
         twillioService.getTwilioService(message+"ns", "91" +phoneNumber);
     }
