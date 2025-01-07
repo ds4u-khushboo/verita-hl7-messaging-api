@@ -28,10 +28,38 @@ No Show Appointment Count:
 GET /hl7/createdAppointmentCount?patientId={patientId}&startDate={startDate}&endDate={endDate}
 
 Booked Appointment Count:
+Description: This API fetches the count of appointments successfully booked for a specific patient within a given date range.
 GET /reports/createdAppointmentCount?patientId={patientId}&startDate={startDate}&endDate={endDate}
 
-Appointment Summary by Patient:
+New Appointment with Patient Summary
+Endpoint: GET /reports/findNoShowAppointmentsWithPatients Description: This API returns a summary of no-show appointments, including patient details, for a specific date range.
 GET /reports/findNoShowAppointmentsWithPatients?patientId={patientId}&startDate={startDate}&endDate={endDate}
+
+No Show Appointments with Patients
+Endpoint: GET /reports/findNoShowAppointmentsWithPatients
+Description: This API retrieves no-show appointments along with patient details, filtered by patient ID and date range. 
 
 Booked Appointment by Demographics:
 GET /reports/findBookedAppointmentByPatientDemographics?gender={gender}&patientName={patientName}&address={address}&minAge={minAge}&maxAge={maxAge}&startDate={startDate}&endDate={endDate}
+Description: This API retrieves booked appointments filtered by patient demographics such as gender, age, address, and name within a specified date range. 
+ 
+Find No-Show Appointments by Patient Demographics
+Endpoint: GET /reports/findNoShowAppointmentByPatientDemographics Description: This API retrieves no-show appointments based on patient demographics (gender, name, age, address) within a specified date range. 
+
+Booked Appointment with Providers
+Endpoint: GET /reports/findNewAppointmentsWithProviders 
+Description: This API retrieves the new appointments scheduled with specific providers based on provider ID, specialty, and date range.
+
+No Show Appointments with Providers
+Endpoint: GET /reports/findNoShowAppointmentsWithProviders 
+Description: This API retrieves no-show appointments filtered by provider ID and optionally by specialty, allowing you to track missed appointments for specific providers
+
+Find Booked Appointments by Location
+Endpoint: GET /reports/findBookedAppointmentWithLocation 
+Description: This API retrieves booked appointments filtered by location, allowing you to track appointments for specific locations within a defined date range.
+
+Find No-Show Appointments by Location
+Endpoint: GET /reports/findNoShowAppointmentWithLocation 
+Description: This API retrieves no-show appointments filtered by location, enabling healthcare providers to track missed appointments at specific locations. 
+
+
