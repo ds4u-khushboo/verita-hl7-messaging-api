@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.lang.reflect.Field;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
@@ -89,7 +90,8 @@ public class AppointmentController {
     }
 
     @RequestMapping("/getMessageByRange")
-    public MessageResponse getMessageByTimRange(@RequestParam String startDate, @RequestParam String endDate) {
+    public MessageResponse getMessageByTimRange(@RequestParam(name = "startDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
+                                                @RequestParam(name = "endDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate) {
         return siuInboundService.getMessagesInRange(startDate, endDate);
     }
 

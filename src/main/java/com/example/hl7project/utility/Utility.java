@@ -73,22 +73,4 @@ public class Utility {
 
         return dtoList;
     }
-
-
-    public static Map<String, Object> createFieldMap(Object[] row, Class<?> dtoClass) {
-        Map<String, Object> fieldMap = new HashMap<>();
-        Field[] fields = dtoClass.getDeclaredFields();
-        if (row.length != fields.length) {
-            System.out.println("Mismatch in row length and fields length.");
-        }
-
-        for (int i = 0; i < row.length; i++) {
-            if (i < fields.length) {
-                fieldMap.put(fields[i].getName(), row[i]);
-            }
-        }
-
-        return fieldMap;
-    }
-
 }

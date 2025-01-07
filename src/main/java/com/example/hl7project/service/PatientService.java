@@ -53,6 +53,5 @@ public class PatientService {
         patient.setHomePhone(patientData.get("Home Phone Number"));
         patient.setMaritalStatus(patientData.get("Marital Status"));
         patientRepository.save(patient);
-
     }
 }

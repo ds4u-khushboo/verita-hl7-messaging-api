@@ -2,11 +2,12 @@ package com.example.hl7project.dto;
 
 import com.example.hl7project.model.Appointment;
 import com.example.hl7project.model.Patient;
-
+import lombok.Data;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Data
 public class PatientSummaryDTO {
 
     private Long patientId;
@@ -31,67 +32,4 @@ public class PatientSummaryDTO {
                 .collect(Collectors.toList());
     }
 
-    public Long getPatientId() {
-        return patientId;
-    }
-
-    public void setPatientId(Long patientId) {
-        this.patientId = patientId;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getAddress() {
-        return address;
-    }
-
-    public void setAddress(String address) {
-        this.address = address;
-    }
-
-    public LocalDate getDateOfBirth() {
-        return dateOfBirth;
-    }
-
-    public void setDateOfBirth(LocalDate dateOfBirth) {
-        this.dateOfBirth = dateOfBirth;
-    }
-
-    public String getSex() {
-        return sex;
-    }
-
-    public void setSex(String sex) {
-        this.sex = sex;
-    }
-
-    public long getAppointmentCount() {
-        return appointmentCount;
-    }
-
-    public void setAppointmentCount(long appointmentCount) {
-        this.appointmentCount = appointmentCount;
-    }
-
-    public long getMessagesTriggered() {
-        return messagesTriggered;
-    }
-
-    public void setMessagesTriggered(long messagesTriggered) {
-        this.messagesTriggered = messagesTriggered;
-    }
-
-    public List<BookingInfoDTO.AppointmentDTO> getAppointments() {
-        return appointments;
-    }
-
-    public void setAppointments(List<BookingInfoDTO.AppointmentDTO> appointments) {
-        this.appointments = appointments;
-    }
 }

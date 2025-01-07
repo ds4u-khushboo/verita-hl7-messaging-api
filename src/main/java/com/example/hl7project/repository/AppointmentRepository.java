@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -50,18 +51,6 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
             "FROM appointments WHERE cm_code IN ('NEW', 'CRS', 'CRR0', 'CRR1')", nativeQuery = true)
     List<Object[]> findAppointmentsWithConfirmationStatus();
 
-    @Query(value = "SELECT visit_appointment_id AS visitAppointmentId, " +
-            "patient_id AS patientId, " +
-            "cm_code AS cmCode, " +
-            "created_at AS createdAt, " +
-            "TIMESTAMPDIFF(MINUTE, created_at, NOW()) AS minutesElapsed, " +
-            "CASE WHEN LAG(cm_code) OVER (PARTITION BY patient_id, DATE(created_at) " +
-            "ORDER BY created_at ASC) = 'NEW' THEN 1 ELSE 0 END AS isPreviousNew " +
-            "FROM appointments WHERE cm_code IN ('NEW', 'CRS', 'CRR0', 'CRR1') " +
-            "AND DATE(created_at) = CURDATE() AND patient_id=:patientId",
-            nativeQuery = true)
-    List<Object[]> findOneAppointmentWithNewConfirmationStatus(@Param("patientId") String patientId);
-
 
     @Query("SELECT a FROM Appointment a WHERE a.patientId = :patientId ORDER BY a.appointmentDate DESC")
     Appointment findLatestByPatient(@Param("patientId") Long patientId);
@@ -104,8 +93,6 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     Long countNoShowAppointments(@Param("patientId") String patientId,
                                  @Param("startDate") LocalDate startDate,
                                  @Param("endDate") LocalDate endDate);
-
-
 
 
     @Query("SELECT p.patientId, p.name, p.address, p.dateOfBirth, p.sex, a.visitStatusCode, a.appointmentDate, a.visitAppointmentId, a.appointmentReason, a.isConfirmRequestSent ," +
@@ -173,12 +160,6 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate
     );
-
-    @Query("SELECT COUNT(a) FROM Appointment a WHERE a.appointmentDate BETWEEN :startDate AND :endDate")
-    long countAppointmentsInDateRange(@Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
-
-    @Query("SELECT COUNT(a) FROM Appointment a WHERE a.visitStatusCode = 'N/S' AND a.appointmentDate BETWEEN :startDate AND :endDate")
-    long countNoShowsInDateRange(@Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
 
     @Query("SELECT a FROM Appointment a WHERE " +
             "(:startDate IS null OR a.appointmentDate >= :startDate) AND " +

@@ -95,27 +95,4 @@ public class AppointmentPatientDTO {
         this.countOfAppointments = countOfAppointments;
         this.age = age;
     }
-    public static <T> List<T> mapToDto(List<Object[]> results, Class<T> dtoClass) {
-        List<T> dtoList = new ArrayList<>();
-        try {
-            for (Object[] row : results) {
-                if (row.length != 13) {
-                    System.out.println("Mismatch in row: " + Arrays.toString(row));
-                    continue;
-                }
-
-
-            T dto = dtoClass.getDeclaredConstructor(String.class, String.class, String.class, String.class, String.class,
-                                String.class, String.class, Long.class, String.class,
-                                Long.class, Long.class, Long.class,Long.class)
-                        .newInstance(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7],
-                                row[8], row[9], row[10], row[11], row[12]);
-                dtoList.add(dto);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.out.println("Cause: " + e.getCause());
-        }
-        return dtoList;
-    }
 }

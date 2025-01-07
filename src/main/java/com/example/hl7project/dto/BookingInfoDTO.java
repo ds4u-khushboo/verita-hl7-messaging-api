@@ -3,6 +3,7 @@ package com.example.hl7project.dto;
 import com.example.hl7project.model.Appointment;
 import lombok.Getter;
 import lombok.Setter;
+
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;

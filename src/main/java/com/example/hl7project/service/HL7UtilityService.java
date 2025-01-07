@@ -1,13 +1,11 @@
 package com.example.hl7project.service;
 
 import com.example.hl7project.dto.AppointmentRequest;
-import com.example.hl7project.dto.BookingInfoDTO;
 import com.example.hl7project.model.Provider;
 import com.example.hl7project.model.Resource;
 import com.example.hl7project.repository.ProviderRepository;
 import com.example.hl7project.repository.ResourceRepository;
 import com.example.hl7project.utility.Utility;
-import com.google.gson.JsonObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

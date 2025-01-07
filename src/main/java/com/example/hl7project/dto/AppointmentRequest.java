@@ -2,6 +2,7 @@ package com.example.hl7project.dto;
 
 import lombok.Getter;
 import lombok.Setter;
+
 import java.time.LocalDateTime;
 
 @Getter
@@ -73,7 +74,7 @@ public class AppointmentRequest {
 
     @Getter
     @Setter
-    public  class Patient {
+    public class Patient {
         private String lastName;
         private String firstName;
         private String middleName;
@@ -102,6 +103,7 @@ public class AppointmentRequest {
         private String state;
         private String zip;
     }
+
     @Getter
     @Setter
     public static class Visit {
@@ -111,6 +113,7 @@ public class AppointmentRequest {
         private String visitNumber;
         private LocalDateTime admitDate;
     }
+
     @Getter
     @Setter
     public static class AssignedLocation {
@@ -118,6 +121,7 @@ public class AppointmentRequest {
         private String room;
         private String bed;
     }
+
     @Getter
     @Setter
     public static class Doctor {
@@ -125,6 +129,7 @@ public class AppointmentRequest {
         private String lastName;
         private String firstName;
     }
+
     @Getter
     @Setter
     public static class Insurance {

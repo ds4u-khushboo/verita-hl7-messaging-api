@@ -41,7 +41,6 @@ public class NoShowService {
             Long visitAppointmentId = (Long) data[0];
             String patientId = (String) data[1];
             String cmCode = (String) data[2];
-            Timestamp createdAt = (Timestamp) data[3];
             Long minutesElapsed = (Long) data[4];
             Integer isPreviousNew = (Integer) data[5];
             Patient patient = patientRepository.findByPatientId(patientId);

@@ -18,7 +18,7 @@ public interface InboundSIUMessageRepo extends JpaRepository<InboundHL7Message, 
      List<InboundHL7Message> deleteAllByCreatedAt(LocalDateTime date);
 
 
-    List<InboundHL7Message> findByCreatedAtBetween(Timestamp startTimestamp, Timestamp endTimestamp);
+    List<InboundHL7Message> findByCreatedAtBetween(LocalDateTime startTimestamp, LocalDateTime endTimestamp);
 
     @Query("SELECT COUNT(me) FROM InboundHL7Message me WHERE me.messageType = :messageType")
     long countByMessageType(String messageType);
@@ -31,6 +31,6 @@ public interface InboundSIUMessageRepo extends JpaRepository<InboundHL7Message, 
 
     List<InboundHL7Message> deleteByCreatedAtBefore(LocalDate cutoffDate);
 
-    @Query(value = "SELECT m.messageType AS messageType, COUNT(*) AS messageCount FROM MessageEntity m WHERE m.messageType IN ('SIU_S12', 'SIU_S14', 'SIU_S26') GROUP BY m.messageType", nativeQuery = true)
+    @Query(value = "SELECT m.message_type AS messageType, COUNT(*) AS messageCount FROM inbound_siu_message m WHERE m.message_type IN ('SIU_S12', 'SIU_S14', 'SIU_S26') GROUP BY m.message_type", nativeQuery = true)
     List<Object[]> countMessagesByType();
 }

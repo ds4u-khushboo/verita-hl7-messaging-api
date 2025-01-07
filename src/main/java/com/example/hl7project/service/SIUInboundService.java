@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+
 import java.sql.Timestamp;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
@@ -222,19 +223,12 @@ public class SIUInboundService {
         return null;
     }
 
-    public MessageResponse getMessagesInRange(String startDate, String endDate) {
+    public MessageResponse getMessagesInRange(LocalDateTime startDate, LocalDateTime endDate) {
         try {
             logger.debug("Fetching messages in range: {} to {}", startDate, endDate);
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
-            LocalDateTime startDateTime = LocalDateTime.parse(startDate, formatter);
-            LocalDateTime endDateTime = LocalDateTime.parse(endDate, formatter);
 
-            Timestamp startTimestamp = Timestamp.valueOf(startDateTime);
-            Timestamp endTimestamp = Timestamp.valueOf(endDateTime);
-
-            List<InboundHL7Message> messages = inboundSIUMessageRepo.findByCreatedAtBetween(startTimestamp, endTimestamp);
+            List<InboundHL7Message> messages = inboundSIUMessageRepo.findByCreatedAtBetween(startDate, endDate);
             long count = messages.size();
-
             logger.info("Found {} messages in the date range.", count);
             return new MessageResponse(messages, count);
         } catch (Exception e) {

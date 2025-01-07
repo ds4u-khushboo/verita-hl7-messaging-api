@@ -9,8 +9,6 @@ import java.util.List;
 public interface ProviderRepository extends JpaRepository<Provider, String> {
     List<Provider> findBySpecialty(String specialty);
 
-    Provider findByProviderId(String providerId);
-
     Provider findByProviderName(String providerName);
 
 }
