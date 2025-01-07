@@ -23,7 +23,7 @@ FROM appointments a
 LEFT JOIN providers p on p.provider_id = a.provider_id
 WHERE a.patient_id = '259163' AND p.specialty='Internal Medicine' AND a.visit_status_code = 'N/S' AND DATEDIFF(CURDATE(), a.appointment_date)<29 AND a.reminder_message_status IN ('NONE', 'NO_SHOW', 'NO_SHOW_2_WEEK')
 
-
+## reporting apis:
 No Show Appointment Count:
 GET /hl7/createdAppointmentCount?patientId={patientId}&startDate={startDate}&endDate={endDate}
 
@@ -61,5 +61,47 @@ Description: This API retrieves booked appointments filtered by location, allowi
 Find No-Show Appointments by Location
 Endpoint: GET /reports/findNoShowAppointmentWithLocation 
 Description: This API retrieves no-show appointments filtered by location, enabling healthcare providers to track missed appointments at specific locations. 
+
+#messaging apis:
+GET http://localhost:8083/appointment/listByName?patientName={patientName}
+
+GET http://localhost:8083/appointment/listByPhNumber?phNumber={phNumber]
+
+GET http://localhost:8082/hl7/getMessageByRange?startDate={startDate}4&endDate=2024-08-09T10:13:27
+
+GET http://localhost:8083/appointment/count?type={type}
+
+DELETE http://localhost:8083/appointment/deleteByDays?days={days}
+
+DELETE https://20.119.41.172:8082/hl7/deleteByDate?date={date}
+
+GET http://localhost:8082/appointment/noshow-rate
+
+GET http://localhost:8083/appointment/count-by-type
+
+POST http://localhost:8083/hl7/book-appointment
+
+SIU Request
+Method: POST
+URL: http://localhost:8083/hl7/SIU
+Description: Sends a Schedule Information Unsolicited (SIU) message to update appointment details in the system. The body includes appointment details like patient, provider, insurance, and location information.
+
+Method: POST
+URL: http://localhost:8083/hl7/sendTcp
+Description: Sends HL7 messages over TCP to the system. This endpoint can be used to send ADT messages with patient information, event details, and visit data.
+
+Method: POST
+URL: http://localhost:8083/sendHttp
+Description: Sends an ADT message in HTTP format to the system for processing patient data and visit information.
+
+Book Appointment
+Method: POST
+URL: http://localhost:8083/appointment/book
+Description: Books a new appointment for a patient. It includes patient details, visit information, insurance details, and appointment timings.
+
+Process No-Show Reminders
+Method: GET
+URL: http://localhost:8083/appointment/process-no-show-reminders
+Description: Processes no-show reminders for appointments. This helps ensure that patients are reminded about their upcoming appointments.
 
 
