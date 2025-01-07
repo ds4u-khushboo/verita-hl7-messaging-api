@@ -22,3 +22,16 @@ DATEDIFF(CURDATE(), a.appointment_date) as days
 FROM appointments a
 LEFT JOIN providers p on p.provider_id = a.provider_id
 WHERE a.patient_id = '259163' AND p.specialty='Internal Medicine' AND a.visit_status_code = 'N/S' AND DATEDIFF(CURDATE(), a.appointment_date)<29 AND a.reminder_message_status IN ('NONE', 'NO_SHOW', 'NO_SHOW_2_WEEK')
+
+
+No Show Appointment Count:
+GET /hl7/createdAppointmentCount?patientId={patientId}&startDate={startDate}&endDate={endDate}
+
+Booked Appointment Count:
+GET /reports/createdAppointmentCount?patientId={patientId}&startDate={startDate}&endDate={endDate}
+
+Appointment Summary by Patient:
+GET /reports/findNoShowAppointmentsWithPatients?patientId={patientId}&startDate={startDate}&endDate={endDate}
+
+Booked Appointment by Demographics:
+GET /reports/findBookedAppointmentByPatientDemographics?gender={gender}&patientName={patientName}&address={address}&minAge={minAge}&maxAge={maxAge}&startDate={startDate}&endDate={endDate}
