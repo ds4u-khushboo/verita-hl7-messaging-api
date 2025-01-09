@@ -1,6 +1,5 @@
 package com.example.hl7project.controller;
 
-import com.example.hl7project.dto.AppointmentPatientDTO;
 import com.example.hl7project.dto.AppointmentRequest;
 import com.example.hl7project.model.InboundHL7Message;
 import com.example.hl7project.model.Patient;
@@ -8,7 +7,6 @@ import com.example.hl7project.repository.InboundSIUMessageRepo;
 import com.example.hl7project.repository.PatientRepository;
 import com.example.hl7project.response.MessageResponse;
 import com.example.hl7project.service.*;
-import com.example.hl7project.utility.Utility;
 import com.twilio.rest.api.v2010.account.Message;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -16,11 +14,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.lang.reflect.Field;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/appointment")
