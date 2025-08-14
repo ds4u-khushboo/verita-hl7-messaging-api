@@ -24,16 +24,33 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
             "ORDER BY ap.appointmentDate")
     List<Object[]> findNoShowAppointmentsToSendTextMessages();
 
-    @Query(value = "SELECT ap.*, " +
-            "CASE " +
-            "WHEN FLOOR(TIME_TO_SEC(TIMEDIFF(TIMESTAMP(ap.appointmentDate), ap.appointment_date)) / 60) < 180 " +
-            "THEN 1 " +
-            "ELSE 0 " +
-            "END AS timeDiffLessThan3Hours " +
-            "FROM appointments ap " +
-            "WHERE ap.patient_id = :patientId " +
-            "AND ap.is_confirm_request_replied = 0 " +  "AND ap.visit_status_code = 'PEN' " +
-            "AND FLOOR(TIME_TO_SEC(TIMEDIFF(TIMESTAMP(ap.appointmentDate), ap.appointment_date)) / 60) < 180",
+//    @Query(value = "SELECT ap.*, " +
+//            "CASE " +
+//            "WHEN FLOOR(TIME_TO_SEC(TIMEDIFF(TIMESTAMP(CURRENT_TIMESTAMP), ap.appointment_date)) / 60) < 180 " +
+//            "THEN 1 " +
+//            "ELSE 0 " +
+//            "END AS timeDiffLessThan3Hours " +
+//            "FROM appointments ap " +
+//            "WHERE ap.patient_id = :patientId " +
+//            "AND ap.is_confirm_request_replied = 0 " + "AND ap.visit_status_code = 'PEN' " +
+//            "AND FLOOR(TIME_TO_SEC(TIMEDIFF(TIMESTAMP(CURRENT_TIMESTAMP), ap.appointment_date)) / 60) < 180",
+//            nativeQuery = true)
+//    List<Object[]> findAppointmentsWithTimeDiff(@Param("patientId") String patientId);
+
+    @Query(value = "SELECT ap.*, \n" +
+            "       TIMESTAMPDIFF(MINUTE, prev.appointment_date, ap.appointment_date) AS time_diff_in_minutes\n" +
+            "FROM appointments ap\n" +
+            "JOIN appointments prev \n" +
+            "  ON ap.patient_id = prev.patient_id\n" +
+            "  AND DATE(ap.appointment_date) = DATE(prev.appointment_date)  -- Ensure appointments are on the same day\n" +
+            "  AND ap.appointment_date > prev.appointment_date  -- Make sure ap is after prev\n" +
+            "WHERE ap.patient_id = 259163\n" +
+            "  AND ap.is_confirm_request_replied = 0\n" +
+            "  AND ap.visit_status_code = 'PEN'\n" +
+            "  AND prev.is_confirm_request_replied = 0\n" +
+            "  AND prev.visit_status_code = 'PEN'\n" +
+            "ORDER BY ap.appointment_date DESC  -- Order by the most recent appointment first\n" +
+            "LIMIT 1;",
             nativeQuery = true)
     List<Object[]> findAppointmentsWithTimeDiff(@Param("patientId") String patientId);
 

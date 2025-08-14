@@ -16,4 +16,11 @@ public class Utility {
 
         return dateTime;
     }
+    public  String formatToHL7DateTime(LocalDateTime localDateTime) {
+        // Define HL7 date-time format (YYYYMMDDHHMMSS)
+        DateTimeFormatter hl7Formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+
+        // Format the LocalDateTime into HL7 date-time string
+        return localDateTime.format(hl7Formatter);
+    }
 }

@@ -4,6 +4,7 @@ import com.example.hl7project.model.Patient;
 import com.example.hl7project.repository.PatientRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
 import java.util.Map;
 
 @Service
@@ -26,12 +27,11 @@ public class PatientService {
         patient.setHomePhone(patientData.get("Home Phone Number"));
         patient.setLanguage(patientData.get("Primary Language"));
         patient.setMaritalStatus(patientData.get("Marital Status"));
-        patient.setFirstName(patientData.get("firstName"));
-        patient.setLastName(patientData.get("lastName"));
+        patient.setFirstName(patientData.get("First Name"));
+        patient.setLastName(patientData.get("Last Name"));
 
 //        patient.setAppointments(appointmentList);
         System.out.println("patient data saved!!!");
-
         patientRepository.save(patient);
     }
 
@@ -39,8 +39,15 @@ public class PatientService {
         String patientId = patientData.get("External Patient ID");
         Patient patient = patientRepository.findByPatientId(patientId);
         if (patient == null) {
-            System.out.println("Patient not found for update.");
-            return;
+            patient = patientRepository.findByExternalPatientMRN(patientData.get("External Patient MRN"));
+            if (patient == null) {
+                // if found id update
+                System.out.println("Patient not found for update.");
+                return;
+            }
+        }
+        if (patient.getPatientId() == null) {
+            patient.setPatientId(patientId);
         }
         patient.setName(patientData.get("Patient Name"));
         patient.setDateOfBirth(patientData.get("Date of Birth"));

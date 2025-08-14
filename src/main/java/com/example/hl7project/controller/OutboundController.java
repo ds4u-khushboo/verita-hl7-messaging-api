@@ -31,10 +31,15 @@ public class OutboundController {
     @PostMapping("/book-appointment")
     public String conversion(@RequestBody AppointmentRequest appointmentRequest) {
         return outboundService.processAppointmentRequest(appointmentRequest);
+
+        //1 findExistingPatient - patient service  (first name,  last name, dob ,
+        //if false : send adt message - outbound service
+        //send siu message  - outbound service
+//create patient or create appointment context path
     }
 
     @PostMapping("/siubuild")
-    public String buildSIU(@RequestBody AppointmentRequest appointmentRequest) {
+    public String buildSIU(@RequestBody AppointmentRequest appointmentRequest) throws Exception {
         String hl7Message = hl7UtilityService.buildSIUHl7Message(appointmentRequest);
         System.out.println("hl7Message::" + hl7Message);
         return hl7Message.toString();
