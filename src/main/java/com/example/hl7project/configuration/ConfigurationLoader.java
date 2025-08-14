@@ -30,35 +30,4 @@ public class ConfigurationLoader {
             e.printStackTrace();
         }
     }
-
-//    public static HL7MessageHandler getHandler(String messageType) throws Exception {
-//        Class<? extends HL7MessageHandler> handlerClass = handlers.get(messageType);
-//        if (handlerClass != null) {
-//            Constructor<? extends HL7MessageHandler> constructor = handlerClass.getConstructor();
-//            return constructor.newInstance();
-//        }
-//        throw new Exception("No handler found for message type: " + messageType);
-//    }
-//
-//    public static Map<String, Object> getMessageConfig(String messageType) {
-//        return messageConfig.get(messageType);
-//    }
-//
-//    private static void loadConfiguration() {
-//        try (InputStream input = HandlerRegistry.class.getClassLoader().getResourceAsStream("config.properties")) {
-//            Properties properties = new Properties();
-//            properties.load(input);
-//
-//            for (String key : properties.stringPropertyNames()) {
-//                String className = properties.getProperty(key);
-//                try {
-//                    Class<? extends HL7MessageHandler> handlerClass = (Class<? extends HL7MessageHandler>) Class.forName(className);
-//                    handlerMap.put(key, handlerClass);
-//                } catch (ClassNotFoundException e) {
-//                    e.printStackTrace();
-//                }
-//            }
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
 }

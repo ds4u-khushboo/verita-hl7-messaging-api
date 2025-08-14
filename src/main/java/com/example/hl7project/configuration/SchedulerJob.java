@@ -18,9 +18,8 @@ public class SchedulerJob {
     @Autowired
     private SIUInboundService appointmentService;
 
-    @Scheduled(cron = "0 0 0 * * ?") // Runs every day at midnight
+    @Scheduled(cron = "0 0 0 * * ?")
     public void deleteOldMessages() {
-        // Example: Delete messages older than 30 days
         LocalDateTime thirtyDaysAgo = LocalDateTime.now().minusDays(30);
         Timestamp timestamp = Timestamp.valueOf(thirtyDaysAgo);
         appointmentService.deleteMessage(LocalDate.from(thirtyDaysAgo));

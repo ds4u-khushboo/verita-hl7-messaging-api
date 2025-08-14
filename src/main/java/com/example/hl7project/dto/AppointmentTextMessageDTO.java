@@ -3,7 +3,6 @@ package com.example.hl7project.dto;
 import com.example.hl7project.utility.ConfirmationMessageStatus;
 import com.example.hl7project.utility.ReminderMessageStatus;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 
@@ -20,21 +19,9 @@ public class AppointmentTextMessageDTO {
 
     private ReminderMessageStatus reminderMessageStatus;
 
-//    public AppointmentTextMessageDTO(Long visitAppointmentId, String externalPatientId, String appointmentDate, String visitStatusCode, Long textMessageId, String typeCode, LocalDateTime createdAt, Long days) {
-//        this.visitAppointmentId = visitAppointmentId;
-//        this.externalPatientId = externalPatientId;
-//        this.appointmentDate = appointmentDate;
-//        this.visitStatusCode = visitStatusCode;
-//        this.textMessageId = textMessageId;
-//        this.typeCode = typeCode;
-//        this.createdAt = createdAt;
-//        this.days = days;
-//    }
-
     public AppointmentTextMessageDTO() {
 
     }
-
 
     public String getProviderCode() {
         return providerCode;

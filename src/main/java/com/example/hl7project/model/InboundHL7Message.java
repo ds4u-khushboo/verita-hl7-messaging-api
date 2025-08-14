@@ -2,7 +2,6 @@ package com.example.hl7project.model;
 
 import jakarta.persistence.*;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -120,5 +119,4 @@ public class InboundHL7Message {
         this.sentAt = sentAt;
     }
 
-    // Getters and Setters
 }

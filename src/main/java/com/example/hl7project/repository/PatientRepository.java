@@ -10,8 +10,6 @@ import java.util.Optional;
 
 public interface PatientRepository extends JpaRepository<Patient, Long> {
 
-//    public Patient findById(String patientId);
-
     public List<Patient> findByName(String patientName);
 
     @Query("SELECT p FROM Patient p WHERE p.firstName = :firstName AND p.lastName = :lastName AND p.dateOfBirth = :dateOfBirth ORDER BY p.createdAt DESC")
@@ -20,7 +18,6 @@ public interface PatientRepository extends JpaRepository<Patient, Long> {
             @Param("lastName") String lastName,
             @Param("dateOfBirth") String dateOfBirth
     );
-
     Patient findByPatientId(String patientId);
 
     Patient findByExternalPatientMRN(String patientMRN);

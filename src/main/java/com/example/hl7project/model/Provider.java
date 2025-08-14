@@ -27,14 +27,14 @@ public class Provider {
     @Column(name = "npi_number", length = 50)
     private String npiNumber;
 
+    @Column(name = "locationId")
+    private String location;
+
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
-
-//    @OneToMany(mappedBy = "providers")
-//    private List<Appointment> appointmentList;
 
 }
 

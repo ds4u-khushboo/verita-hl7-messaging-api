@@ -6,7 +6,6 @@ public class MessageDTO {
     @JsonProperty("message")
     private String message;
 
-    // Getter and Setter
     public String getMessage() {
         return message;
     }

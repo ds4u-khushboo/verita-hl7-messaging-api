@@ -13,7 +13,7 @@ public class TextMessageConfig {
 
     @Value("${twilio.authToken}")
     private String authToken;
-    //
+
     @Value("${twilio.fromNumber}")
     private String fromNumber;
 
